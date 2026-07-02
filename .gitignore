@@ -6,6 +6,7 @@
 !/themes/
 /themes/*/
 !/themes/HeroesLounge-Theme/
+!/docs/
 *.gitignore
 
 /plugins/rikki/.idea/*
