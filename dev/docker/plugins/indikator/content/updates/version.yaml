@@ -1,0 +1,3 @@
+1.0.1:
+    - 'Dev shim: create blog tables'
+    - create_blog_tables.php

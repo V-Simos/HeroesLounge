@@ -1,0 +1,54 @@
+# HeroesLounge local development environment.
+# See dev/README.md for usage. Site: http://localhost:8090/ (8080 is taken on this host).
+name: heroeslounge-dev
+
+services:
+  db:
+    image: mysql:5.7
+    command: --character-set-server=utf8 --collation-server=utf8_general_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: heroeslounge
+      MYSQL_USER: october
+      MYSQL_PASSWORD: october
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build: ./docker
+    ports:
+      - "8090:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # October CMS is configured via env vars (APP_ENV=docker config set, see the
+      # aspendigital/octobercms base image).
+      DB_TYPE: mysql
+      DB_HOST: db
+      DB_DATABASE: heroeslounge
+      DB_USERNAME: october
+      DB_PASSWORD: october
+      APP_URL: http://localhost:8090
+      APP_DEBUG: "true"
+      PHP_DISPLAY_ERRORS: "On"
+      CMS_ACTIVE_THEME: HeroesLounge-Theme
+      # Run `php artisan october:up` (all migrations, incl. the rikki plugins') on start.
+      INIT_OCTOBER: "true"
+    volumes:
+      # Only the repo's own code is mounted; October core + third-party plugins live
+      # in the image so the repo stays clean.
+      - ../plugins/rikki:/var/www/html/plugins/rikki
+      - ../plugins/dev:/var/www/html/plugins/dev
+      - ../themes/HeroesLounge-Theme:/var/www/html/themes/HeroesLounge-Theme
+      # Dev-only compatibility shim for the unobtainable marketplace plugin
+      # Indikator.Content (see dev/README.md).
+      - ./docker/plugins/indikator:/var/www/html/plugins/indikator
+
+volumes:
+  dbdata:

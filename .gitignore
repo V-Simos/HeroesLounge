@@ -1,8 +1,10 @@
 /*
 /*/
+!/dev/
 !/plugins/
 /plugins/*/
 !/plugins/rikki/
+!/plugins/dev/
 !/themes/
 /themes/*/
 !/themes/HeroesLounge-Theme/
