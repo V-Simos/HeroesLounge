@@ -42,6 +42,27 @@ Try `vagrant up` in the repo root (see `README.md` for the full Vagrant setup: V
 
 Open `http://localhost:8080/hl/backend` and confirm login credentials work (ask the user for them if unknown). Needed later to switch the frontend theme.
 
+> **RESOLVED 2026-07-03:** Task 0 failed on this machine — no Vagrant/VirtualBox, no DB dump or Project ID (user will obtain team access later), and port 8080 is occupied by an unrelated EnterpriseDB server. User chose a self-sufficient Docker environment instead → Task 0.5. All later verification URLs in this plan become `http://localhost:8090` and "log in with password 1234" becomes "log in with a seeded fixture user". When the real dump arrives later, it replaces the fixture DB and visual checks are re-run.
+
+---
+
+### Task 0.5: Docker dev environment + fixture data
+
+**Files:**
+- Create: `dev/docker-compose.yml`, `dev/README.md`, and whatever init scripts/Dockerfile the setup needs (all under `dev/`)
+- Create: `plugins/dev/fixtures/` — a tiny dev-only October plugin exposing `php artisan fixtures:seed` (the rikki plugins stay untouched; this is a new, clearly-marked dev plugin)
+- Modify: `.gitignore` (whitelist `/dev/` and `/plugins/dev/`)
+
+**Approach:**
+- `web` service: October CMS **v1** on PHP 7.x — prefer the community image `aspendigital/octobercms` (PHP 7.4 tag) which ships October v1 preinstalled; mount/copy this repo's `plugins/rikki` and `themes/` into it. Fall back to `php:7.4-apache` + composer `october/october` v1.1.x if the image doesn't work out.
+- `db` service: `mysql:5.7`. Site on **port 8090** (8080 is taken on the host).
+- Install open-source RainLab plugins from GitHub (no marketplace/Project ID): `rainlab/user-plugin`, `rainlab/blog-plugin`, `rainlab/pages-plugin`, `rainlab/translate-plugin` — pin tags compatible with October v1 / the rikki plugins' era.
+- `php artisan october:up` runs all migrations including the rikki plugins' — the schema comes from the repo itself, so it is authoritative.
+- Fixture seeder (via the dev plugin, using the real models so relations/pivots are correct): regions EU+NA; one **active** season (title "Season 30", `current_round` set, region EU) with 3 divisions (varied `mmr_bound`); ~10 teams incl. deliberately ugly cases (no logo, one disbanded, long names); users+sloths with known password `dev12345`, one user on two teams and captain of one; `team_division` pivots with varied `win_count/match_count/bye/free_win_count/active`; played matches **with games** (maps, winners, scores) and upcoming matches in the next 14 days covering: `wbp` set, `wbp` null, one with an approved caster + linked Twitch channel, one with a pending caster; blog category `events` + a handful of posts (some in `events`, varied authors/dates).
+- `dev/README.md`: one-command bring-up (`docker compose -f dev/docker-compose.yml up -d` then seed), how to log into frontend/backend, how to later swap in the real team dump.
+
+**Done when:** `http://localhost:8090/` serves the site with the OLD theme rendering fixture data correctly (proves environment + data before any new-theme work), backend reachable, `fixtures:seed` idempotent (safe to re-run).
+
 ---
 
 ### Task 1: Theme skeleton
@@ -414,4 +435,4 @@ Layout = `dashboard-v2.html` exactly: welcome strip; full-width next-match; symm
 
 ## Verification philosophy
 
-No PHP is written, so there are no unit tests to add. Every task's "verify" step is a real check against the running October instance with the anonymized production DB — not against static mockups. A task is not done while its page 500s, logs Twig errors, renders unstyled, or shows a blank section where an empty state should be. When a data binding can't be confirmed from code, confirm it in the browser against the DB before committing.
+No theme PHP is written, so there are no unit tests to add. Every task's "verify" step is a real check against the running October instance (Docker, `localhost:8090`, fixture DB per Task 0.5 — the real team dump replaces it later) — not against static mockups. A task is not done while its page 500s, logs Twig errors, renders unstyled, or shows a blank section where an empty state should be. When a data binding can't be confirmed from code, confirm it in the browser against the DB before committing.
