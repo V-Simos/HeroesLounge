@@ -23,12 +23,46 @@ maintained — this table is.)
 | 5 — lounge.js | ✅ | ✅ | ✅ (fast-follows applied + re-approved) | 271c199, 7c96aad |
 | 6 — Layouts + site chrome | ✅ | ✅ | ✅ (fixes applied + re-approved) | 53f3262, 9e30f30 |
 | 7 — Homepage static sections | ✅ | ✅ | ✅ | f006b55 |
-| 8 — Homepage data sections | — | — | — | |
+| 8 — Homepage data sections | ✅ | ✅ | ✅ (fixes applied + re-approved) | 8350276, 27a25dd |
 | 9 — Dashboard (logged-in home) | — | — | — | |
 | 10 — Blog pages | — | — | — | |
 | 11 — Maintenance + finishing pass | — | — | — | |
 
-**Next action:** Task 8 (homepage data sections).
+**Next action:** Task 9 (dashboard).
+
+**Patterns established by Task 8 — Task 9 must reuse, not reinvent:**
+- **onRender pattern:** UpcomingMatches + RecentResults collect data in
+  `onRender()` ONLY (no onRun); partials attach the component in front-matter
+  then call `{% do Component.onRender() %}` (+ `setProperty` for runtime ids)
+  and read the public property. `{% component %}` would render the plugin's
+  Bootstrap partial. Verified against Controller.php:1213 on this pinned
+  October v1 — re-verify after any core upgrade (if core ever auto-calls
+  onRender for partial components, every `{% do %}` site double-queries).
+- **DivisionTable override** (`partials/DivisionTable/default.htm`): emits
+  header+rows only; consumer supplies wrapper (`.table`/`.p` panel) +
+  table-foot. Props: `id`, `teamId`, `surroundingEntries` (default 4;
+  `maxEntries` is dead). startIndex is clamped in the override (plugin
+  computes negative for small divisions — upstream partial has the bug live).
+  `showScore` playoff mode NOT ported — add a guard before theming playoffs.
+  Old partial's `user.sloth.isInTeam()` highlight dropped (moot: use teamId).
+- **Season derivation:** canonical copy + rationale in site/nav.htm; 5 sites
+  in sync (nav, footer, hero, results, standings).
+- Eager-load lazy relations after onRender (`.load(...)`) — but NOT on
+  DivisionTable's teams (plain Support\Collection, no load()).
+- Shield partial: `{% partial 'team/shield' team=t size='lg'|'sm' %}`; logo
+  branch untested by fixtures (no team logos seeded) — verify with real dump.
+
+**Pre-production hardening (plugin-side, frozen for now — MUST be tracked to
+production cutover; from Task 8 quality review):**
+- `Division.php:190` `Log::info(...)` serializes full standings into the log
+  on EVERY DivisionTable render (3×/homepage hit) — log bloat + CPU.
+- `DivisionTable::onRender()` runs a dead teams query (overwritten result).
+- `getDivisionTableStandings()` lazy-loads games + winner/loser per match —
+  query cascade grows with season length, ×3 divisions per homepage hit.
+- UpcomingMatches type=all hydrates every unplayed match in 14 days (+5
+  eager relations) to show one card — bounded by time, not count.
+- No component caching (October v1) — decide caching strategy for the
+  anonymous homepage before cutover.
 
 **Notes from Task 7 reviews:**
 - Task 8 MUST replace hero's placeholder eyebrow (`EU · SEASON — · ROUND —`)
