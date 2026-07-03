@@ -25,10 +25,25 @@ maintained — this table is.)
 | 7 — Homepage static sections | ✅ | ✅ | ✅ | f006b55 |
 | 8 — Homepage data sections | ✅ | ✅ | ✅ (fixes applied + re-approved) | 8350276, 27a25dd |
 | 9 — Dashboard (logged-in home) | ✅ | ✅ | ✅ (follow-ups applied) | 3c8adcf, 7dd9fde |
-| 10 — Blog pages | — | — | — | |
+| 10 — Blog pages | ✅ | ✅ | ✅ (fixes applied + re-approved) | 9330c5d, 0d0347f |
 | 11 — Maintenance + finishing pass | — | — | — | |
 
-**Next action:** Task 10 (blog pages).
+**Next action:** Task 11 (maintenance page + finishing pass) — includes the
+accumulated Task-11 items listed under the Task 9 notes below.
+
+**Notes from Task 10 (blog):**
+- blog/post-card.htm is the single source for .post card markup (home/posts
+  delegates); events cards are the distinct .event variant.
+- Pager is windowed (1 … current±2 … last, ≤9 entries, clamped out-of-range,
+  page-1 emits param-less URL — verified against Rain Router source).
+- Real-data re-verify list (blocked on dump): prose typography beyond <p>
+  (headings/blockquote/code/img exercised only via temp content), pager at
+  real post volume, post cover image + carousel/files blocks (not ported),
+  post-not-found semantics after real Indikator swap (redirectPage may fire
+  before onEnd 404 — dev/README checklist).
+- icon.htm at 21 branches — fine; soft ceiling ~30 branches or when two
+  consumers need sizing variants, then revisit (dynamic partial / macro).
+- tag_posts is a graceful stub (old theme's was an inert empty page).
 
 **Notes from Task 9 (dashboard):**
 - **Task 11 finishing-pass items:** extract `partials/site/initials.htm` and
