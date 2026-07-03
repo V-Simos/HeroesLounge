@@ -1,6 +1,7 @@
 /* Base styles — ported from docs/superpowers/specs/assets/dashboard-v2.html global rules.
-   :focus-visible, .sec/.sec-alt band pattern and reduced-motion block ported from
-   reference-design.html (with v2 token values). */
+   :focus-visible and .sec/.sec-alt band pattern ported from reference-design.html
+   (with v2 token values). The prefers-reduced-motion block lives at the END of
+   components.css so it follows the animation/transform rules it neutralizes. */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; }
 
@@ -31,12 +32,4 @@ h1, h2, h3 { font-family: 'Chakra Petch', sans-serif; }
 
 @media (max-width: 720px) {
   .sec { padding: 56px 0; }
-}
-
-/* ---------- reduced motion ---------- */
-@media (prefers-reduced-motion: reduce) {
-  .ticker-track { animation: none; }
-  .ticker-clip { overflow-x: auto; }
-  .dot { animation: none; }
-  .btn:hover { transform: none; }
 }
