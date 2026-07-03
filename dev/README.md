@@ -29,8 +29,10 @@ whose contents you care about.
 
 ## Logins
 
-- **Backend**: http://localhost:8090/backend — login `admin`, password `admin`
-  (October's default seeded administrator).
+- **Backend**: http://localhost:8090/backend — login `admin`, password
+  `dev12345` (`fixtures:seed` resets it; before the first seed, October
+  generates a random admin password — it is printed in the `web` container
+  log).
 - **Frontend**: any fixture user, password `dev12345`. Log in on
   http://localhost:8090/user with the username, e.g.:
   - `AlphaCap` — captain of *Alpha Sloths* (Division 1)
@@ -68,7 +70,10 @@ October-v1-compatible releases, installed from GitHub:
 | RainLab.Pages | v1.5.12 |
 | RainLab.Translate | v1.12.0 |
 | RainLab.GoogleAnalytics | v1.3.2 |
+| RainLab.Location | v1.2.5 (provides `form_select_country()` used by the account page) |
 | OFFLINE.SiteSearch | v1.7.9 |
+| ToughDeveloper.ImageResizer | v1.4.0 (provides the `\| resize` Twig filter; shows a placeholder for missing logos) |
+| ShahiemSeymor.Roles | master (commit-pinned; provides the `can()` / `hasRole()` Twig functions) |
 | AnandPatel.WysiwygEditors | master (commit-pinned, no tags) |
 | Zainab.SimpleContact | master (commit-pinned, no tags) |
 
@@ -92,6 +97,17 @@ October-v1-compatible releases, installed from GitHub:
 - **`mmr_bound` column** — production has it on divisions, but no repo
   migration creates it (schema drift). `plugins/dev/fixtures` adds it via its
   own migration.
+- **`_()` Twig function** — the theme calls `_('key', 'ns::lang.section')` as
+  a function (RainLab.Translate only ships the `|_` filter); the plugin that
+  provided the function form is unknown/unobtainable, so `plugins/dev/fixtures`
+  registers a compatible implementation.
+
+### Known pre-existing theme gaps (not environment bugs)
+
+- `/contact` 500s: the theme references a `sections/contact` partial that does
+  not exist in this repo.
+- `/timezone` 500s without a `?time=...` query parameter (raw `$_GET` access
+  in the page's PHP section); it is only ever called with the parameter.
 
 ## Fixture data summary
 

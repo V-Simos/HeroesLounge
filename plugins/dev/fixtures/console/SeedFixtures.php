@@ -52,6 +52,7 @@ class SeedFixtures extends Command
 
         $this->wipe();
         $this->disableExternalModelEvents();
+        $this->resetBackendAdmin();
 
         $this->seedRegions();
         $this->seedMaps();
@@ -68,7 +69,7 @@ class SeedFixtures extends Command
             $user = $sloth->user;
             $this->output->writeln(sprintf('  %-14s %s', $user->username, $user->email));
         }
-        $this->output->writeln('<info>Backend: http://localhost:8090/backend - login "admin", password "admin".</info>');
+        $this->output->writeln('<info>Backend: http://localhost:8090/backend - login "admin", password "' . self::PASSWORD . '".</info>');
     }
 
     /**
@@ -128,6 +129,21 @@ class SeedFixtures extends Command
         Sloth::flushEventListeners();
     }
 
+    /**
+     * October generates a random password for the seeded "admin" backend user;
+     * reset it to the well-known dev password.
+     */
+    protected function resetBackendAdmin()
+    {
+        $admin = \Backend\Models\User::where('login', 'admin')->first();
+        if ($admin) {
+            $admin->password = self::PASSWORD;
+            $admin->password_confirmation = self::PASSWORD;
+            $admin->save();
+            $this->output->writeln('  - backend admin password reset to "' . self::PASSWORD . '"');
+        }
+    }
+
     protected function seedRegions()
     {
         foreach ([1 => 'EU', 2 => 'NA'] as $id => $title) {
@@ -149,6 +165,8 @@ class SeedFixtures extends Command
         foreach ($maps as $title) {
             $map = new Map();
             $map->title = $title;
+            $this->setIfColumn($map, 'enabled', 1);
+            $this->setIfColumn($map, 'translations', '');
             $this->saveRow($map);
         }
         $this->output->writeln('  - maps: ' . count($maps));
@@ -185,6 +203,8 @@ class SeedFixtures extends Command
             $user->password_confirmation = self::PASSWORD;
             $user->is_activated = true;
             $user->activated_at = Carbon::now();
+            // Added by ShahiemSeymor.Roles, NOT NULL without a default:
+            $this->setIfColumn($user, 'primary_usergroup', 0);
             $user->save();
 
             $sloth = new Sloth();
@@ -192,6 +212,16 @@ class SeedFixtures extends Command
             $sloth->battle_tag = $battleTag;
             $sloth->discord_tag = $username . '#0001';
             $sloth->region_id = $regionId;
+            // NOT NULL columns without defaults:
+            $this->setIfColumn($sloth, 'title', $username);
+            $this->setIfColumn($sloth, 'mmr', 0);
+            $this->setIfColumn($sloth, 'all_mmr', 0);
+            $this->setIfColumn($sloth, 'timezone', 'Europe/Berlin');
+            $this->setIfColumn($sloth, 'discord_id', '');
+            $this->setIfColumn($sloth, 'server_preference', '');
+            $this->setIfColumn($sloth, 'newsletter_subscription', 0);
+            // varied MMR so team ratings differ
+            $this->setIfColumn($sloth, 'heroesprofile_mmr', 2000 + (crc32($username) % 1200));
             $this->setIfColumn($sloth, 'birthday', '1990-06-15');
             $this->setIfColumn($sloth, 'short_description', 'Fixture sloth for local development.');
             $this->saveRow($sloth);
@@ -287,6 +317,13 @@ class SeedFixtures extends Command
             $team->slug = $slug;
             $team->region_id = $regionId;
             $this->setIfColumn($team, 'short_description', 'Fixture team for local development.');
+            // NOT NULL columns without defaults:
+            foreach (['facebook_url', 'twitch_url', 'twitter_url', 'youtube_url', 'website_url', 'server_preference'] as $column) {
+                $this->setIfColumn($team, $column, '');
+            }
+            $this->setIfColumn($team, 'accepting_apps', 0);
+            $this->setIfColumn($team, 'disbanded', 0);
+            $this->setIfColumn($team, 'slothrating', 0);
             $this->saveRow($team);
 
             // No team gets a logo on purpose - the theme must cope with missing logos.

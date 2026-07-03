@@ -44,6 +44,32 @@ class Plugin extends PluginBase
     }
 
     /**
+     * The theme calls `_('key', 'vendor.plugin::lang.section')` as a Twig
+     * *function* (RainLab.Translate only registers `_` as a *filter*). The
+     * plugin that provided the function form is not publicly available, so
+     * supply a compatible implementation: translate `section.key` from the
+     * given language namespace, falling back to the bare key.
+     */
+    public function registerMarkupTags()
+    {
+        return [
+            'functions' => [
+                '_' => function ($string, $namespace = null) {
+                    if ($namespace) {
+                        $key = $namespace . '.' . $string;
+                        $translated = trans($key);
+                        return $translated === $key ? $string : $translated;
+                    }
+                    if (class_exists('RainLab\Translate\Models\Message')) {
+                        return \RainLab\Translate\Models\Message::trans($string);
+                    }
+                    return $string;
+                },
+            ],
+        ];
+    }
+
+    /**
      * The production deployment has AuthCode classes holding API secrets
      * (Discord, HeroesProfile, Mailchimp). They are gitignored, so calls into
      * them fatal with "class not found" locally. Provide dummies that return

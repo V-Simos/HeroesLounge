@@ -14,10 +14,12 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      # Force a TCP connection: during first-run initialization MySQL runs a
+      # temporary socket-only server that would fool `mysqladmin ping`.
+      test: ["CMD-SHELL", "mysql -h127.0.0.1 -uoctober -poctober -e 'SELECT 1' heroeslounge"]
       interval: 5s
       timeout: 5s
-      retries: 20
+      retries: 30
 
   web:
     build: ./docker
