@@ -100,6 +100,10 @@
 .links .signin { color: var(--ink); }
 .burger { display: none; background: none; border: 0; color: var(--ink); cursor: pointer; padding: 6px; }
 .burger svg { width: 22px; height: 22px; }
+/* burger icon swap (new — not in the mockups): lounge.js toggles aria-expanded
+   on #burger; show the menu icon closed, the x icon open. */
+.burger .i-menu, .burger .i-close { display: inline-flex; }
+.burger[aria-expanded="true"] .i-menu, .burger:not([aria-expanded="true"]) .i-close { display: none; }
 .avatar { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 600; }
 .avatar .pic { width: 32px; height: 35px; display: inline-flex; align-items: center; justify-content: center;
   font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 13px;

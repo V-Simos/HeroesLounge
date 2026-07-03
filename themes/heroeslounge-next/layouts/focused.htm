@@ -1,14 +1,7 @@
-description = "Default layout"
+description = "Focused layout — centered chamfered panel, no site chrome"
 
 [session]
 security = "all"
-
-[Navigation]
-paramCode = ""
-
-[SetTimezone]
-
-[staticPage]
 ==
 <!DOCTYPE html>
 <html lang="en">
@@ -28,9 +21,12 @@ paramCode = ""
     {% styles %}
 </head>
 <body>
-    {% partial 'site/nav' %}
-    {% page %}
-    {% partial 'site/footer' %}
+    <main class="focused">
+        <a class="logo" href="{{ 'home' | page }}">{% partial 'site/icon' name='swords' %}<span>HEROES <em>LOUNGE</em></span></a>
+        <div class="focused-panel chamfer">
+            {% page %}
+        </div>
+    </main>
     {% scripts %}
     <script src="{{ 'assets/js/vendor/jquery.js' | theme }}"></script>
     {% framework extras %}

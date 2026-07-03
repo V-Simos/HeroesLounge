@@ -1,1 +1,8 @@
 /* Page-specific styles — populated in a later task. */
+
+/* ---------- focused layout (layouts/focused.htm) ----------
+   Centered 480px chamfered panel with the logo above it; no nav/footer. */
+.focused { min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 28px; padding: 48px 24px; }
+.focused .focused-panel { width: 100%; max-width: 480px;
+  background: var(--panel); padding: 34px 32px; }

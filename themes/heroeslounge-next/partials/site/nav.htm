@@ -1,0 +1,45 @@
+description = "Sticky site nav (markup from docs/superpowers/specs mockups)"
+==
+{#- Requires the [Navigation] + [session] components (attached by layouts/default.htm):
+    Navigation.current_eu_amateurseasons drives the League link (the season page URL
+    is parameterized, "/:slug" in the old theme's pages/season/view.htm, so there is
+    no stable literal); `user` comes from [session]. The League link is hidden when
+    no EU amateur season is active.
+    URL literals below are copied from the old theme (pages that do not exist in
+    this theme yet cannot use the |page filter — it resolves against the ACTIVE
+    theme and would yield href=""):
+      /blog/category/events  pages/blog/category.htm    url = "/blog/category/:slug/:page?"
+      /guides/signup-guide   content/static-pages/guides-signup-guide.htm (RainLab.Pages)
+      /calendar              pages/calendar.htm         url = "/calendar"
+      /blog                  pages/blog/list.htm        url = "/blog/:page?"
+      /user                  pages/user/account.htm     url = "/user/:code?"
+    There is no current-events landing page in the old theme (only the legacy
+    /events/archive accordion), so Events points at the events blog category. -#}
+{% set currentSeason = Navigation.current_eu_amateurseasons ? Navigation.current_eu_amateurseasons.first : null %}
+<header class="nav">
+    <div class="wrap nav-in">
+        <a class="logo" href="{{ 'home' | page }}">{% partial 'site/icon' name='swords' %}<span>HEROES <em>LOUNGE</em></span></a>
+        <nav class="links" id="site-links">
+            {% if currentSeason %}
+            <a href="/{{ currentSeason.slug }}">League</a>
+            {% endif %}
+            {# TODO(task-10): switch Events + Blog to the |page filter once the blog pages are ported to this theme #}
+            <a href="/blog/category/events">Events</a>
+            <a href="/guides/signup-guide">Guides</a>
+            <a href="/calendar">Calendar</a>
+            <a href="/blog">Blog</a>
+            {% if user %}
+            {% set nameParts = (user.username | trim) | split(' ', 2) %}
+            {% set initials = nameParts | length > 1 and nameParts[1]
+                ? ((nameParts[0] | slice(0, 1)) ~ (nameParts[1] | slice(0, 1))) | upper
+                : nameParts[0] | slice(0, 2) | upper %}
+            <a class="bell" href="/user" aria-label="Notifications">{% partial 'site/icon' name='bell' %}</a>
+            <a class="avatar" href="/user"><span class="pic" aria-hidden="true">{{ initials }}</span> {{ user.username }}</a>
+            {% else %}
+            <a class="signin" href="/user">Sign in</a>
+            <a class="btn btn-solid btn-sm" href="/user">Join Season</a>
+            {% endif %}
+        </nav>
+        <button class="burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="site-links"><span class="i-menu">{% partial 'site/icon' name='menu' %}</span><span class="i-close">{% partial 'site/icon' name='x' %}</span></button>
+    </div>
+</header>
