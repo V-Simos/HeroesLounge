@@ -1,0 +1,19 @@
+/* Design tokens — ported from docs/superpowers/specs/assets/dashboard-v2.html (.hl block),
+   declared on :root. --deep comes from reference-design.html (used by .sec-alt). */
+
+:root {
+  /* v2 tokens: higher contrast, larger type */
+  --void:  #070A16;            /* darker page for separation */
+  --deep:  #0D1226;
+  --panel: #151C3D;            /* lighter panels for contrast against void */
+  --panel2:#1B2350;
+  --line:  rgba(136,156,215,0.28);   /* stronger borders */
+  --storm: #4FB3F2;            /* brighter accents */
+  --arc:   #9D8CF2;
+  --gold:  #F2BE55;
+  --red:   #F26379;
+  --green: #57D49A;
+  --ink:   #F4F7FF;            /* brighter text */
+  --mute:  #AAB6DA;            /* muted text passes AA on panels */
+  --ch: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+}

@@ -1,0 +1,42 @@
+/* Base styles — ported from docs/superpowers/specs/assets/dashboard-v2.html global rules.
+   :focus-visible, .sec/.sec-alt band pattern and reduced-motion block ported from
+   reference-design.html (with v2 token values). */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+body {
+  background: var(--void);
+  color: var(--ink);
+  font-family: 'Barlow', system-ui, sans-serif;
+  font-size: 17px;                   /* base up from 16 */
+  line-height: 1.55;
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--storm); outline-offset: 3px; }
+
+.mono { font-family: 'JetBrains Mono', monospace; font-weight: 500; letter-spacing: .12em; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.chamfer { clip-path: var(--ch); }
+
+h1, h2, h3 { font-family: 'Chakra Petch', sans-serif; }
+
+.eyebrow { font-size: 12.5px; color: var(--storm); letter-spacing: .22em; margin-bottom: 10px; font-weight: 600; }
+
+/* ---------- sections ---------- */
+.sec { padding: 76px 0; }
+.sec-alt { background: var(--deep); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+
+@media (max-width: 720px) {
+  .sec { padding: 56px 0; }
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; }
+  .ticker-clip { overflow-x: auto; }
+  .dot { animation: none; }
+  .btn:hover { transform: none; }
+}
