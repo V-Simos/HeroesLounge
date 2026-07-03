@@ -48,6 +48,7 @@ services:
       - ../plugins/rikki:/var/www/html/plugins/rikki
       - ../plugins/dev:/var/www/html/plugins/dev
       - ../themes/HeroesLounge-Theme:/var/www/html/themes/HeroesLounge-Theme
+      - ../themes/heroeslounge-next:/var/www/html/themes/heroeslounge-next
       # Dev-only compatibility shim for the unobtainable marketplace plugin
       # Indikator.Content (see dev/README.md).
       - ./docker/plugins/indikator:/var/www/html/plugins/indikator

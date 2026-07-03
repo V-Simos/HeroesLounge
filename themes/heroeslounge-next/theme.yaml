@@ -1,0 +1,8 @@
+name: 'Heroes Lounge Next'
+description: 'Reworked Heroes Lounge theme — dark esports design system'
+author: 'Heroes Lounge Webdevs'
+code: heroeslounge-next
+require:
+    - RainLab.Blog
+    - RainLab.Pages
+    - RainLab.Translate

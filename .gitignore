@@ -8,6 +8,7 @@
 !/themes/
 /themes/*/
 !/themes/HeroesLounge-Theme/
+!/themes/heroeslounge-next/
 !/docs/
 *.gitignore
 
