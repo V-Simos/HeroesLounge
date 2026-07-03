@@ -2,4 +2,12 @@ title = "Home"
 url = "/"
 layout = "default"
 ==
-<h1>heroeslounge-next lives</h1>
+{#- Same branch structure as the old theme's home.htm: logged-in users get the
+    dashboard, everyone else the marketing page. -#}
+{% if user %}
+{# TODO(task-9): dashboard partials #}
+{% else %}
+{% partial 'home/hero' %}
+{% partial 'home/how' %}
+{% partial 'home/cta' %}
+{% endif %}

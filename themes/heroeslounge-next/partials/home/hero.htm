@@ -1,0 +1,29 @@
+description = "Homepage hero (markup from docs/superpowers/specs/assets/reference-design.html)"
+==
+{#- Hero background (radial glows + grid-line ::after backdrop) lives in
+    pages.css; structural .hero rules are in components.css.
+    Eyebrow + first chip carry em-dash placeholders until Task 8 attaches the
+    [UpcomingMatches] component and derives the season from the cast-panel
+    match's division.season — do not invent numbers here (spec forbids
+    hardcoded stats). -#}
+<section class="hero">
+    <div class="wrap hero-grid">
+        <div class="hero-copy">
+            {# TODO(task-8): live data — season/region/round from UpcomingMatches (cast match division.season) #}
+            <p class="eyebrow mono">EU · SEASON — · ROUND —</p>
+            <h1>The Nexus,<br>every night.</h1>
+            <p class="lede">Heroes Lounge is the largest amateur Heroes of the Storm league. Five divisions, every skill level — and your matches cast live on Twitch.</p>
+            <div class="cta-row">
+                <a class="btn btn-solid" href="/user">Join Season {% partial 'site/icon' name='arrow-right' %}</a>
+                <a class="btn btn-ghost" href="https://www.twitch.tv/heroes_lounge">{% partial 'site/icon' name='twitch' %} Watch live</a>
+            </div>
+            <ul class="chips mono">
+                {# TODO(task-8): live data — division count #}
+                <li>— divisions</li>
+                <li>All MMRs welcome</li>
+                <li>Free, forever</li>
+            </ul>
+        </div>
+        {# TODO(task-8): cast panel (.cast-outer next-cast card) from UpcomingMatches #}
+    </div>
+</section>

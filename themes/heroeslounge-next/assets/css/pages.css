@@ -8,3 +8,24 @@
   align-items: center; justify-content: center; gap: 28px; padding: 48px 24px; }
 .focused .focused-panel { width: 100%; max-width: 480px;
   background: var(--panel); padding: 34px 32px; }
+
+/* ---------- home page (pages/home.htm) ----------
+   Hero background from reference-design.html — the radial glows on .hero and
+   the ::after grid-line backdrop. Structural .hero rules live in
+   components.css; Task 4 deliberately left these here. rgba tints rebased on
+   the v2 palette: storm 62,166,232 -> 79,179,242; arc 139,121,232 ->
+   157,140,242; line 126,146,205 -> 136,156,215. */
+.hero {
+  background:
+    radial-gradient(720px 420px at 12% -10%, rgba(79,179,242,0.14), transparent 65%),
+    radial-gradient(680px 420px at 92% 8%, rgba(157,140,242,0.13), transparent 65%),
+    var(--void);
+}
+.hero::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(136,156,215,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(136,156,215,0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(760px 480px at 50% 0%, black, transparent 78%);
+  -webkit-mask-image: radial-gradient(760px 480px at 50% 0%, black, transparent 78%);
+}
