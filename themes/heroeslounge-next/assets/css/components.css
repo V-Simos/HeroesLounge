@@ -171,6 +171,11 @@
 .cast-foot a:hover { color: var(--ink); }
 .cast-foot svg { width: 12px; height: 12px; }
 .cast-actions { display: flex; gap: 12px; }
+/* The dashboard's cast-foot actions are <a class="btn …"> links (the mockup
+   used <button>, which the .cast-foot a link colouring above never touched);
+   restore the button palettes — .cast-foot a (0,1,1) beats .btn-solid (0,1,0). */
+.cast-foot .cast-actions a.btn-solid { color: #041020; }
+.cast-foot .cast-actions a.btn-ghost { color: var(--ink); }
 
 /* ---------- ticker ---------- */
 .ticker { display: flex; align-items: stretch;
@@ -342,6 +347,9 @@
 /* .dot + label composite in the cast panel head (reference-design puts the
    pulse dot inside the head line; .p-head itself is space-between). */
 .p-head .live { display: inline-flex; align-items: center; gap: 8px; }
+/* Teamchip pics (dashboard welcome strip) can hold a real logo <img> when the
+   team has one — the mockups only ever render initials in .pic. */
+.teamchip .pic img { width: 100%; height: 100%; object-fit: cover; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 960px) {
@@ -373,6 +381,14 @@
 }
 @media (max-width: 480px) {
   .how-grid { grid-template-columns: 1fr; }
+  /* .mrow at phone width (new — the mockup rows only ever held short names):
+     the 92px timestamp + >=118px pill/score leave the flexible middle ~20px,
+     shattering real team names one character per line. Wrap instead:
+     timestamp + pill/score share the first line, the matchup gets its own
+     full-width line. */
+  .mrow { flex-wrap: wrap; row-gap: 4px; padding: 10px 20px; }
+  .mrow .pill, .mrow .res { order: 1; margin-left: auto; }
+  .mrow .who { order: 2; flex-basis: 100%; }
   /* Stack the cast panel (team / countdown / team) — three columns of real
      team names plus a ticking "xD HH:MM:SS" can't share a 360px viewport
      (the mockups' side-by-side layout only ever held a short HH:MM:SS and

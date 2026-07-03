@@ -1,0 +1,71 @@
+[UpcomingMatches]
+type = "team"
+daysInFuture = 14
+==
+{#- "Your matches · next 14 days" panel (markup: dashboard-v2.html .p/.mrow/
+    .pill rows).
+
+    Data: [UpcomingMatches] type="team" per user team — the deliberate choice
+    over Task 8's type="all": "all" is every match in the window (not scoped
+    to the user) while "team" is the team's matches relation. Same onRender
+    pattern as home/cast.htm (set the runtime id, invoke onRender(), read
+    datesToMatches). Rows from all teams are merged, deduped by match id
+    (two of the user's teams can meet each other), and ordered by a sortable
+    "wbp|zero-padded-id" string key — Twig 1 has no arrow-function sort.
+
+    Pill states per the mockup: pending caster request (pivot approved=0) ->
+    .cast "Cast requested"; else wbp set -> .ok "Scheduled"; else -> .warn
+    "Propose time". COMPONENT LIMITATION: no UpcomingMatches type can return
+    an unscheduled match — every branch of its collectMatches() switch
+    filters `wbp >= today AND wbp <= today+N`, which SQL-excludes NULL wbp
+    (the fixtures' unscheduled match never appears). The .warn branch is
+    therefore defensive dead code until a data source for unscheduled team
+    matches exists (plugin change, out of scope). winner_id guard as in
+    dashboard/next-match.htm. -#}
+{% set teams = user.sloth ? user.sloth.teams : [] %}
+{% set rowsByKey = {} %}
+{% set keys = [] %}
+{% for team in teams %}
+    {% do UpcomingMatches.setProperty('id', team.id) %}
+    {% do UpcomingMatches.onRender() %}
+    {% for dayMatches in UpcomingMatches.datesToMatches %}
+        {% for match in dayMatches %}
+            {% set key = match.wbp ~ '|' ~ ('%06d'|format(match.id)) %}
+            {% if match.winner_id is null and match.teams|length >= 2 and rowsByKey[key] is not defined %}
+                {% set rowsByKey = rowsByKey|merge({ (key): { match: match, team: team } }) %}
+                {% set keys = keys|merge([key]) %}
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+{% endfor %}
+<div class="p chamfer">
+    {#- /calendar frozen from the old theme's pages/calendar.htm (url = "/calendar"). -#}
+    <div class="p-head"><span>YOUR MATCHES · NEXT 14 DAYS</span><a href="/calendar">CALENDAR {% partial 'site/icon' name='chevron-right' %}</a></div>
+    {% for key in keys|sort %}
+    {% set match = rowsByKey[key].match %}
+    {% set team = rowsByKey[key].team %}
+    {% set opponent = null %}
+    {% for t in match.teams %}
+        {% if opponent is null and t.id != team.id %}{% set opponent = t %}{% endif %}
+    {% endfor %}
+    {% set opponent = opponent ?: match.teams[1] %}
+    {% set words = team.title|trim|split(' ') %}
+    {% set initials = words|length > 1 and words[1]
+        ? ((words[0]|slice(0, 1)) ~ (words[1]|slice(0, 1)))|upper
+        : words[0]|slice(0, 2)|upper %}
+    {% set casterPending = false %}
+    {% for caster in match.casters %}
+        {% if caster.pivot.approved == 0 %}{% set casterPending = true %}{% endif %}
+    {% endfor %}
+    <div class="mrow">
+        {#- Mockup .when shape: weekday+time inside the next 7 days
+            ("SAT 20:00"), date beyond ("JUL 12") — in the viewer TZ via the
+            component's SetTimezone-fed timezone (as home/cast.htm). -#}
+        <span class="when">{% if match.wbp is null %}TBD{% elseif date(match.wbp) < date('+7 days') %}{{ match.wbp|date('D H:i', UpcomingMatches.timezone)|upper }}{% else %}{{ match.wbp|date('M j', UpcomingMatches.timezone)|upper }}{% endif %}</span>
+        <span class="who">{{ initials }} <i>vs</i> {{ opponent.title }}</span>
+        {% if casterPending %}<span class="pill cast">Cast requested</span>{% elseif match.wbp %}<span class="pill ok">Scheduled</span>{% else %}<span class="pill warn">Propose time</span>{% endif %}
+    </div>
+    {% else %}
+    <div class="mrow"><span class="who"><i>Nothing scheduled in the next 14 days.</i></span></div>
+    {% endfor %}
+</div>
