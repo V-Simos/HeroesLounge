@@ -1,4 +1,6 @@
-/* Page-specific styles — populated in a later task. */
+/* Page/layout-level rules — styles scoped to a single page or layout rather
+   than the shared components in components.css. Currently: the focused
+   layout's centered panel; page sections land here as pages are ported. */
 
 /* ---------- focused layout (layouts/focused.htm) ----------
    Centered 480px chamfered panel with the logo above it; no nav/footer. */

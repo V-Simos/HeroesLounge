@@ -8,3 +8,4 @@ require:
     - RainLab.Pages
     - RainLab.Translate
     - RainLab.User
+    - Rikki.LoungeViews
