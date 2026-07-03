@@ -17,21 +17,20 @@ postPage = "blog/post"
     <div class="wrap">
         <div class="sec-head">
             <div><p class="eyebrow mono">FROM THE BLOG</p><h2>Latest posts</h2></div>
-            {#- Blog list URL frozen from the old theme's pages/blog/list.htm
-                (url = "/blog/:page?"). -#}
-            <a class="sec-link mono" href="/blog">ALL POSTS {% partial 'site/icon' name='chevron-right' %}</a>
+            {#- Resolves to /blog — the frozen old-theme URL (pages/blog/list.htm,
+                url = "/blog/:page?", ported in Task 10). ({}, false) disables
+                route persistence (see site/nav.htm). -#}
+            <a class="sec-link mono" href="{{ 'blog/list'|page({}, false) }}">ALL POSTS {% partial 'site/icon' name='chevron-right' %}</a>
         </div>
         <div class="post-grid">
             {% for post in latestPosts %}
             {% set author = post.findAuthor %}
-            {#- Post URL frozen from the old theme (url = "/blog/post/:slug").
-                TODO(task-10): switch to post.url once blog/post page exists
-                (postPage resolves against the ACTIVE theme, so post.url is
-                empty until that page is ported here).
+            {#- post.url comes from blogList's postPage = "blog/post" (ported in
+                Task 10) and renders /blog/post/:slug — the frozen old-theme URL.
                 Date-TZ: human dates render in the app TZ (day granularity);
                 cast.htm uses the viewer TZ via UpcomingMatches.timezone —
                 unify when a viewer-TZ source exists outside UpcomingMatches. -#}
-            <a class="post chamfer" href="/blog/post/{{ post.slug }}">
+            <a class="post chamfer" href="{{ post.url }}">
                 <div class="post-meta mono">{% partial 'site/icon' name='calendar' %} {{ post.published_at|date('M j, Y') }}{% if author %} · {{ author.login }}{% endif %}</div>
                 <h3>{{ post.title }}</h3>
                 <p>{{ post.summary|striptags }}</p>

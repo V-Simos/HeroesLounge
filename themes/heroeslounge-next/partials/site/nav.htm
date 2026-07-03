@@ -8,11 +8,13 @@ description = "Sticky site nav (markup from docs/superpowers/specs mockups)"
     URL literals below are copied from the old theme (pages that do not exist in
     this theme yet cannot use the |page filter — it resolves against the ACTIVE
     theme and would yield href=""):
-      /blog/category/events  pages/blog/category.htm    url = "/blog/category/:slug/:page?"
       /guides                content/static-pages/guides.htm (RainLab.Pages guides landing)
       /calendar              pages/calendar.htm         url = "/calendar"
-      /blog                  pages/blog/list.htm        url = "/blog/:page?"
       /user                  pages/user/account.htm     url = "/user/:code?"
+    Events + Blog resolve via |page since Task 10 ported the blog pages
+    (frozen URLs /blog/category/events and /blog). The ({}, false) second
+    argument disables route persistence: on a page with a :page route param
+    (e.g. /blog/2) persistence would leak it into these URLs.
     There is no current-events landing page in the old theme (only the legacy
     /events/archive accordion), so Events points at the events blog category. -#}
 {#- Active-season derivation — CANONICAL copy. Policy: "the current season" is
@@ -34,11 +36,10 @@ description = "Sticky site nav (markup from docs/superpowers/specs mockups)"
             {% if currentSeason %}
             <a href="/{{ currentSeason.slug }}">League</a>
             {% endif %}
-            {# TODO(task-10): switch Events + Blog to the |page filter once the blog pages are ported to this theme #}
-            <a href="/blog/category/events">Events</a>
+            <a href="{{ 'blog/category'|page({ slug: 'events' }, false) }}">Events</a>
             <a href="/guides">Guides</a>
             <a href="/calendar">Calendar</a>
-            <a href="/blog">Blog</a>
+            <a href="{{ 'blog/list'|page({}, false) }}">Blog</a>
             {% if user %}
             {# Avatar initials: first letter of each of the first two words of the username, or its first two letters when it is a single word — uppercased. #}
             {% set nameParts = (user.username | trim) | split(' ', 2) %}

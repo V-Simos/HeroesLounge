@@ -1,0 +1,94 @@
+title = "Blog post"
+url = "/blog/post/:slug"
+layout = "default"
+
+[BlogPage blogPage]
+slug = "{{ :slug }}"
+categoryPage = "blog/category"
+redirectPage = "blog"
+==
+<?php
+// Dynamic <title> from the post (site/head.htm renders this.page.title).
+// The OLD post page kept its static "Blog Post" title, but its own category
+// page set the title dynamically in onEnd() — this mirrors that mechanism.
+// Not-found gets a 404 (the real Indikator blogPage redirected via
+// redirectPage — the dev shim doesn't implement that, so render gracefully).
+function onEnd()
+{
+    if ($this->post) {
+        $this->page->title = $this->post->title;
+    } else {
+        $this->page->title = 'Post not found';
+        $this->setStatusCode(404);
+    }
+}
+?>
+==
+{#- URL + component config copied from the old theme's pages/blog/post.htm
+    (frozen URL /blog/post/:slug). [BlogPage blogPage] is rikki's subclass of
+    the Indikator blogPage (same attachment as the old page) — it adds the
+    previousPost/nextPost siblings used below. The old page's [ssbuttonsnb]/
+    [ssbuttonsssb] social-share components are not ported (marketplace plugin,
+    not part of the new design), nor are the post.images carousel / post.files
+    attachment list (unused by fixtures; revisit with real data if needed). -#}
+{% set post = blogPage.post %}
+{% if post %}
+{% set author = post.findAuthor %}
+<article class="sec post-article">
+    <div class="wrap">
+        <header class="post-head">
+            <p class="eyebrow mono">{{ post.published_at|date('M j, Y') }}{% if author %} · {{ author.login }}{% endif %}</p>
+            <h1>{{ post.title }}</h1>
+        </header>
+        {% if post.image %}
+        <img class="post-cover chamfer" src="{{ post.image|media }}" alt="">
+        {% endif %}
+        <div class="post-content">
+            {#- |raw is the SANCTIONED exception (the theme's first): post.content
+                is rich HTML authored by trusted backend staff — the same trust
+                model as the old theme's partials/blogPage/default.htm
+                `{{ post.content|raw }}`. Do NOT copy this pattern for
+                user-supplied fields. -#}
+            {{ post.content|raw }}
+        </div>
+        {% if post.categories|length > 0 %}
+        <div class="post-foot">
+            <div class="post-tags mono">
+                {%- for category in post.categories -%}
+                <a href="{{ category.url }}"><span>{{ category.name }}</span></a>
+                {%- endfor -%}
+            </div>
+        </div>
+        {% endif %}
+        {#- Prev/next posts — port of the old partials/blog/pagination.htm
+            pattern (blogPage.previousPost/nextPost), rendered as .post cards. -#}
+        {% set prevPost = blogPage.previousPost %}
+        {% set nextPost = blogPage.nextPost %}
+        {% if prevPost or nextPost %}
+        <nav class="post-siblings" aria-label="More posts">
+            <div>
+                {% if prevPost %}
+                <p class="eyebrow mono">PREVIOUS POST</p>
+                {% partial 'blog/post-card' post=prevPost %}
+                {% endif %}
+            </div>
+            <div>
+                {% if nextPost %}
+                <p class="eyebrow mono">NEXT POST</p>
+                {% partial 'blog/post-card' post=nextPost %}
+                {% endif %}
+            </div>
+        </nav>
+        {% endif %}
+    </div>
+</article>
+{% else %}
+<section class="sec">
+    <div class="wrap">
+        <div class="sec-head">
+            <div><p class="eyebrow mono">FROM THE BLOG</p><h2>Post not found</h2></div>
+        </div>
+        <p class="blog-empty">This post does not exist or is no longer published. <a href="{{ 'blog/list'|page({}, false) }}">Browse all posts</a> instead.</p>
+    </div>
+</section>
+{% endif %}

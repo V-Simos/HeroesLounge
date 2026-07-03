@@ -154,6 +154,10 @@ October-v1-compatible releases, installed from GitHub:
    - [ ] verify events gold-tag rendering (`prize` tag → `.event-gold`) — the
      dev shim has no tags, so home/events.htm's gold branch is unexercised
      until the real plugin is in.
+   - [ ] revisit `heroeslounge-next/pages/blog/tag_posts.htm` — `/blog/tag/:slug`
+     renders a graceful "not available" fallback because the shim has no tags
+     (the OLD theme's page was an inert stub too: no components, empty body).
+     Decide with real tag data whether a functional tag archive is worth porting.
 4. `docker compose -f dev/docker-compose.yml exec web php artisan october:up`
    to apply any pending migrations against the dump.
 5. Frontend logins from the dump use password `1234` (per the anonymised-dump

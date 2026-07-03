@@ -1,0 +1,21 @@
+description = "Numbered blog pagination; expects `posts` (paginator) + `pageParam`"
+==
+{#- Restyles the old theme's partials/blogList/default.htm pagination pattern:
+    this.page.baseFileName|page({ (pageParam): n }) — route persistence (the
+    default) keeps the category page's :slug while the explicit number
+    overrides :page. Old theme shipped prev/next only (numbered loop was
+    commented out); the numbers are restored here as .pager chips
+    (pages.css, derived from the .tab chip pattern). -#}
+{% if posts.lastPage > 1 %}
+<nav class="pager mono" aria-label="Posts pages">
+    {% if posts.currentPage > 1 %}
+    <a href="{{ this.page.baseFileName|page({ (pageParam): (posts.currentPage - 1) }) }}" aria-label="Previous page">{% partial 'site/icon' name='chevron-left' %}</a>
+    {% endif %}
+    {% for p in 1..posts.lastPage %}
+    <a href="{{ this.page.baseFileName|page({ (pageParam): p }) }}"{% if posts.currentPage == p %} class="on" aria-current="page"{% endif %}>{{ p }}</a>
+    {% endfor %}
+    {% if posts.currentPage < posts.lastPage %}
+    <a href="{{ this.page.baseFileName|page({ (pageParam): (posts.currentPage + 1) }) }}" aria-label="Next page">{% partial 'site/icon' name='chevron-right' %}</a>
+    {% endif %}
+</nav>
+{% endif %}

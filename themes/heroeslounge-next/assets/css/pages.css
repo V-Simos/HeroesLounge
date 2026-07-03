@@ -50,3 +50,60 @@
 @media (max-width: 900px) {
   .dash-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- blog (pages/blog/*) ----------
+   There is no blog mockup — everything below derives from the established
+   system. Inventions: .pager chips restyle the old theme's blogList
+   pagination as .tab-like chamfered chips (mono type, storm-gradient active
+   state = .tab.on, 36px hit targets); the post article is a left-aligned
+   72ch measure inside the standard .wrap (matches the left-flowing sections
+   everywhere else — no centered column in the design language). */
+.pager { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 36px; }
+.pager a { display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; min-height: 36px; padding: 0 12px; font-size: 12px; font-weight: 600;
+  background: rgba(136,156,215,0.1); color: var(--mute);
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+.pager a:hover { color: var(--ink); background: rgba(79,179,242,0.16); }
+.pager a.on { background: linear-gradient(135deg, var(--storm), #2E86DD); color: #041020; }
+.pager a:focus-visible { outline-offset: -4px; } /* clip-path clips outside outlines (see components.css) */
+.pager svg { width: 15px; height: 15px; }
+
+.blog-empty { color: var(--mute); }
+.blog-empty a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
+.blog-empty a:hover { color: var(--ink); }
+
+/* ---------- blog post article (pages/blog/post.htm) ---------- */
+.post-article .post-head { max-width: 72ch; margin-bottom: 30px; }
+.post-article .post-head .eyebrow { text-transform: uppercase; }
+.post-article .post-head h1 { font-size: clamp(1.9rem, 4.2vw, 2.9rem); font-weight: 700;
+  line-height: 1.1; text-wrap: balance; }
+.post-cover { display: block; max-width: 100%; margin-bottom: 30px; }
+/* Post content is backend-authored rich HTML rendered |raw — style the tags
+   it may contain. Fixture posts only exercise <p>; the rest is speced blind
+   (h2/h3, blockquote, code/pre, img, lists, links) — re-verify with real data. */
+.post-content { max-width: 72ch; }
+.post-content > * + * { margin-top: 16px; }        /* base.css zeroes all margins — restore prose flow */
+.post-content blockquote > * + * { margin-top: 12px; }
+.post-content h2, .post-content h3 { line-height: 1.25; }
+.post-content h2 { font-size: 1.45rem; margin-top: 36px; }
+.post-content h3 { font-size: 1.15rem; margin-top: 30px; }
+/* Link affordance (WCAG 1.4.1): base.css strips link styling globally, which
+   would leave prose links color-only/invisible — underline + storm here. */
+.post-content a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
+.post-content a:hover { color: var(--ink); }
+.post-content blockquote { border-left: 3px solid var(--storm); padding: 6px 0 6px 20px; color: var(--mute); }
+.post-content img { max-width: 100%; height: auto; clip-path: var(--ch); }
+.post-content code { font-family: 'JetBrains Mono', monospace; font-size: .85em;
+  background: var(--panel); padding: 2px 7px; }
+.post-content pre { background: var(--panel); padding: 16px 18px; overflow-x: auto; }
+.post-content pre code { background: none; padding: 0; }
+.post-content ul, .post-content ol { padding-left: 24px; }
+.post-content li + li { margin-top: 6px; }
+.post-content hr { border: 0; border-top: 1px solid var(--line); }
+.post-foot { max-width: 72ch; margin-top: 30px; }
+.post-foot .post-tags a:hover span { color: var(--ink); }
+.post-siblings { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 56px; }
+.post-siblings .eyebrow { margin-bottom: 12px; }
+@media (max-width: 720px) {
+  .post-siblings { grid-template-columns: 1fr; }
+}
