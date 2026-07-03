@@ -24,11 +24,27 @@ maintained — this table is.)
 | 6 — Layouts + site chrome | ✅ | ✅ | ✅ (fixes applied + re-approved) | 53f3262, 9e30f30 |
 | 7 — Homepage static sections | ✅ | ✅ | ✅ | f006b55 |
 | 8 — Homepage data sections | ✅ | ✅ | ✅ (fixes applied + re-approved) | 8350276, 27a25dd |
-| 9 — Dashboard (logged-in home) | — | — | — | |
+| 9 — Dashboard (logged-in home) | ✅ | ✅ | ✅ (follow-ups applied) | 3c8adcf, 7dd9fde |
 | 10 — Blog pages | — | — | — | |
 | 11 — Maintenance + finishing pass | — | — | — | |
 
-**Next action:** Task 9 (dashboard).
+**Next action:** Task 10 (blog pages).
+
+**Notes from Task 9 (dashboard):**
+- **Task 11 finishing-pass items:** extract `partials/site/initials.htm` and
+  replace the 5 initials copies (team/shield.htm, site/nav.htm,
+  dashboard/{welcome,standings,matches}.htm) — own small commit; guard
+  "ROUND 0 OF N" pre-season edge (welcome + home/standings eyebrows);
+  standings `.tr` name column very narrow at 360px (hard wraps).
+- **Phase-2 plugin backlog:** the cross-team merge scaffolds
+  (dashboard/next-match.htm + matches.htm, kept in sync by comments) belong
+  in a plugin component/helper when plugins unfreeze; "Propose time" pill is
+  dead — NO UpcomingMatches type can return NULL-wbp matches (SQL excludes);
+  notifications pipeline dead upstream (Session::put commented out).
+- Dashboard verified against DB truth for AlphaCap + DoubleDuty (two-team);
+  no team-less fixture user exists — empty states verified from guards only.
+- Frontend login uses EMAIL (alphacap@dev.local), not username (dev/README
+  fixed).
 
 **Patterns established by Task 8 — Task 9 must reuse, not reinvent:**
 - **onRender pattern:** UpcomingMatches + RecentResults collect data in
@@ -50,7 +66,8 @@ maintained — this table is.)
 - Eager-load lazy relations after onRender (`.load(...)`) — but NOT on
   DivisionTable's teams (plain Support\Collection, no load()).
 - Shield partial: `{% partial 'team/shield' team=t size='lg'|'sm' %}`; logo
-  branch untested by fixtures (no team logos seeded) — verify with real dump.
+  branch untested by fixtures (no team logos seeded) — verify with real dump
+  (same for dashboard teamchip `.pic img` logo branch in welcome.htm).
 
 **Pre-production hardening (plugin-side, frozen for now — MUST be tracked to
 production cutover; from Task 8 quality review):**
@@ -63,6 +80,12 @@ production cutover; from Task 8 quality review):**
   eager relations) to show one card — bounded by time, not count.
 - No component caching (October v1) — decide caching strategy for the
   anonymous homepage before cutover.
+- **Dashboard multiplier (Task 9):** logged-in home runs UpcomingMatches
+  onRender 2×teams (next-match + matches duplicate the query set),
+  RecentResults ×distinct divisions, DivisionTable ×(team×division) — and can
+  never be page-cached. The Division.php Log::info + standings cascade above
+  fire on every dashboard hit too. Fold the duplicate UpcomingMatches runs
+  into one source when plugins unfreeze.
 
 **Notes from Task 7 reviews:**
 - Task 8 MUST replace hero's placeholder eyebrow (`EU · SEASON — · ROUND —`)

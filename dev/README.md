@@ -42,8 +42,9 @@ whose contents you care about.
   log). A second backend account `editor` / `dev12345` is created by
   `fixtures:seed` (used as the alternating blog-post author).
 - **Frontend**: any fixture user, password `dev12345`. Log in on
-  http://localhost:8090/user with the username, e.g.:
-  - `AlphaCap` — captain of *Alpha Sloths* (Division 1)
+  http://localhost:8090/user with the user's **email** (`<username
+  lowercased>@dev.local` — the login form rejects bare usernames), e.g.:
+  - `AlphaCap` (`alphacap@dev.local`) — captain of *Alpha Sloths* (Division 1)
   - `DoubleDuty` — member of *Alpha Sloths* AND captain of *The B Team*
   - `CasterCarl` — approved caster on an upcoming match
   - `PendingPete` — pending (unapproved) caster on an upcoming match
