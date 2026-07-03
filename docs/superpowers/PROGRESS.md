@@ -21,16 +21,28 @@ maintained — this table is.)
 | 3 — Design tokens + base styles | ✅ | ✅ | ✅ | 0a94652 |
 | 4 — Component library CSS | ✅ | ✅ | ✅ (fixes applied + re-approved) | c64e3ee, 0ff895b |
 | 5 — lounge.js | ✅ | ✅ | ✅ (fast-follows applied + re-approved) | 271c199, 7c96aad |
-| 6 — Layouts + site chrome | — | — | — | |
+| 6 — Layouts + site chrome | ✅ | ✅ | ✅ (fixes applied + re-approved) | 53f3262, 9e30f30 |
 | 7 — Homepage static sections | — | — | — | |
 | 8 — Homepage data sections | — | — | — | |
 | 9 — Dashboard (logged-in home) | — | — | — | |
 | 10 — Blog pages | — | — | — | |
 | 11 — Maintenance + finishing pass | — | — | — | |
 
-**Next action:** Task 6 (layouts + site chrome). Fold in the deferred Task 1
-notes (theme.yaml requires true-up incl. RainLab.User, title fallback,
-`{% styles %}`/`{% scripts %}` placeholders).
+**Next action:** Task 7 (homepage static sections).
+
+**Notes from Task 6 (site chrome):**
+- Shared chrome lives in `partials/site/head.htm` + `partials/site/scripts.htm`
+  — future CSS links/preloads/meta go THERE (both layouts consume them).
+- SetTimezone must stay rendered (`{% component 'SetTimezone' %}` in
+  default.htm before the scripts partial) — attach-only never detects tz.
+- `{% scripts %}` is LAST in scripts.htm (component-injected JS needs jQuery).
+- Skip link + `main#main` landmark exist; `html{scroll-padding-top:84px}`.
+- Nav Guides → `/guides` (old-theme landing page); bell → `/user` placeholder
+  (no notifications URL exists); bell count badge omitted (no data source).
+- Literal URLs (calendar, guides, faq, …) 404 under the new theme until their
+  phases port those pages — expected, frozen URL strings verified vs old theme.
+- Deferred polish: Escape-to-close burger; favicon manifest/theme-color zoo;
+  `lang="en"` hardcoded until localization is real.
 
 **Contracts established by Task 5 (lounge.js) — Tasks 6–9 templates must follow:**
 - Countdowns: emit datetimes with Twig `|date('c')` (offset-qualified ISO).

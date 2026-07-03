@@ -306,7 +306,7 @@ Also add a generated team-shield fallback: `.badge-hue-0` … `.badge-hue-11` (1
 
 - [ ] **Step 3: footer partial** — port from `reference-design.html`: brand col (logo, blurb, socials: Twitch `twitch.tv/heroes_lounge`, YouTube, Twitter, Facebook — Facebook/Twitter/Patreon/Discord URLs are in `themes/HeroesLounge-Theme/partials/modules/footer.htm`; the YouTube URL is in `partials/sections/follow.htm`), LEAGUE / GUIDES / COMMUNITY link columns (literal URL paths for unported pages, per the crash-course note), base bar "© 2017–2026 HEROES LOUNGE · RUN BY VOLUNTEERS" + privacy link (literal `/privacy-statement`).
 
-- [ ] **Step 4: default.htm layout** — full document: head (meta, title, CSS links, favicon from old theme's `partials/assets/favicons.htm`), `{% partial 'site/nav' %}`, `{% page %}`, `{% partial 'site/footer' %}`, scripts. Components: `[session] security="all"`, `[Navigation]`, `[SetTimezone]`, `[staticPage]`.
+- [ ] **Step 4: default.htm layout** — full document: head (meta, title, CSS links, favicon from old theme's `partials/assets/favicons.htm`), `{% partial 'site/nav' %}`, `{% page %}`, `{% partial 'site/footer' %}`, scripts. Components: `[session] security="all"`, `[Navigation]`, `[SetTimezone]`, `[staticPage]`. **SetTimezone must be attached AND rendered** (`{% component 'SetTimezone' %}` near end of body, after jQuery/framework load) — attaching alone never runs its detection JS and Navigation then persists a fallback timezone to the DB.
 
 - [ ] **Step 5: focused.htm layout** — same head/scripts, no nav/footer; centered 480px chamfered panel wrapper around `{% page %}`; small logo on top linking home. Components: `[session]` only.
 
@@ -428,6 +428,8 @@ Layout = `dashboard-v2.html` exactly: welcome strip; full-width next-match; symm
 - [ ] **Step 2: Responsive + a11y sweep** — every Phase 1 page at 360/768/1200px; keyboard-tab through nav, tabs, forms (focus visible everywhere); reduced-motion check (ticker static, no pulse); contrast spot-check muted text on panels (≥ AA).
 
 - [ ] **Step 3: Twig/console hygiene** — `storage/logs` clean of theme errors; browser console clean.
+
+- [ ] **Step 3.5: Timezone check** — match/countdown times reflect the browser timezone (SetTimezone detection ran: session holds the visitor tz; change the browser tz and confirm a displayed match time shifts).
 
 - [ ] **Step 4: Commit** — `git commit -m "feat(theme-next): maintenance page + phase 1 polish"`
 
