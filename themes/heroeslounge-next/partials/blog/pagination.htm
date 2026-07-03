@@ -3,19 +3,46 @@ description = "Numbered blog pagination; expects `posts` (paginator) + `pagePara
 {#- Restyles the old theme's partials/blogList/default.htm pagination pattern:
     this.page.baseFileName|page({ (pageParam): n }) — route persistence (the
     default) keeps the category page's :slug while the explicit number
-    overrides :page. Old theme shipped prev/next only (numbered loop was
-    commented out); the numbers are restored here as .pager chips
-    (pages.css, derived from the .tab chip pattern). -#}
+    overrides :page. The old theme shipped prev/next only (its numbered loop —
+    one chip per page, unbounded — was commented out); the numbers return here
+    as a BOUNDED window: 1 … current±2 … lastPage, with non-interactive
+    .pager-gap ellipses (pages.css) for the jumps, so the chip row never
+    exceeds 9 entries however many pages exist.
+
+    Page-1 URLs pass (pageParam): null — Rain's Router::urlFromPattern skips
+    an optional segment whose value fails strlen() and trims it off the tail,
+    so the chip gets the canonical param-less URL (/blog, /blog/category/:slug)
+    instead of /blog/1. Route persistence still fills :slug because array_merge
+    only overrides the page key.
+
+    Out-of-range requests (e.g. /blog/99): `current` is clamped to
+    1..lastPage for LINK purposes only — prev then points inside the real
+    range (lastPage - 1) and next disappears, so nothing links deeper into
+    the void. The on/aria-current checks compare the RAW posts.currentPage,
+    so no chip claims to be the (empty) page 99. -#}
 {% if posts.lastPage > 1 %}
+{% set current = max(1, min(posts.currentPage, posts.lastPage)) %}
+{% set windowStart = max(2, current - 2) %}
+{% set windowEnd = min(posts.lastPage - 1, current + 2) %}
 <nav class="pager mono" aria-label="Posts pages">
-    {% if posts.currentPage > 1 %}
-    <a href="{{ this.page.baseFileName|page({ (pageParam): (posts.currentPage - 1) }) }}" aria-label="Previous page">{% partial 'site/icon' name='chevron-left' %}</a>
+    {% if current > 1 %}
+    <a href="{{ this.page.baseFileName|page({ (pageParam): (current > 2 ? current - 1 : null) }) }}" aria-label="Previous page">{% partial 'site/icon' name='chevron-left' %}</a>
     {% endif %}
-    {% for p in 1..posts.lastPage %}
+    <a href="{{ this.page.baseFileName|page({ (pageParam): null }) }}"{% if posts.currentPage == 1 %} class="on" aria-current="page"{% endif %}>1</a>
+    {%- if windowStart > 2 %}
+    <span class="pager-gap" aria-hidden="true">…</span>
+    {%- endif %}
+    {%- if windowStart <= windowEnd %}{#- empty range when lastPage == 2: the 1 and lastPage chips already cover it -#}
+    {% for p in windowStart..windowEnd %}
     <a href="{{ this.page.baseFileName|page({ (pageParam): p }) }}"{% if posts.currentPage == p %} class="on" aria-current="page"{% endif %}>{{ p }}</a>
-    {% endfor %}
-    {% if posts.currentPage < posts.lastPage %}
-    <a href="{{ this.page.baseFileName|page({ (pageParam): (posts.currentPage + 1) }) }}" aria-label="Next page">{% partial 'site/icon' name='chevron-right' %}</a>
+    {%- endfor %}
+    {%- endif %}
+    {%- if windowEnd < posts.lastPage - 1 %}
+    <span class="pager-gap" aria-hidden="true">…</span>
+    {%- endif %}
+    <a href="{{ this.page.baseFileName|page({ (pageParam): posts.lastPage }) }}"{% if posts.currentPage == posts.lastPage %} class="on" aria-current="page"{% endif %}>{{ posts.lastPage }}</a>
+    {% if current < posts.lastPage %}
+    <a href="{{ this.page.baseFileName|page({ (pageParam): (current + 1) }) }}" aria-label="Next page">{% partial 'site/icon' name='chevron-right' %}</a>
     {% endif %}
 </nav>
 {% endif %}

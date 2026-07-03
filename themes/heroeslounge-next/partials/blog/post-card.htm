@@ -1,11 +1,14 @@
 description = "One .post card; expects `post` with its url already set by the component"
 ==
-{#- Same card markup as home/posts.htm (reference-design.html .post):
-    post.url comes from blogList's postPage property (or rikki's BlogPage
-    setUrl for prev/next siblings) — /blog/post/:slug, the frozen old-theme
-    URL. Author via post.findAuthor.login (dynamic method added to the blog
-    model by plugins/rikki/heroeslounge/Plugin.php boot()). Date-TZ: human
-    dates render in the app TZ (day granularity) — same note as home/posts. -#}
+{#- The .post card (reference-design.html) — single source for every post
+    card: the blog grid, the post page's prev/next siblings and home/posts.htm
+    all delegate here. post.url comes from blogList's postPage property (or
+    rikki's BlogPage setUrl for prev/next siblings) — /blog/post/:slug, the
+    frozen old-theme URL. Author via post.findAuthor.login (dynamic method
+    added to the blog model by plugins/rikki/heroeslounge/Plugin.php boot()).
+    Date-TZ: human dates render in the app TZ (day granularity); home/cast.htm
+    uses the viewer TZ via UpcomingMatches.timezone — unify when a viewer-TZ
+    source exists outside UpcomingMatches. -#}
 {% set author = post.findAuthor %}
 <a class="post chamfer" href="{{ post.url }}">
     <div class="post-meta mono">{% partial 'site/icon' name='calendar' %} {{ post.published_at|date('M j, Y') }}{% if author %} · {{ author.login }}{% endif %}</div>

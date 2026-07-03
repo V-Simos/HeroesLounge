@@ -158,6 +158,11 @@ October-v1-compatible releases, installed from GitHub:
      renders a graceful "not available" fallback because the shim has no tags
      (the OLD theme's page was an inert stub too: no components, empty body).
      Decide with real tag data whether a functional tag archive is worth porting.
+   - [ ] re-verify post-not-found semantics on `/blog/post/:slug` — the real
+     Indikator blogPage may honor its `redirectPage` property (redirect to
+     /blog) for a missing post BEFORE `pages/blog/post.htm`'s `onEnd()` 404
+     runs; the dev shim never redirects, so today the page 404s. Decide 404
+     vs redirect after the swap.
 4. `docker compose -f dev/docker-compose.yml exec web php artisan october:up`
    to apply any pending migrations against the dump.
 5. Frontend logins from the dump use password `1234` (per the anonymised-dump

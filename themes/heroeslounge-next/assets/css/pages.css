@@ -67,6 +67,9 @@
 .pager a.on { background: linear-gradient(135deg, var(--storm), #2E86DD); color: #041020; }
 .pager a:focus-visible { outline-offset: -4px; } /* clip-path clips outside outlines (see components.css) */
 .pager svg { width: 15px; height: 15px; }
+/* Non-interactive ellipsis between windowed page numbers (partials/blog/pagination.htm) */
+.pager .pager-gap { display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; min-height: 36px; font-size: 12px; font-weight: 600; color: var(--mute); }
 
 .blog-empty { color: var(--mute); }
 .blog-empty a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
@@ -81,18 +84,21 @@
 /* Post content is backend-authored rich HTML rendered |raw — style the tags
    it may contain. Fixture posts only exercise <p>; the rest is speced blind
    (h2/h3, blockquote, code/pre, img, lists, links) — re-verify with real data. */
-.post-content { max-width: 72ch; }
+.post-content { max-width: 72ch; overflow-wrap: break-word; } /* break-word: long unbroken URLs must wrap, not overflow the column */
 .post-content > * + * { margin-top: 16px; }        /* base.css zeroes all margins — restore prose flow */
 .post-content blockquote > * + * { margin-top: 12px; }
 .post-content h2, .post-content h3 { line-height: 1.25; }
 .post-content h2 { font-size: 1.45rem; margin-top: 36px; }
 .post-content h3 { font-size: 1.15rem; margin-top: 30px; }
+/* A post that opens with a heading shouldn't add heading-margin below .post-head */
+.post-content > h2:first-child, .post-content > h3:first-child { margin-top: 0; }
 /* Link affordance (WCAG 1.4.1): base.css strips link styling globally, which
    would leave prose links color-only/invisible — underline + storm here. */
 .post-content a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
 .post-content a:hover { color: var(--ink); }
 .post-content blockquote { border-left: 3px solid var(--storm); padding: 6px 0 6px 20px; color: var(--mute); }
 .post-content img { max-width: 100%; height: auto; clip-path: var(--ch); }
+.post-content iframe { max-width: 100%; } /* real posts embed fixed-width YouTube iframes */
 .post-content code { font-family: 'JetBrains Mono', monospace; font-size: .85em;
   background: var(--panel); padding: 2px 7px; }
 .post-content pre { background: var(--panel); padding: 16px 18px; overflow-x: auto; }

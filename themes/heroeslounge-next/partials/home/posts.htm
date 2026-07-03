@@ -24,20 +24,11 @@ postPage = "blog/post"
         </div>
         <div class="post-grid">
             {% for post in latestPosts %}
-            {% set author = post.findAuthor %}
-            {#- post.url comes from blogList's postPage = "blog/post" (ported in
-                Task 10) and renders /blog/post/:slug — the frozen old-theme URL.
-                Date-TZ: human dates render in the app TZ (day granularity);
-                cast.htm uses the viewer TZ via UpcomingMatches.timezone —
-                unify when a viewer-TZ source exists outside UpcomingMatches. -#}
-            <a class="post chamfer" href="{{ post.url }}">
-                <div class="post-meta mono">{% partial 'site/icon' name='calendar' %} {{ post.published_at|date('M j, Y') }}{% if author %} · {{ author.login }}{% endif %}</div>
-                <h3>{{ post.title }}</h3>
-                <p>{{ post.summary|striptags }}</p>
-                {% if post.categories|length > 0 %}
-                <div class="post-tags mono">{% for category in post.categories %}<span>{{ category.name }}</span>{% endfor %}</div>
-                {% endif %}
-            </a>
+            {#- Card markup lives in blog/post-card.htm — the single source for
+                every .post card (blog grid, post-page siblings, here). post.url
+                resolves via this component's postPage = "blog/post" (see the
+                partial's notes for the URL/author/date-TZ details). -#}
+            {% partial 'blog/post-card' post=post %}
             {% endfor %}
         </div>
     </div>
