@@ -1,0 +1,66 @@
+[UpcomingMatches]
+type = "all"
+daysInFuture = 14
+==
+{#- Next-cast panel (markup: dashboard-v2.html .cast-outer/.cast/.cast-teams/
+    .cast-mid/.cast-foot; the pulsing .dot head is from reference-design.html).
+    Rendered inside hero.htm's .hero-grid — outputs one grid item or nothing.
+
+    Data: rikki/heroeslounge [UpcomingMatches] type="all" — unplayed matches
+    with wbp between today and +daysInFuture, wbp ASC, eager-loaded teams/
+    casters/channels/division, grouped by date into the component's public
+    `datesToMatches` property. NOTE: the component collects its data in
+    onRender() (it has no onRun), which October only calls when the component
+    is rendered via {% component %} — and that would emit the plugin's old
+    Bootstrap partial. Invoking onRender() directly populates the property
+    without rendering plugin markup. (casterFilter is NOT used: it only
+    applies to type="caster".) -#}
+{% do UpcomingMatches.onRender() %}
+{#- Pick the first match (earliest wbp) with an APPROVED caster pivot;
+    spec-required fallback: the next scheduled match of any kind. Hide the
+    panel only when there are no upcoming matches at all. Matches missing a
+    second team can't fill a two-shield panel and are skipped. -#}
+{% set castMatch = null %}
+{% set fallbackMatch = null %}
+{% for dayMatches in UpcomingMatches.datesToMatches %}
+    {% for match in dayMatches %}
+        {% if match.teams|length >= 2 %}
+            {% if fallbackMatch is null %}{% set fallbackMatch = match %}{% endif %}
+            {% if castMatch is null %}
+                {% for caster in match.casters %}
+                    {% if castMatch is null and caster.pivot.approved == 1 %}{% set castMatch = match %}{% endif %}
+                {% endfor %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+{% set isCast = castMatch is not null %}
+{% set match = castMatch ?: fallbackMatch %}
+{% if match %}
+<div class="cast-outer">
+    <div class="cast chamfer">
+        <div class="p-head">
+            {#- match.channel = first attached Twitch channel (Match model accessor).
+                "TWITCH.TV/…" derived from the real channel URL, per the mockup head. -#}
+            <span class="live">{% if isCast %}<span class="dot" aria-hidden="true"></span>{% endif %}{{ isCast ? 'NEXT CAST' : 'NEXT MATCH' }}{% if isCast and match.channel %} · {{ match.channel.url|replace({'https://www.': '', 'https://': '', 'http://www.': '', 'http://': ''})|upper }}{% endif %}</span>
+        </div>
+        <div class="cast-teams">
+            <div class="cast-team">{% partial 'team/shield' team=match.teams[0] size='lg' %}<span>{{ match.teams[0].title }}</span></div>
+            <div class="cast-mid">
+                {#- |date('c') is the lounge.js countdown contract (offset-qualified
+                    ISO 8601); type="all" guarantees wbp is set. Ticks "xD HH:MM:SS". -#}
+                <span class="mono countdown" data-countdown="{{ match.wbp|date('c') }}">&mdash;</span>
+                <span class="mono starts">{{ match.wbp|date('D M j · H:i T', UpcomingMatches.timezone) }}</span>
+            </div>
+            <div class="cast-team">{% partial 'team/shield' team=match.teams[1] size='lg' %}<span>{{ match.teams[1].title }}</span></div>
+        </div>
+        <div class="cast-foot mono">
+            {#- "BO3": league format per the ruleset ("played as a Best of 3",
+                old theme content/static-pages/general-rules.htm) — format
+                copy, not match data. -#}
+            <span>{% if match.division %}{{ match.division.title|upper }} · {% endif %}{% if match.round %}ROUND {{ match.round }} · {% endif %}BO3</span>
+            {% if match.channel %}<a href="{{ match.channel.url }}" target="_blank" rel="noopener">{% partial 'site/icon' name='play' %} Open stream</a>{% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}

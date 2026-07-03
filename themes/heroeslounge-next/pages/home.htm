@@ -7,7 +7,14 @@ layout = "default"
 {% if user %}
 {# TODO(task-9): dashboard partials #}
 {% else %}
+{#- Section order matches reference-design.html: hero (with the next-cast
+    panel inside its grid) → results ticker + cards → standings → events →
+    how → posts → footer CTA. -#}
 {% partial 'home/hero' %}
+{% partial 'home/results' %}
+{% partial 'home/standings' %}
+{% partial 'home/events' %}
 {% partial 'home/how' %}
+{% partial 'home/posts' %}
 {% partial 'home/cta' %}
 {% endif %}

@@ -2,28 +2,36 @@ description = "Homepage hero (markup from docs/superpowers/specs/assets/referenc
 ==
 {#- Hero background (radial glows + grid-line ::after backdrop) lives in
     pages.css; structural .hero rules are in components.css.
-    Eyebrow + first chip carry em-dash placeholders until Task 8 attaches the
-    [UpcomingMatches] component and derives the season from the cast-panel
-    match's division.season — do not invent numbers here (spec forbids
-    hardcoded stats). -#}
+    Season source: the layout-attached Navigation component's
+    current_eu_amateurseasons (active EU amateur seasons, populated in the
+    component's init() so it exists on every page regardless of render order
+    — the same source site/nav.htm uses). Chosen over the cast-panel match's
+    division.season because it also works when no upcoming matches exist.
+    When no season is active, the eyebrow and the division-count chip are
+    omitted entirely (spec forbids placeholder/hardcoded numbers).
+    The cast panel partial fills the grid's second column (or renders
+    nothing, leaving the copy column standing alone). -#}
+{% set season = Navigation.current_eu_amateurseasons ? Navigation.current_eu_amateurseasons.first : null %}
 <section class="hero">
     <div class="wrap hero-grid">
         <div class="hero-copy">
-            {# TODO(task-8): live data — season/region/round from UpcomingMatches (cast match division.season) #}
-            <p class="eyebrow mono">EU · SEASON — · ROUND —</p>
+            {% if season %}
+            <p class="eyebrow mono">{{ season.region.title|upper }} · {{ season.title|upper }} · ROUND {{ season.current_round }}</p>
+            {% endif %}
             <h1>The Nexus,<br>every night.</h1>
-            <p class="lede">Heroes Lounge is the largest amateur Heroes of the Storm league. Five divisions, every skill level — and your matches cast live on Twitch.</p>
+            <p class="lede">Heroes Lounge is the largest amateur Heroes of the Storm league. Divisions for every skill level — and your matches cast live on Twitch.</p>
             <div class="cta-row">
-                <a class="btn btn-solid" href="/user">Join Season {% partial 'site/icon' name='arrow-right' %}</a>
+                <a class="btn btn-solid" href="/user">Join {{ season ? season.title : 'the Lounge' }} {% partial 'site/icon' name='arrow-right' %}</a>
                 <a class="btn btn-ghost" href="https://www.twitch.tv/heroes_lounge">{% partial 'site/icon' name='twitch' %} Watch live</a>
             </div>
             <ul class="chips mono">
-                {# TODO(task-8): live data — division count #}
-                <li>— divisions</li>
+                {% if season and season.divisions|length > 0 %}
+                <li>{{ season.divisions|length }} division{{ season.divisions|length > 1 ? 's' }}</li>
+                {% endif %}
                 <li>All MMRs welcome</li>
                 <li>Free, forever</li>
             </ul>
         </div>
-        {# TODO(task-8): cast panel (.cast-outer next-cast card) from UpcomingMatches #}
+        {% partial 'home/cast' %}
     </div>
 </section>

@@ -1,0 +1,39 @@
+[blogList]
+postsPerPage = 3
+sortOrder = "published_at desc"
+categoryPage = "blog/category"
+postPage = "blog/post"
+==
+{#- Latest posts (markup from reference-design.html .post cards). Wiring
+    matches the old theme's partials/sections/posts.htm: [blogList] with the
+    same properties (no categoryFilter -> all posts), blogList.posts populated
+    in the component's onRun(), author via post.findAuthor.login (a dynamic
+    method added to the blog model by plugins/rikki/heroeslounge/Plugin.php
+    boot()), tags rendered from post.categories. Empty state: no published
+    posts -> no section. -#}
+{% set latestPosts = blogList.posts %}
+{% if latestPosts and latestPosts|length > 0 %}
+<section class="sec">
+    <div class="wrap">
+        <div class="sec-head">
+            <div><p class="eyebrow mono">FROM THE BLOG</p><h2>Latest posts</h2></div>
+            {#- Blog list URL frozen from the old theme's pages/blog/list.htm
+                (url = "/blog/:page?"). -#}
+            <a class="sec-link mono" href="/blog">ALL POSTS {% partial 'site/icon' name='chevron-right' %}</a>
+        </div>
+        <div class="post-grid">
+            {% for post in latestPosts %}
+            {% set author = post.findAuthor %}
+            <a class="post chamfer" href="/blog/post/{{ post.slug }}">
+                <div class="post-meta mono">{% partial 'site/icon' name='calendar' %} {{ post.published_at|date('M j, Y') }}{% if author %} · {{ author.login }}{% endif %}</div>
+                <h3>{{ post.title }}</h3>
+                <p>{{ post.summary|striptags }}</p>
+                {% if post.categories|length > 0 %}
+                <div class="post-tags mono">{% for category in post.categories %}<span>{{ category.name }}</span>{% endfor %}</div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

@@ -1,0 +1,46 @@
+[blogList]
+postsPerPage = 3
+sortOrder = "published_at desc"
+categoryFilter = "events"
+categoryPage = "blog/category"
+postPage = "blog/post"
+==
+{#- Cups & events (markup from reference-design.html .event cards): the 3
+    newest posts in the blog category slug "events" via [blogList]
+    (Indikator.Content's Posts-list component; property names match the old
+    theme's pages/blog/category.htm front-matter). The component populates
+    its public `posts` property in onRun(), which October fires for
+    partial-attached components — no explicit render needed.
+
+    Fallback: when no "events" category exists, the component's own
+    loadCategory() returns null and listPosts() serves the 3 most recent
+    posts of any category. Empty state: no published posts at all -> no
+    section. Gold variant: post tagged "prize" — post.tags resolves to null
+    on installs whose blog plugin has no tag concept (the dev shim), and the
+    loop simply never runs. -#}
+{% set eventPosts = blogList.posts %}
+{% if eventPosts and eventPosts|length > 0 %}
+<section class="sec">
+    <div class="wrap">
+        <div class="sec-head">
+            <div><p class="eyebrow mono">BEYOND THE SEASON</p><h2>Cups &amp; events</h2></div>
+        </div>
+        <div class="event-grid">
+            {% for post in eventPosts %}
+            {% set gold = false %}
+            {% for tag in post.tags %}
+                {% if (tag.slug is defined and tag.slug == 'prize') or (tag.name is defined and tag.name|lower == 'prize') %}{% set gold = true %}{% endif %}
+            {% endfor %}
+            {#- Post URL pattern frozen from the old theme's
+                pages/blog/post.htm (url = "/blog/post/:slug"). -#}
+            <a class="event chamfer{% if gold %} event-gold{% endif %}" href="/blog/post/{{ post.slug }}">
+                <span class="event-meta mono">{{ post.published_at|date('M j, Y') }}</span>
+                <h3>{{ post.title }}</h3>
+                <p>{{ post.summary|striptags }}</p>
+                <span class="event-go mono">DETAILS {% partial 'site/icon' name='chevron-right' %}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

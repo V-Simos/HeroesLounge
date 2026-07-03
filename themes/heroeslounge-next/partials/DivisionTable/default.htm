@@ -1,0 +1,35 @@
+{#- Theme override for Rikki\LoungeViews\Components\DivisionTable (alias
+    "DivisionTable" in plugins/rikki/loungeviews/Plugin.php) — replaces the
+    plugin's Bootstrap partial. Data logic copied from
+    plugins/rikki/loungeviews/components/divisiontable/default.htm:
+    __SELF__.teams (getDivisionTableStandings(): pivot.match_count plus the
+    computed match_wins/map_wins/map_score), sliced
+    [__SELF__.startIndex : __SELF__.length], rank = loop.index + startIndex.
+
+    One override, two consumers:
+    - no teamId (homepage widget): startIndex 0 / length null -> top-5 slice;
+    - teamId set (dashboard, Task 9): the component computes a
+      surroundingEntries window around the team; __SELF__.selTeam row gets
+      the .you highlight.
+    Emits only the header + rows — consumers provide the wrapper (.table /
+    .p panel) and any table-foot link. Rows: # | team (shield + link, gold
+    leader with trophy) | P | W | Map W | Map ±. Disbanded teams keep the
+    mockup's dimmed .inact row (the old partial's active/inactive dot).
+    showScore mode (playoffs) is not used by any consumer of this theme yet
+    and is intentionally not ported. -#}
+<div class="tr th mono"><span>#</span><span>Team</span><span>P</span><span>W</span><span>Map W</span><span>Map ±</span></div>
+{% for team in __SELF__.teams[__SELF__.startIndex:(__SELF__.length ?: 5)] %}
+{% set rank = loop.index + __SELF__.startIndex %}
+<div class="tr{% if rank == 1 %} first{% endif %}{% if __SELF__.selTeam == team.id %} you{% endif %}{% if team.disbanded %} inact{% endif %}">
+    <span class="rank mono">{{ rank }}</span>
+    {#- Team page URL pattern frozen from the old theme's pages/team/view.htm
+        (url = "/team/view/:slug"). -#}
+    <span class="tteam">{% if rank == 1 %}<span class="gold-ic">{% partial 'site/icon' name='trophy' %}</span>{% endif %}{% partial 'team/shield' team=team size='sm' %}<a href="/team/view/{{ team.slug }}">{{ team.title }}</a></span>
+    <span class="num dim">{{ team.pivot.match_count }}</span>
+    <span class="num big">{{ team.match_wins }}</span>
+    <span class="num">{{ team.map_wins }}</span>
+    <span class="num {{ team.map_score > 0 ? 'pos' : (team.map_score < 0 ? 'neg' : 'dim') }}">{{ team.map_score > 0 ? '+' ~ team.map_score : team.map_score }}</span>
+</div>
+{% else %}
+<div class="tr"><span class="rank mono">–</span><span class="tteam">No active teams yet</span><span class="num dim"></span><span class="num"></span><span class="num"></span><span class="num"></span></div>
+{% endfor %}

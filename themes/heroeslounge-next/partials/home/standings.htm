@@ -1,0 +1,40 @@
+[DivisionTable]
+==
+{#- Standings widget (markup: reference-design.html section + dashboard-v2.html
+    .tr rows). [DivisionTable] is attached in this partial's front-matter like
+    the old theme's partials/user/standings.htm; each division tab renders it
+    with a runtime id ({% component 'DivisionTable' id=div.id %}), and the
+    output comes from this theme's component-partial override at
+    partials/DivisionTable/default.htm instead of the plugin's Bootstrap one.
+
+    Season source: the layout-attached Navigation component's
+    current_eu_amateurseasons (active EU amateur seasons, populated in init()
+    — same source site/nav.htm already uses). Empty state: no active season
+    (or a season without divisions) renders nothing. -#}
+{% set season = Navigation.current_eu_amateurseasons ? Navigation.current_eu_amateurseasons.first : null %}
+{% if season and season.divisions|length > 0 %}
+<section class="sec sec-alt">
+    <div class="wrap">
+        <div class="sec-head">
+            <div><p class="eyebrow mono">{{ season.region.title|upper }} {{ season.title|upper }} · ROUND {{ season.current_round }}</p><h2>Standings</h2></div>
+            {#- lounge.js tabs contract: [data-tabs] container, buttons with
+                data-tab-target=<panel id>, panels toggled via [hidden]. -#}
+            <div class="tabs" data-tabs role="tablist" aria-label="Division">
+                {% for div in season.divisions %}
+                {#- "Division N" abbreviates to the mockup's "DN" tab; anything
+                    else keeps its real title. -#}
+                <button class="tab{% if loop.first %} on{% endif %}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="standings-{{ div.id }}" data-tab-target="standings-{{ div.id }}">{{ div.title matches '/^Division \\d+$/' ? 'D' ~ (div.title|split(' ')|last) : div.title }}</button>
+                {% endfor %}
+            </div>
+        </div>
+        {% for div in season.divisions %}
+        <div class="table chamfer" id="standings-{{ div.id }}" role="tabpanel"{% if not loop.first %} hidden{% endif %}>
+            {% component 'DivisionTable' id = div.id %}
+            {#- Division page URL pattern frozen from the old theme's
+                pages/season/division.htm (url = "/:slug/:divslug"). -#}
+            <a class="table-foot mono" href="/{{ season.slug }}/{{ div.slug }}">FULL {{ div.title|upper }} TABLE {% partial 'site/icon' name='chevron-right' %}</a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
