@@ -353,10 +353,13 @@
 /* ---------- toast (AJAX error notices; lounge.js appends .toast divs to a
    fixed #toasts host it creates on demand — not in the mockups) ---------- */
 #toasts { position: fixed; right: 18px; bottom: 18px; z-index: 100; /* above .nav (50) */
-  display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+  display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+  pointer-events: none; /* don't swallow clicks in the gaps between stacked toasts */ }
 .toast { max-width: 360px; padding: 13px 18px; cursor: pointer;
+  pointer-events: auto; /* re-enable dismiss clicks on the toasts themselves */
   background: var(--panel2); border: 1px solid var(--red); color: var(--ink);
-  font-size: 14px; clip-path: var(--ch); }
+  font-size: 14px; clip-path: var(--ch);
+  overflow-wrap: anywhere; /* server errors carry unbreakable class names/URLs; clip-path would visually truncate overflow */ }
 
 /* ---------- focus affordance on clipped elements ---------- */
 /* Focus on clipped elements: outlines outside the border box are clipped
