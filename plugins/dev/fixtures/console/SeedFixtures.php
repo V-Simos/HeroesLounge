@@ -52,6 +52,7 @@ class SeedFixtures extends Command
 
         $this->wipe();
         $this->disableExternalModelEvents();
+        $this->warmThemeData();
         $this->resetBackendAdmin();
 
         $this->seedRegions();
@@ -127,6 +128,19 @@ class SeedFixtures extends Command
     {
         new Sloth(); // force the model to boot so there are listeners to flush
         Sloth::flushEventListeners();
+    }
+
+    /**
+     * Initialise the theme customisation row (cms_theme_data) with the
+     * theme.yaml defaults. October creates it lazily during the first page
+     * request, and that first request 500s because the CSS combiner sees an
+     * empty "color" setting; seeding it up-front avoids the one-time error.
+     */
+    protected function warmThemeData()
+    {
+        if (\Cms\Classes\Theme::exists('HeroesLounge-Theme')) {
+            \Cms\Models\ThemeData::forTheme(\Cms\Classes\Theme::load('HeroesLounge-Theme'));
+        }
     }
 
     /**
