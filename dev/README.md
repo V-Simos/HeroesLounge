@@ -18,6 +18,13 @@ docker compose -f dev/docker-compose.yml logs -f web   # until "Initializing Oct
 docker compose -f dev/docker-compose.yml exec web php artisan fixtures:seed
 ```
 
+`fixtures:seed` asks for confirmation before truncating (it wipes ~20 tables).
+For scripted / non-interactive use (e.g. `exec -T`), pass `--force`:
+
+```powershell
+docker compose -f dev/docker-compose.yml exec -T web php artisan fixtures:seed --force
+```
+
 Then open http://localhost:8090/ — the old HeroesLounge theme should render with
 fixture blog posts, an active "Season 30" with three divisions, standings,
 played and upcoming matches.
@@ -32,7 +39,8 @@ whose contents you care about.
 - **Backend**: http://localhost:8090/backend — login `admin`, password
   `dev12345` (`fixtures:seed` resets it; before the first seed, October
   generates a random admin password — it is printed in the `web` container
-  log).
+  log). A second backend account `editor` / `dev12345` is created by
+  `fixtures:seed` (used as the alternating blog-post author).
 - **Frontend**: any fixture user, password `dev12345`. Log in on
   http://localhost:8090/user with the username, e.g.:
   - `AlphaCap` — captain of *Alpha Sloths* (Division 1)
@@ -63,13 +71,15 @@ Mounted from the repo (live-editable, the whole point of the env):
 Baked into the image (`dev/docker/Dockerfile`), pinned to the last
 October-v1-compatible releases, installed from GitHub:
 
+(keep this table in sync with `dev/docker/Dockerfile`)
+
 | Plugin | Version |
 |---|---|
 | RainLab.User | v1.7.2 |
 | RainLab.Blog | v1.6.3 |
 | RainLab.Pages | v1.5.12 |
 | RainLab.Translate | v1.12.0 |
-| RainLab.GoogleAnalytics | v1.3.2 |
+| RainLab.GoogleAnalytics | v1.3.2 (provides the `googleTracker` component declared by every theme layout) |
 | RainLab.Location | v1.2.5 (provides `form_select_country()` used by the account page) |
 | OFFLINE.SiteSearch | v1.7.9 |
 | ToughDeveloper.ImageResizer | v1.4.0 (provides the `\| resize` Twig filter; shows a placeholder for missing logos) |
@@ -127,8 +137,8 @@ October-v1-compatible releases, installed from GitHub:
   set, `wbp` NULL, one with an approved caster + linked Twitch channel, one
   with a pending caster.
 - Blog: categories `events` + `announcements`, 5 posts (3 in `events`, one
-  featured, dates spread over the last 16 days, authored by the backend
-  admin).
+  featured, dates spread over the last 16 days, authors alternating between
+  the backend `admin` and the seeded `editor` user).
 
 ## Swapping in the real team dump later
 

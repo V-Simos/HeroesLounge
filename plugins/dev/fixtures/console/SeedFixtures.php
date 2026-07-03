@@ -4,6 +4,7 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Schema;
+use Symfony\Component\Console\Input\InputOption;
 
 use RainLab\User\Models\User;
 use Rikki\Heroeslounge\Models\Region;
@@ -48,6 +49,17 @@ class SeedFixtures extends Command
 
     public function handle()
     {
+        if (!$this->option('force')) {
+            $confirmed = $this->confirm(
+                'This TRUNCATES all fixture-owned tables (teams, seasons, divisions, matches, '
+                . 'games, maps, users/sloths, twitch channels, timeline, blog) and reseeds them. Continue?'
+            );
+            if (!$confirmed) {
+                $this->output->writeln('<comment>Aborted - nothing was changed. Use --force to skip this prompt.</comment>');
+                return 1;
+            }
+        }
+
         $this->output->writeln('<info>Seeding HeroesLounge dev fixtures...</info>');
 
         $this->wipe();
@@ -66,11 +78,21 @@ class SeedFixtures extends Command
 
         $this->output->writeln('');
         $this->output->writeln('<info>Done. Fixture accounts (frontend, password "' . self::PASSWORD . '"):</info>');
-        foreach ($this->sloths as $key => $sloth) {
+        foreach ($this->sloths as $sloth) {
             $user = $sloth->user;
             $this->output->writeln(sprintf('  %-14s %s', $user->username, $user->email));
         }
-        $this->output->writeln('<info>Backend: http://localhost:8090/backend - login "admin", password "' . self::PASSWORD . '".</info>');
+        $this->output->writeln('<info>Backend: ' . config('app.url') . '/backend - login "admin", password "' . self::PASSWORD . '".</info>');
+    }
+
+    /**
+     * Console options (Laravel 6 $name-style command).
+     */
+    protected function getOptions()
+    {
+        return [
+            ['force', 'f', InputOption::VALUE_NONE, 'Skip the destructive-truncate confirmation prompt (for scripted use).'],
+        ];
     }
 
     /**
@@ -108,12 +130,15 @@ class SeedFixtures extends Command
         ];
 
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
-        foreach ($tables as $table) {
-            if (Schema::hasTable($table)) {
-                DB::table($table)->truncate();
+        try {
+            foreach ($tables as $table) {
+                if (Schema::hasTable($table)) {
+                    DB::table($table)->truncate();
+                }
             }
+        } finally {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
         }
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         $this->output->writeln('  - wiped fixture tables');
     }
@@ -375,6 +400,8 @@ class SeedFixtures extends Command
         $d3 = $this->divisions['div3']->id;
 
         // --- Played matches (with games: maps, winners; scores maintained by Game events) ---
+        // map ids = 1-based position in the seedMaps() list (tables are truncated
+        // each run, so auto-increment ids restart at 1 in insertion order).
         $this->createMatch($d1, 1, 'alpha', 'long', Carbon::now()->subDays(14), [
             ['map' => 2, 'winner' => 'alpha'],
             ['map' => 3, 'winner' => 'alpha'],
@@ -495,6 +522,10 @@ class SeedFixtures extends Command
 
     protected function seedBlog()
     {
+        // Look the admin up by login (like resetBackendAdmin()) instead of
+        // assuming it has id 1.
+        $admin = \Backend\Models\User::where('login', 'admin')->first();
+
         // Second backend user so posts have varied authors (idempotent:
         // backend_users is not truncated by wipe()).
         $editor = \Backend\Models\User::where('login', 'editor')->first();
@@ -567,8 +598,8 @@ class SeedFixtures extends Command
             $post->featured = $spec['featured'];
             $post->published = true;
             $post->published_at = Carbon::now()->subDays($spec['days_ago']);
-            // Alternate authors: default admin (id 1) and the "editor" user.
-            $post->author_id = ($i % 2 === 0) ? 1 : $editor->id;
+            // Alternate authors: the "admin" and "editor" backend users.
+            $post->author_id = ($i % 2 === 0) ? $admin->id : $editor->id;
             $post->save();
             $post->categories()->attach($spec['category']->id);
         }

@@ -11,6 +11,7 @@ RUN set -eux; \
     git clone --depth 1 --branch v1.6.3  https://github.com/rainlab/blog-plugin            plugins/rainlab/blog; \
     git clone --depth 1 --branch v1.5.12 https://github.com/rainlab/pages-plugin           plugins/rainlab/pages; \
     git clone --depth 1 --branch v1.12.0 https://github.com/rainlab/translate-plugin       plugins/rainlab/translate; \
+    # Provides the googleTracker component declared by all theme layouts.
     git clone --depth 1 --branch v1.3.2  https://github.com/rainlab/googleanalytics-plugin plugins/rainlab/googleanalytics; \
     # Provides the form_select_country()/form_select_state() Twig functions the theme uses.
     git clone --depth 1 --branch v1.2.5  https://github.com/rainlab/location-plugin        plugins/rainlab/location; \
