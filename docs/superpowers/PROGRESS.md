@@ -20,7 +20,7 @@ maintained — this table is.)
 | 2 — Self-hosted fonts | ✅ | ✅ | ✅ | d932116 |
 | 3 — Design tokens + base styles | ✅ | ✅ | ✅ | 0a94652 |
 | 4 — Component library CSS | ✅ | ✅ | ✅ (fixes applied + re-approved) | c64e3ee, 0ff895b |
-| 5 — lounge.js | — | — | — | |
+| 5 — lounge.js | ✅ | ✅ | ✅ (fast-follows applied + re-approved) | 271c199, 7c96aad |
 | 6 — Layouts + site chrome | — | — | — | |
 | 7 — Homepage static sections | — | — | — | |
 | 8 — Homepage data sections | — | — | — | |
@@ -28,7 +28,24 @@ maintained — this table is.)
 | 10 — Blog pages | — | — | — | |
 | 11 — Maintenance + finishing pass | — | — | — | |
 
-**Next action:** Task 5 (lounge.js).
+**Next action:** Task 6 (layouts + site chrome). Fold in the deferred Task 1
+notes (theme.yaml requires true-up incl. RainLab.User, title fallback,
+`{% styles %}`/`{% scripts %}` placeholders).
+
+**Contracts established by Task 5 (lounge.js) — Tasks 6–9 templates must follow:**
+- Countdowns: emit datetimes with Twig `|date('c')` (offset-qualified ISO).
+  Timezone-less strings parse as viewer-local = silently wrong. Rescan on
+  October `ajaxUpdateComplete` is wired (AJAX-swapped partials tick).
+- Tabs: `.tabs > .tab` buttons with `data-tab-target` in a `[data-tabs]`
+  container; panels toggled via `hidden`. ARIA tab semantics only if the
+  template provides role=tablist/tab/tabpanel + aria-controls.
+- Mobile nav: lounge.js expects `#burger` and `#site-links` ids.
+- Toasts: showToast is IIFE-private by design; if success/flash toasts are
+  needed later, expose one namespaced global — do NOT write a second impl.
+- jQuery 1.12.4 vendored (byte-copy of old theme, required by October v1
+  framework.js). Post-rework spike: upgrade to 3.7.x (framework floor 1.9.1).
+- Deferred polish: toast keyboard-dismiss/hover-pause; outer-tab click resets
+  nested inner-tabs state (accepted — nested tabs unplanned).
 
 **Notes from Task 4 reviews:**
 - **Do not revert:** the "focus affordance on clipped elements" section at the
@@ -69,8 +86,10 @@ default.htm is rewritten):**
   RainLab.User / Rikki.LoungeViews that the layout actually uses) — true up or comment.
 - `<title>{{ this.page.title }} — Heroes Lounge</title>` renders a dangling
   "— Heroes Lounge" if a page has an empty title.
-- Layout has no `{% styles %}` / `{% scripts %}` / `{% framework %}` and no CSRF
-  meta yet — required before any data-request/AJAX work (Task 5 wires framework).
+- Layout has no `{% styles %}` / `{% scripts %}` yet — required before plugin
+  components that inject assets (Task 6 adds them). ~~CSRF meta~~ NOT needed:
+  this install's framework.js reads the XSRF-TOKEN cookie, not a meta tag
+  (verified in container during Task 5 review).
 - `lang="en"` hardcoded; switch to active locale when translation work starts.
 
 ## Resuming a session
