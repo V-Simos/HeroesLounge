@@ -5,6 +5,9 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; }
 
+/* Native UI — form controls, scrollbars, autofill — must match the dark theme. */
+:root { color-scheme: dark; }
+
 body {
   background: var(--void);
   color: var(--ink);
