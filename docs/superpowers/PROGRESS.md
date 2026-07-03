@@ -18,7 +18,7 @@ maintained — this table is.)
 | 0.5 — Docker dev env + fixtures | ✅ | ✅ | ✅ (fixes applied + re-approved) | 806e802, b2f7d5e, 520336a, 902c7c6, 559d994 |
 | 1 — Theme skeleton | ✅ | ✅ | ✅ approved (minor notes → Task 6) | 619f7db |
 | 2 — Self-hosted fonts | ✅ | ✅ | ✅ | d932116 |
-| 3 — Design tokens + base styles | — | — | — | |
+| 3 — Design tokens + base styles | ✅ | ✅ | ✅ | 0a94652 |
 | 4 — Component library CSS | — | — | — | |
 | 5 — lounge.js | — | — | — | |
 | 6 — Layouts + site chrome | — | — | — | |
@@ -28,7 +28,17 @@ maintained — this table is.)
 | 10 — Blog pages | — | — | — | |
 | 11 — Maintenance + finishing pass | — | — | — | |
 
-**Next action:** Task 3 (design tokens + base styles).
+**Next action:** Task 4 (component library CSS).
+
+**Notes from Task 3 reviews (plan already amended for the first two):**
+- Task 4 must move the `prefers-reduced-motion` block from base.css to the END
+  of components.css (source-order cascade; media queries add no specificity).
+- Task 10 must add prose link affordance (underline + storm) inside post
+  content — base.css strips link styling globally.
+- Production cutover (Phase 3+): decide CSS cache-busting (`?v=` vs October
+  combiner). Plain `| theme` links have no Cache-Control today.
+- `--deep` token is not in dashboard-v2's block (only reference-design); it's
+  included in tokens.css with a source comment — intentional, keep.
 
 **Notes from Task 2 reviews:**
 - 8 woff2 files, not 9 — the plan header said 9 but the variant list totals 8

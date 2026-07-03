@@ -255,6 +255,8 @@ New (not in mockups) — form controls, one consistent set:
 
 Also add a generated team-shield fallback: `.badge-hue-0` … `.badge-hue-11` (12 hue steps, the hsl gradient pattern from the mockups) — Twig will pick one by hashing the team name when no logo attachment exists.
 
+**Also MOVE the `prefers-reduced-motion` block from base.css to the END of components.css** (Task 3 quality-review finding: `@media` adds no specificity, so the animation/transform rules this task adds to components.css — later in source order than base.css — would silently defeat `animation: none`. The block must come after the rules it neutralizes.)
+
 - [ ] **Step 2: Verify** — temporarily drop a `.btn-solid` button and a `.p` panel into `home.htm`, reload, compare against `dashboard-v2.html` opened side-by-side in a browser. Remove the scratch markup after.
 
 - [ ] **Step 3: Commit** — `git commit -m "feat(theme-next): component library css"`
@@ -407,7 +409,7 @@ Layout = `dashboard-v2.html` exactly: welcome strip; full-width next-match; symm
 
 - [ ] **Step 2: list/category/tag markup** — `.post-grid` of `.post` cards + section header + chamfered pagination (restyle old `partials/blog/pagination.htm` pattern in new classes).
 
-- [ ] **Step 3: post page** — article layout: eyebrow (date · author), Chakra Petch title, post content in a readable measure (`max-width: 72ch`), styled `content` typography in `pages.css` (h2/h3, blockquote with storm left bar, images chamfered, code in mono on panel background), tag row, related posts via old `blogRelated` partial pattern if trivially portable — otherwise skip (YAGNI).
+- [ ] **Step 3: post page** — article layout: eyebrow (date · author), Chakra Petch title, post content in a readable measure (`max-width: 72ch`), styled `content` typography in `pages.css` (h2/h3, blockquote with storm left bar, images chamfered, code in mono on panel background, **and link affordance: `a` inside post content gets underline + storm color** — base.css strips link styling globally, which is a WCAG 1.4.1 failure in prose), tag row, related posts via old `blogRelated` partial pattern if trivially portable — otherwise skip (YAGNI).
 
 - [ ] **Step 4: Verify** — `/blog`, a real post, a category page: readable, styled, pagination works, old URLs intact.
 
