@@ -30,6 +30,7 @@ daysInFuture = 14
     {% do UpcomingMatches.onRender() %}
     {% for dayMatches in UpcomingMatches.datesToMatches %}
         {% for match in dayMatches %}
+            {# wbp is the raw DB 'Y-m-d H:i:s' string (Match has no wbp date-cast) — lexicographic == chronological; %06d pad assumes id < 1e6 #}
             {% set key = match.wbp ~ '|' ~ ('%06d'|format(match.id)) %}
             {% if match.winner_id is null and match.teams|length >= 2 and rowsByKey[key] is not defined %}
                 {% set rowsByKey = rowsByKey|merge({ (key): { match: match, team: team } }) %}
@@ -50,6 +51,7 @@ daysInFuture = 14
     {% endfor %}
     {% set opponent = opponent ?: match.teams[1] %}
     {% set words = team.title|trim|split(' ') %}
+    {# Initials pattern also lives in team/shield.htm (canonical for teams), site/nav.htm (usernames), dashboard/welcome.htm, dashboard/standings.htm #}
     {% set initials = words|length > 1 and words[1]
         ? ((words[0]|slice(0, 1)) ~ (words[1]|slice(0, 1)))|upper
         : words[0]|slice(0, 2)|upper %}

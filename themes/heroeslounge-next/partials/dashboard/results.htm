@@ -40,6 +40,7 @@ maxItems = 5
     {% do RecentResults.setProperty('id', div.id) %}
     {% do RecentResults.onRender() %}
     {% for match in RecentResults.matches %}
+        {# wbp is the raw DB 'Y-m-d H:i:s' string (Match has no wbp date-cast) but updated_at IS a Carbon — |date normalizes both to 'Y-m-d H:i:s' so lexicographic == chronological; %06d pad assumes id < 1e6 #}
         {% set key = (match.wbp ?: match.updated_at)|date('Y-m-d H:i:s') ~ '|' ~ ('%06d'|format(match.id)) %}
         {% if match.teams|length >= 2 and rowsByKey[key] is not defined %}
             {% set rowsByKey = rowsByKey|merge({ (key): match }) %}
@@ -47,11 +48,15 @@ maxItems = 5
         {% endif %}
     {% endfor %}
 {% endfor %}
-{% set season = divs|length > 0 and divs[0].season ? divs[0].season : null %}
+{# First division that HAS a season (a seasonless playoff division may come first) — Twig-1-safe loop, no arrow-function filter. #}
+{% set season = null %}
+{% for div in divs %}
+    {% if season is null and div.season %}{% set season = div.season %}{% endif %}
+{% endfor %}
 <div class="p chamfer">
     {#- ALL RESULTS -> the season overview (every round's results) of the
-        user's first division; URL pattern frozen from the old theme's
-        pages/season/view.htm (url = "/:slug"). -#}
+        user's first division with a season; URL pattern frozen from the old
+        theme's pages/season/view.htm (url = "/:slug"). -#}
     <div class="p-head"><span>RECENT RESULTS · YOUR DIVISIONS</span>{% if season %}<a href="/{{ season.slug }}">ALL RESULTS {% partial 'site/icon' name='chevron-right' %}</a>{% endif %}</div>
     {% for key in keys|sort|reverse|slice(0, 6) %}
     {% set match = rowsByKey[key] %}

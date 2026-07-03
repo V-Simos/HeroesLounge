@@ -18,6 +18,7 @@ daysInFuture = 14
 
     daysInFuture=14 mirrors the old partials/user/matches.htm horizon; a next
     match further out than 14 days renders the off-season empty state. -#}
+{# Cross-team merge scaffold — keep in sync with dashboard/matches.htm (same guard + per-team onRender pattern; only the accumulator differs) #}
 {% set teams = user.sloth ? user.sloth.teams : [] %}
 {% set nextMatch = null %}
 {% set nextTeam = null %}
