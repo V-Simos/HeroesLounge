@@ -481,6 +481,21 @@ class SeedFixtures extends Command
 
     protected function seedBlog()
     {
+        // Second backend user so posts have varied authors (idempotent:
+        // backend_users is not truncated by wipe()).
+        $editor = \Backend\Models\User::where('login', 'editor')->first();
+        if (!$editor) {
+            $editor = new \Backend\Models\User();
+            $editor->login = 'editor';
+            $editor->email = 'editor@dev.local';
+            $editor->first_name = 'Eddie';
+            $editor->last_name = 'Editor';
+            $editor->password = self::PASSWORD;
+            $editor->password_confirmation = self::PASSWORD;
+            $editor->is_activated = true;
+            $editor->save();
+        }
+
         $events = new Category();
         $events->name = 'events';
         $events->slug = 'events';
@@ -529,7 +544,7 @@ class SeedFixtures extends Command
             ],
         ];
 
-        foreach ($posts as $spec) {
+        foreach ($posts as $i => $spec) {
             $post = new Blog();
             $post->title = $spec['title'];
             $post->summary = $spec['summary'];
@@ -538,7 +553,8 @@ class SeedFixtures extends Command
             $post->featured = $spec['featured'];
             $post->published = true;
             $post->published_at = Carbon::now()->subDays($spec['days_ago']);
-            $post->author_id = 1; // default backend admin
+            // Alternate authors: default admin (id 1) and the "editor" user.
+            $post->author_id = ($i % 2 === 0) ? 1 : $editor->id;
             $post->save();
             $post->categories()->attach($spec['category']->id);
         }
