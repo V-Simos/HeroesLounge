@@ -22,13 +22,22 @@ maintained — this table is.)
 | 4 — Component library CSS | ✅ | ✅ | ✅ (fixes applied + re-approved) | c64e3ee, 0ff895b |
 | 5 — lounge.js | ✅ | ✅ | ✅ (fast-follows applied + re-approved) | 271c199, 7c96aad |
 | 6 — Layouts + site chrome | ✅ | ✅ | ✅ (fixes applied + re-approved) | 53f3262, 9e30f30 |
-| 7 — Homepage static sections | — | — | — | |
+| 7 — Homepage static sections | ✅ | ✅ | ✅ | f006b55 |
 | 8 — Homepage data sections | — | — | — | |
 | 9 — Dashboard (logged-in home) | — | — | — | |
 | 10 — Blog pages | — | — | — | |
 | 11 — Maintenance + finishing pass | — | — | — | |
 
-**Next action:** Task 7 (homepage static sections).
+**Next action:** Task 8 (homepage data sections).
+
+**Notes from Task 7 reviews:**
+- Task 8 MUST replace hero's placeholder eyebrow (`EU · SEASON — · ROUND —`)
+  and `— divisions` chip with live data AND delete the TODO(task-8) comments
+  in the same commit; cast panel fills hero's empty second grid column.
+- `.hero` background in pages.css is page-scoped by convention only — if a
+  future page reuses class="hero", scope it then.
+- `.how` items are divs (mockup fidelity); ul/li would be better SR semantics
+  — optional deviation, only with team buy-in.
 
 **Notes from Task 6 (site chrome):**
 - Shared chrome lives in `partials/site/head.htm` + `partials/site/scripts.htm`
