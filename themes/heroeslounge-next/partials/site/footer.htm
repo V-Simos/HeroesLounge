@@ -18,6 +18,7 @@ description = "Site footer (markup from docs/superpowers/specs/assets/reference-
       /privacy-statement     content/static-pages/privacy-statement.htm (RainLab.Pages)
     "Current season" mirrors the nav League link (parameterized season URL,
     hidden when no EU amateur season is active). -#}
+{# Active-season derivation — canonical copy + rationale in site/nav.htm; keep the 5 sites in sync (nav, footer, hero, results, standings) #}
 {% set currentSeason = Navigation.current_eu_amateurseasons ? Navigation.current_eu_amateurseasons.first : null %}
 <footer class="footer">
     <div class="wrap foot-grid">

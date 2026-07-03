@@ -15,6 +15,12 @@ description = "Sticky site nav (markup from docs/superpowers/specs mockups)"
       /user                  pages/user/account.htm     url = "/user/:code?"
     There is no current-events landing page in the old theme (only the legacy
     /events/archive accordion), so Events points at the events blog category. -#}
+{#- Active-season derivation — CANONICAL copy. Policy: "the current season" is
+    the first active EU amateur season from the layout-attached Navigation
+    component (populated in its init(), so available on every page regardless
+    of render order); when none is active, season-dependent UI is omitted.
+    The same derivation is repeated in site/footer.htm, home/hero.htm,
+    home/results.htm and home/standings.htm — keep the 5 sites in sync. -#}
 {% set currentSeason = Navigation.current_eu_amateurseasons ? Navigation.current_eu_amateurseasons.first : null %}
 <header class="nav">
     <div class="wrap nav-in">

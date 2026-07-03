@@ -16,10 +16,21 @@
     leader with trophy) | P | W | Map W | Map ±. Disbanded teams keep the
     mockup's dimmed .inact row (the old partial's active/inactive dot).
     showScore mode (playoffs) is not used by any consumer of this theme yet
-    and is intentionally not ported. -#}
+    and is intentionally not ported.
+
+    N+1 note: no `.load('smallLogo')` for the shields here — the component's
+    getDivisionTableStandings() returns an October\Rain\Support\Collection
+    (plain support collection, not Eloquent), which has no load(); the
+    shields' smallLogo/logo lazy-load per rendered row (<=5 rows per tab). -#}
 <div class="tr th mono"><span>#</span><span>Team</span><span>P</span><span>W</span><span>Map W</span><span>Map ±</span></div>
-{% for team in __SELF__.teams[__SELF__.startIndex:(__SELF__.length ?: 5)] %}
-{% set rank = loop.index + __SELF__.startIndex %}
+{#- Clamp: with teamId set, the plugin computes a negative startIndex for
+    divisions smaller than 1+surroundingEntries teams (its end-of-table
+    adjustment subtracts past zero). Twig treats a negative slice start as
+    slice-from-end -> wrong window and negative ranks; the plugin's own
+    partial has this bug — the override must not. -#}
+{% set start = max(__SELF__.startIndex, 0) %}
+{% for team in __SELF__.teams[start:(__SELF__.length ?: 5)] %}
+{% set rank = loop.index + start %}
 <div class="tr{% if rank == 1 %} first{% endif %}{% if __SELF__.selTeam == team.id %} you{% endif %}{% if team.disbanded %} inact{% endif %}">
     <span class="rank mono">{{ rank }}</span>
     {#- Team page URL pattern frozen from the old theme's pages/team/view.htm

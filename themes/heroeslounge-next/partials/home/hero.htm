@@ -11,6 +11,7 @@ description = "Homepage hero (markup from docs/superpowers/specs/assets/referenc
     omitted entirely (spec forbids placeholder/hardcoded numbers).
     The cast panel partial fills the grid's second column (or renders
     nothing, leaving the copy column standing alone). -#}
+{# Active-season derivation — canonical copy + rationale in site/nav.htm; keep the 5 sites in sync (nav, footer, hero, results, standings) #}
 {% set season = Navigation.current_eu_amateurseasons ? Navigation.current_eu_amateurseasons.first : null %}
 <section class="hero">
     <div class="wrap hero-grid">

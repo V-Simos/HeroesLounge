@@ -150,6 +150,9 @@ October-v1-compatible releases, installed from GitHub:
 3. Install the real marketplace plugins (at minimum Indikator.Content) via the
    backend's *Settings → Updates → Attach Project*, then remove the
    `dev/docker/plugins/indikator` mount from `dev/docker-compose.yml`.
+   - [ ] verify events gold-tag rendering (`prize` tag → `.event-gold`) — the
+     dev shim has no tags, so home/events.htm's gold branch is unexercised
+     until the real plugin is in.
 4. `docker compose -f dev/docker-compose.yml exec web php artisan october:up`
    to apply any pending migrations against the dump.
 5. Frontend logins from the dump use password `1234` (per the anonymised-dump

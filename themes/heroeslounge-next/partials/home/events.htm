@@ -32,7 +32,13 @@ postPage = "blog/post"
                 {% if (tag.slug is defined and tag.slug == 'prize') or (tag.name is defined and tag.name|lower == 'prize') %}{% set gold = true %}{% endif %}
             {% endfor %}
             {#- Post URL pattern frozen from the old theme's
-                pages/blog/post.htm (url = "/blog/post/:slug"). -#}
+                pages/blog/post.htm (url = "/blog/post/:slug").
+                TODO(task-10): switch to post.url once blog/post page exists
+                (postPage resolves against the ACTIVE theme, so post.url is
+                empty until that page is ported here).
+                Date-TZ: human dates render in the app TZ (day granularity);
+                cast.htm uses the viewer TZ via UpcomingMatches.timezone —
+                unify when a viewer-TZ source exists outside UpcomingMatches. -#}
             <a class="event chamfer{% if gold %} event-gold{% endif %}" href="/blog/post/{{ post.slug }}">
                 <span class="event-meta mono">{{ post.published_at|date('M j, Y') }}</span>
                 <h3>{{ post.title }}</h3>

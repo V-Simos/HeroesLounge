@@ -11,6 +11,7 @@
     current_eu_amateurseasons (active EU amateur seasons, populated in init()
     — same source site/nav.htm already uses). Empty state: no active season
     (or a season without divisions) renders nothing. -#}
+{# Active-season derivation — canonical copy + rationale in site/nav.htm; keep the 5 sites in sync (nav, footer, hero, results, standings) #}
 {% set season = Navigation.current_eu_amateurseasons ? Navigation.current_eu_amateurseasons.first : null %}
 {% if season and season.divisions|length > 0 %}
 <section class="sec sec-alt">

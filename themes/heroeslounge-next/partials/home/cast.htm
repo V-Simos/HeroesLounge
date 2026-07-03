@@ -37,6 +37,10 @@ daysInFuture = 14
 {% set isCast = castMatch is not null %}
 {% set match = castMatch ?: fallbackMatch %}
 {% if match %}
+{#- The component eager-loads teams/teams.logo/casters/channels/division; the
+    only lazy touch left below is the shields' smallLogo — one query for both
+    teams instead of one per shield. -#}
+{% do match.teams.load('smallLogo') %}
 <div class="cast-outer">
     <div class="cast chamfer">
         <div class="p-head">

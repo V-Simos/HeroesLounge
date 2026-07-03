@@ -24,6 +24,13 @@ postPage = "blog/post"
         <div class="post-grid">
             {% for post in latestPosts %}
             {% set author = post.findAuthor %}
+            {#- Post URL frozen from the old theme (url = "/blog/post/:slug").
+                TODO(task-10): switch to post.url once blog/post page exists
+                (postPage resolves against the ACTIVE theme, so post.url is
+                empty until that page is ported here).
+                Date-TZ: human dates render in the app TZ (day granularity);
+                cast.htm uses the viewer TZ via UpcomingMatches.timezone —
+                unify when a viewer-TZ source exists outside UpcomingMatches. -#}
             <a class="post chamfer" href="/blog/post/{{ post.slug }}">
                 <div class="post-meta mono">{% partial 'site/icon' name='calendar' %} {{ post.published_at|date('M j, Y') }}{% if author %} · {{ author.login }}{% endif %}</div>
                 <h3>{{ post.title }}</h3>

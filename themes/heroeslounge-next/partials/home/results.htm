@@ -14,10 +14,15 @@ maxItems = 6
     onRender() — which must be called explicitly anyway: the component only
     collects data in onRender(), and rendering it via {% component %} would
     emit the plugin's old Bootstrap partial. -#}
+{# Active-season derivation — canonical copy + rationale in site/nav.htm; keep the 5 sites in sync (nav, footer, hero, results, standings) #}
 {% set season = Navigation.current_eu_amateurseasons ? Navigation.current_eu_amateurseasons.first : null %}
 {% if season %}
 {% do RecentResults.setProperty('id', season.id) %}
 {% do RecentResults.onRender() %}
+{#- Eager-load what the ticker/cards below actually read: the component only
+    eager-loads teams+logo, so division, channels and the shields' smallLogo
+    would otherwise lazy-load per match (~24 extra queries for 6 cards). -#}
+{% do RecentResults.matches.load('division', 'channels', 'teams.smallLogo') %}
 {% set results = RecentResults.matches %}
 {#- Empty state: no played matches (or no active season, above) — no ticker,
     no section, no empty shells. -#}
@@ -59,7 +64,11 @@ maxItems = 6
                 <div class="match-top mono">
                     {% if match.division %}<span class="divtag">{{ match.division.title|upper|replace({'DIVISION ': 'DIV '}) }}</span>{% endif %}
                     {#- Match page URL frozen from the old theme's
-                        pages/match/view.htm (url = "/match/view/:id"). -#}
+                        pages/match/view.htm (url = "/match/view/:id").
+                        Date-TZ: human dates render in the app TZ (day
+                        granularity); cast.htm uses the viewer TZ via
+                        UpcomingMatches.timezone — unify when a viewer-TZ
+                        source exists outside UpcomingMatches. -#}
                     <a href="/match/view/{{ match.id }}">{{ (match.wbp ?: match.updated_at)|date('M j') }}</a>
                     {% if match.channels|length > 0 %}<a class="vod" href="{{ (match.channels|first).url }}" target="_blank" rel="noopener">VOD {% partial 'site/icon' name='chevron-right' %}</a>{% endif %}
                 </div>
