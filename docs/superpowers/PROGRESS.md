@@ -16,8 +16,8 @@ maintained — this table is.)
 |---|---|---|---|---|
 | 0 — Verify dev env | ✅ resolved: no Vagrant/dump; Docker chosen | n/a | n/a | 7b4d7d2 (plan amendment) |
 | 0.5 — Docker dev env + fixtures | ✅ | ✅ | ✅ (fixes applied + re-approved) | 806e802, b2f7d5e, 520336a, 902c7c6, 559d994 |
-| 1 — Theme skeleton | ✅ | ✅ | ⏳ **PENDING — resume here** | 619f7db |
-| 2 — Self-hosted fonts | — | — | — | |
+| 1 — Theme skeleton | ✅ | ✅ | ✅ approved (minor notes → Task 6) | 619f7db |
+| 2 — Self-hosted fonts | ✅ | ✅ | ✅ | d932116 |
 | 3 — Design tokens + base styles | — | — | — | |
 | 4 — Component library CSS | — | — | — | |
 | 5 — lounge.js | — | — | — | |
@@ -28,8 +28,28 @@ maintained — this table is.)
 | 10 — Blog pages | — | — | — | |
 | 11 — Maintenance + finishing pass | — | — | — | |
 
-**Next action:** run the code-quality review for Task 1 (commit `619f7db` — theme
-skeleton, ~40 lines; spec review already passed), then proceed to Task 2.
+**Next action:** Task 3 (design tokens + base styles).
+
+**Notes from Task 2 reviews:**
+- 8 woff2 files, not 9 — the plan header said 9 but the variant list totals 8
+  (plan doc fixed). Weight↔file mapping verified at binary level (fonttools).
+- Latin-only subset lacks latin-ext glyphs (ł, č, ş, ő…) — EU roster names will
+  per-glyph fall back mid-heading. Watch during visual QA with real data; fix
+  would be adding latin-ext subsets (Phase-level decision, not a Task 2 defect).
+- For Task 3 wiring: load fonts.css before other CSS; preload only
+  chakra-petch-700 + barlow-regular with `crossorigin` (required even
+  same-origin); no italic faces shipped → `<em>` synthesizes oblique (check one
+  real blog post during QA).
+
+**Deferred minor notes from Task 1 quality review (address in Task 6 when
+default.htm is rewritten):**
+- theme.yaml `require` list is aspirational (lists RainLab.Blog unused; omits
+  RainLab.User / Rikki.LoungeViews that the layout actually uses) — true up or comment.
+- `<title>{{ this.page.title }} — Heroes Lounge</title>` renders a dangling
+  "— Heroes Lounge" if a page has an empty title.
+- Layout has no `{% styles %}` / `{% scripts %}` / `{% framework %}` and no CSRF
+  meta yet — required before any data-request/AJAX work (Task 5 wires framework).
+- `lang="en"` hardcoded; switch to active locale when translation work starts.
 
 ## Resuming a session
 

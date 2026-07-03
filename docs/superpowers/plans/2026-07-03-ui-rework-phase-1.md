@@ -161,7 +161,7 @@ git commit -m "feat(theme-next): theme skeleton"
 ### Task 2: Self-hosted fonts
 
 **Files:**
-- Create: `themes/heroeslounge-next/assets/fonts/*.woff2` (9 files)
+- Create: `themes/heroeslounge-next/assets/fonts/*.woff2` (8 files)
 - Create: `themes/heroeslounge-next/assets/css/fonts.css`
 
 - [ ] **Step 1: Download woff2 files** (google-webfonts-helper API; latin subset)
