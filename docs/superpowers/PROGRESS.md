@@ -19,7 +19,7 @@ maintained — this table is.)
 | 1 — Theme skeleton | ✅ | ✅ | ✅ approved (minor notes → Task 6) | 619f7db |
 | 2 — Self-hosted fonts | ✅ | ✅ | ✅ | d932116 |
 | 3 — Design tokens + base styles | ✅ | ✅ | ✅ | 0a94652 |
-| 4 — Component library CSS | — | — | — | |
+| 4 — Component library CSS | ✅ | ✅ | ✅ (fixes applied + re-approved) | c64e3ee, 0ff895b |
 | 5 — lounge.js | — | — | — | |
 | 6 — Layouts + site chrome | — | — | — | |
 | 7 — Homepage static sections | — | — | — | |
@@ -28,7 +28,19 @@ maintained — this table is.)
 | 10 — Blog pages | — | — | — | |
 | 11 — Maintenance + finishing pass | — | — | — | |
 
-**Next action:** Task 4 (component library CSS).
+**Next action:** Task 5 (lounge.js).
+
+**Notes from Task 4 reviews:**
+- **Do not revert:** the "focus affordance on clipped elements" section at the
+  end of components.css (outline-offset -4px). clip-path clips outlines drawn
+  outside the border box — the mockups' +3px offset is invisible on chamfered
+  elements (WCAG 2.4.7). A fidelity pass must NOT restore the mockup behavior.
+- Design-pass items (fidelity-frozen for now): `.pill.cast` ≈4.4:1 contrast
+  (sub-AA at 10px); `.btn-solid` focus ring is storm-on-storm (visible but
+  modest); `.avatar .pic`/`.teamchip .pic` duplicate `.badge-hue-7` gradient;
+  font-family literals repeated ~15× are token candidates when the freeze lifts.
+- `.tr:not(.th):hover` from reference-design deliberately not ported
+  (dashboard-v2's row system has no hover) — one-line add if Task 7/8 wants it.
 
 **Notes from Task 3 reviews (plan already amended for the first two):**
 - Task 4 must move the `prefers-reduced-motion` block from base.css to the END
