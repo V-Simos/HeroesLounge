@@ -26,10 +26,17 @@ maintained — this table is.)
 | 8 — Homepage data sections | ✅ | ✅ | ✅ (fixes applied + re-approved) | 8350276, 27a25dd |
 | 9 — Dashboard (logged-in home) | ✅ | ✅ | ✅ (follow-ups applied) | 3c8adcf, 7dd9fde |
 | 10 — Blog pages | ✅ | ✅ | ✅ (fixes applied + re-approved) | 9330c5d, 0d0347f |
-| 11 — Maintenance + finishing pass | — | — | — | |
+| 11 — Maintenance + finishing pass | ✅ | ✅ | ✅ | 74f4d7f, 2ec1cec, dc20200 |
 
-**Next action:** Task 11 (maintenance page + finishing pass) — includes the
-accumulated Task-11 items listed under the Task 9 notes below.
+**Next action:** ✅ **PHASE 1 COMPLETE** — all 11 tasks implemented and passed
+spec + quality review. Remaining before merge/PR: final whole-branch review,
+then `superpowers:finishing-a-development-branch`.
+
+**Line-ending note (investigated Task 11):** a Task-11 concern claimed the
+whole repo is CRLF. VERIFIED FALSE at byte level (`git ls-files --eol` +
+`xxd`): all rework blobs are **LF**, matching the upstream LF baseline. The
+`git cat-file | grep -c $'\r'` check that raised it is a false positive
+(`grep -c` counts lines, not CRs). No remediation needed.
 
 **Notes from Task 10 (blog):**
 - blog/post-card.htm is the single source for .post card markup (home/posts
