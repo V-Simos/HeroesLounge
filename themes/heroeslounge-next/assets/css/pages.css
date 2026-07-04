@@ -14,6 +14,7 @@
    storm-accented word (same em treatment as the .logo), muted lede, Discord
    button. No mockup — derived from the established design language. */
 .maint { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+.maint .eyebrow { margin-bottom: 0; } /* the flex gap owns the rhythm; drop base.css's .eyebrow 10px margin */
 .maint h1 { font-size: clamp(1.9rem, 6vw, 2.6rem); font-weight: 700; line-height: 1.05; letter-spacing: .01em; }
 .maint h1 em { font-style: normal; color: var(--storm); }
 .maint-lede { color: var(--mute); font-size: 15.5px; }
