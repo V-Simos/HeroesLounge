@@ -28,9 +28,23 @@ maintained — this table is.)
 | 10 — Blog pages | ✅ | ✅ | ✅ (fixes applied + re-approved) | 9330c5d, 0d0347f |
 | 11 — Maintenance + finishing pass | ✅ | ✅ | ✅ | 74f4d7f, 2ec1cec, dc20200 |
 
-**Next action:** ✅ **PHASE 1 COMPLETE** — all 11 tasks implemented and passed
-spec + quality review. Remaining before merge/PR: final whole-branch review,
-then `superpowers:finishing-a-development-branch`.
+**Next action:** ✅ **PHASE 1 COMPLETE + final whole-theme review passed.**
+All 11 tasks through spec + quality review; final cross-cutting review (commit
+`60eb94b`) found & fixed one AA regression (chamfered `.post`/`.event` card
+links had no visible keyboard focus ring — the Task-4 inset-ring convention
+wasn't extended to cards added in Tasks 7/8/10; fixed + verified live) and the
+standings eyebrow separator. Ready for `finishing-a-development-branch`.
+
+**Deferred from final review (Phase-2 / polish — non-blocking):**
+- Dashboard `.p-head` panel labels are `<div>/<span>`, not headings → SR heading
+  nav skips dashboard content. Promote to `h2` or `aria-labelledby` the panels.
+- External-link open behavior inconsistent (stream/VOD new-tab; hero/Discord/
+  socials same-tab) — pick one convention.
+- Unused icon branches `user-plus`, `newspaper` in site/icon.htm (seeded per
+  Task 6 plan; keep for Phase 2 or drop).
+- `.input:focus` dead `outline-offset:2px` (components.css:320) — harmlessly
+  overridden by the -4px affordance rule; left byte-intact per Task 5's
+  mandated-form-block preservation.
 
 **Line-ending note (investigated Task 11):** a Task-11 concern claimed the
 whole repo is CRLF. VERIFIED FALSE at byte level (`git ls-files --eol` +
