@@ -17,7 +17,9 @@
 <section class="sec sec-alt">
     <div class="wrap">
         <div class="sec-head">
-            <div><p class="eyebrow mono">{{ season.region.title|upper }} {{ season.title|upper }} · ROUND {{ season.current_round }}</p><h2>Standings</h2></div>
+            {#- Pre-season guard: omit "· ROUND n" when current_round < 1 (0 or
+                null before the season's first round starts). -#}
+            <div><p class="eyebrow mono">{{ season.region.title|upper }} {{ season.title|upper }}{% if season.current_round >= 1 %} · ROUND {{ season.current_round }}{% endif %}</p><h2>Standings</h2></div>
             {#- lounge.js tabs contract: [data-tabs] container, buttons with
                 data-tab-target=<panel id>, panels toggled via [hidden]. -#}
             <div class="tabs" data-tabs role="tablist" aria-label="Division">

@@ -381,6 +381,13 @@
 }
 @media (max-width: 480px) {
   .how-grid { grid-template-columns: 1fr; }
+  /* Standings name column at phone width (new — the mockup only held short
+     names): the tightened .tr grid (720px block) squeezes the 1fr name track
+     until overflow-wrap:anywhere shatters real team names one char per line.
+     Below 480px, single-line the name and ellipsize the overflow instead. The
+     shield + trophy stay fixed-width (flex-shrink:0); only the <a> shrinks. */
+  .tteam { overflow: hidden; }
+  .tteam a { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   /* .mrow at phone width (new — the mockup rows only ever held short names):
      the 92px timestamp + >=118px pill/score leave the flexible middle ~20px,
      shattering real team names one character per line. Wrap instead:

@@ -22,7 +22,10 @@ description = "Dashboard welcome strip: eyebrow, greeting, team chips"
     <div class="wrap welcome-in">
         <div>
             {% if season %}
-            <p class="eyebrow mono">{% if season.region %}{{ season.region.title|upper }} · {% endif %}{{ season.title|upper }} · ROUND {{ season.current_round }} OF {{ season.round_length }}</p>
+            {#- Pre-season guard: a season not yet started has current_round 0
+                (or null) — drop the "ROUND n OF m" segment rather than print
+                "ROUND 0 OF m". -#}
+            <p class="eyebrow mono">{% if season.region %}{{ season.region.title|upper }} · {% endif %}{{ season.title|upper }}{% if season.current_round >= 1 %} · ROUND {{ season.current_round }} OF {{ season.round_length }}{% endif %}</p>
             {% endif %}
             <h1>Welcome back, {{ user.username }}.</h1>
         </div>
