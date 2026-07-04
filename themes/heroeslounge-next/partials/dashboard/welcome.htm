@@ -12,8 +12,8 @@ description = "Dashboard welcome strip: eyebrow, greeting, team chips"
     Team chips: one per user.sloth.teams entry; pivot.is_captain adds .cap
     (gold inset) + the gold CAPTAIN label. Chip pic: the team logo when one
     exists (untested by fixtures — no logos seeded; same caveat as
-    team/shield.htm), else initials via the same first-two-words pattern as
-    site/nav.htm's avatar and team/shield.htm. -#}
+    team/shield.htm), else the shared site/initials monogram of team.title
+    (same partial as the nav avatar and team/shield). -#}
 {% set teams = user.sloth ? user.sloth.teams : [] %}
 {% set firstTeam = teams|length > 0 ? teams.first : null %}
 {% set firstDiv = firstTeam and firstTeam.active_divisions|length > 0 ? firstTeam.active_divisions.first : null %}
@@ -30,13 +30,9 @@ description = "Dashboard welcome strip: eyebrow, greeting, team chips"
         <div class="teamchips">
             {% for team in teams %}
             {% set logo = team.smallLogo ?: team.logo %}
-            {% set words = team.title|trim|split(' ') %}
-            {% set initials = words|length > 1 and words[1]
-                ? ((words[0]|slice(0, 1)) ~ (words[1]|slice(0, 1)))|upper
-                : words[0]|slice(0, 2)|upper %}
             {#- Team page URL pattern frozen from the old theme's
                 pages/team/view.htm (url = "/team/view/:slug"). -#}
-            <a class="teamchip{% if team.pivot.is_captain %} cap{% endif %}" href="/team/view/{{ team.slug }}"><span class="pic" aria-hidden="true">{% if logo %}<img src="{{ logo.path }}" alt="" loading="lazy">{% else %}{{ initials }}{% endif %}</span> {{ team.title }}{% if team.pivot.is_captain %} <span class="c">CAPTAIN</span>{% endif %}</a>
+            <a class="teamchip{% if team.pivot.is_captain %} cap{% endif %}" href="/team/view/{{ team.slug }}"><span class="pic" aria-hidden="true">{% if logo %}<img src="{{ logo.path }}" alt="" loading="lazy">{% else %}{% partial 'site/initials' name=team.title %}{% endif %}</span> {{ team.title }}{% if team.pivot.is_captain %} <span class="c">CAPTAIN</span>{% endif %}</a>
             {% endfor %}
         </div>
         {% endif %}

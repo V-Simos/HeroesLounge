@@ -12,8 +12,8 @@
 
     Tabs follow the lounge.js contract ([data-tabs] container, .tab buttons
     with data-tab-target, panels toggled via [hidden]) + ARIA tab semantics;
-    labels are the mockup's "SC · DIV 1" shape (team initials as in
-    team/shield.htm, "Division N" -> "DIV N"). Single team+division: no tabs,
+    labels are the mockup's "SC · DIV 1" shape (team initials via the shared
+    site/initials partial, "Division N" -> "DIV N"). Single team+division: no tabs,
     the division moves into the panel head.
 
     Empty state: a user with no team (or no active division) gets no panel at
@@ -32,11 +32,7 @@
         {% if entries|length > 1 %}
         <div class="tabs" data-tabs role="tablist" aria-label="Your teams">
             {% for e in entries %}
-            {% set words = e.team.title|trim|split(' ') %}
-            {% set initials = words|length > 1 and words[1]
-                ? ((words[0]|slice(0, 1)) ~ (words[1]|slice(0, 1)))|upper
-                : words[0]|slice(0, 2)|upper %}
-            <button class="tab{% if loop.first %} on{% endif %}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="dash-standings-{{ e.div.id }}-{{ e.team.id }}" data-tab-target="dash-standings-{{ e.div.id }}-{{ e.team.id }}">{{ initials }} · {{ e.div.title|upper|replace({'DIVISION ': 'DIV '}) }}</button>
+            <button class="tab{% if loop.first %} on{% endif %}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="dash-standings-{{ e.div.id }}-{{ e.team.id }}" data-tab-target="dash-standings-{{ e.div.id }}-{{ e.team.id }}">{% partial 'site/initials' name=e.team.title %} · {{ e.div.title|upper|replace({'DIVISION ': 'DIV '}) }}</button>
             {% endfor %}
         </div>
         {% endif %}

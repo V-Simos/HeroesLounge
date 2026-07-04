@@ -41,13 +41,9 @@ description = "Sticky site nav (markup from docs/superpowers/specs mockups)"
             <a href="/calendar">Calendar</a>
             <a href="{{ 'blog/list'|page({}, false) }}">Blog</a>
             {% if user %}
-            {# Avatar initials: first letter of each of the first two words of the username, or its first two letters when it is a single word — uppercased. #}
-            {% set nameParts = (user.username | trim) | split(' ', 2) %}
-            {% set initials = nameParts | length > 1 and nameParts[1]
-                ? ((nameParts[0] | slice(0, 1)) ~ (nameParts[1] | slice(0, 1))) | upper
-                : nameParts[0] | slice(0, 2) | upper %}
+            {# Avatar monogram: shared site/initials partial (first letter of each of the first two words of the username, or its first two letters when single-word — uppercased). #}
             <a class="bell" href="/user" aria-label="Notifications">{% partial 'site/icon' name='bell' %}</a>
-            <a class="avatar" href="/user"><span class="pic" aria-hidden="true">{{ initials }}</span> {{ user.username }}</a>
+            <a class="avatar" href="/user"><span class="pic" aria-hidden="true">{% partial 'site/initials' name=user.username %}</span> {{ user.username }}</a>
             {% else %}
             <a class="signin" href="/user">Sign in</a>
             <a class="btn btn-solid btn-sm" href="/user">Join Season</a>

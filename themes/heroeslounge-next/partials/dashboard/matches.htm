@@ -50,11 +50,6 @@ daysInFuture = 14
         {% if opponent is null and t.id != team.id %}{% set opponent = t %}{% endif %}
     {% endfor %}
     {% set opponent = opponent ?: match.teams[1] %}
-    {% set words = team.title|trim|split(' ') %}
-    {# Initials pattern also lives in team/shield.htm (canonical for teams), site/nav.htm (usernames), dashboard/welcome.htm, dashboard/standings.htm #}
-    {% set initials = words|length > 1 and words[1]
-        ? ((words[0]|slice(0, 1)) ~ (words[1]|slice(0, 1)))|upper
-        : words[0]|slice(0, 2)|upper %}
     {% set casterPending = false %}
     {% for caster in match.casters %}
         {% if caster.pivot.approved == 0 %}{% set casterPending = true %}{% endif %}
@@ -64,7 +59,7 @@ daysInFuture = 14
             ("SAT 20:00"), date beyond ("JUL 12") — in the viewer TZ via the
             component's SetTimezone-fed timezone (as home/cast.htm). -#}
         <span class="when">{% if match.wbp is null %}TBD{% elseif date(match.wbp) < date('+7 days') %}{{ match.wbp|date('D H:i', UpcomingMatches.timezone)|upper }}{% else %}{{ match.wbp|date('M j', UpcomingMatches.timezone)|upper }}{% endif %}</span>
-        <span class="who">{{ initials }} <i>vs</i> {{ opponent.title }}</span>
+        <span class="who">{% partial 'site/initials' name=team.title %} <i>vs</i> {{ opponent.title }}</span>
         {% if casterPending %}<span class="pill cast">Cast requested</span>{% elseif match.wbp %}<span class="pill ok">Scheduled</span>{% else %}<span class="pill warn">Propose time</span>{% endif %}
     </div>
     {% else %}
