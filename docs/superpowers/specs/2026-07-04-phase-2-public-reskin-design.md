@@ -46,21 +46,22 @@ Content pages via the `[staticPage]` mechanism already wired into the Phase-1 `d
 
 - **Rules:** general ruleset, playoff rules, tournament ruleset
 - **Legal:** privacy statement
-- **Guides:** guides index + signup guide + scheduling/reporting + uploading replays + captain's guide
+- **Guides:** guides index + signup guide + scheduling/reporting + uploading replays + captain's guide *(exact member set + URLs reconciled at port time — the content dir contains a likely-superseded "…playing-your-frist-game" duplicate to dedupe against)*
 - **Records:** general hall of fame
+- **Help:** FAQ (`/faq` — a live `pages/faq.htm` rendering the `faqpage.htm` content; the Phase-1 footer already links `/faq`, so it 404s until ported)
 - **Ops:** seeding rules (file `general-test.htm` — misleading name), season schedule
 - **Division-S:** crew, ruleset (+ playoffs), qualifier standings, schedule, standings *(the last two are hand-maintained collapsible/tabbed tables — the biggest static-content lift; reuse lounge.js tabs / a collapse behavior)*
 - **Events:** `/events/archive` *(see Open Items — may need a theme-level static-menu definition; if that can't stay purely presentational, keep it on the old theme via a literal link)*
 
 ### 3.3 DEFER → Phase 3
 
-Account/auth (`/user/:code?`, `/user/view/:id`, forgot-password), team create/manage/match, applications, caster tooling (`/user/casterschedule`, `/general/casterstatistics`), and the RSS feed. These stay on the old theme, reached via the literal-URL rule, until Phase 3.
+Account/auth (`/user/:code?`, `/user/view/:id`, forgot-password), team create/manage/match, applications, caster tooling (`/user/casterschedule`, `/general/casterstatistics`), the RSS feed, and `/timezone` (an account-adjacent JS-invoked session-timezone endpoint, not a designed page; nothing in the new theme links it). These stay on the old theme, reached via the literal-URL rule, until Phase 3.
 
 ### 3.4 DROP — not ported
 
 - **Retired utilities:** `/contact` (500s on a missing partial) → point users to Discord (already linked site-wide); `/search` (needs the absent `OFFLINE.SiteSearch` plugin) → dropped. Neither appears in the Phase-1 nav.
 - **Statistics:** `/statistics`, `/statistics/hero/*` — orphaned (no inbound links); dropped for now.
-- **Verifiably dead (scoping pass, grep-evidenced):** `/ext-div/:id` (hidden staff tool), `/general/nacasterstatistics` (hardcoded S17 dupe), the 2019-era `divisionS/*` static set (crew/general/standings/ruleset/schedule), `/general/rules`, `/general/staffpage`, `/general`, `/divisionsoverview` (all hidden/superseded), `/testriggingpage` (dev artifact), Method Mayhem + Heroes Cup pages (concluded events).
+- **Verifiably dead (scoping pass, grep-evidenced):** `/ext-div/:id` (hidden staff tool), `/general/nacasterstatistics` (hardcoded S17 dupe), the 2019-era **old `/divisionS/*` CMS pages** (`pages/divisionS/{crew,general,standings,ruleset,schedule}.htm` — distinct from, and superseded by, the live `content/static-pages/division-s-*` files ported in Wave 2), `/general/rules`, `/general/staffpage`, `/general`, `/divisionsoverview` (all hidden/superseded), `/testriggingpage` (dev artifact), Method Mayhem + Heroes Cup pages (concluded events).
 
 ### 3.5 Open items (non-blocking)
 
@@ -86,7 +87,7 @@ Account/auth (`/user/:code?`, `/user/view/:id`, forgot-password), team create/ma
 
 ## 5. Key dependencies & new shared units
 
-**Hard ordering:** season/view before division/playoff; match-card partial + ViewMatch before the pages that link matches; nothing in Phase 2 depends on the deferred auth surface (that's the point of the viewing-first scope).
+**Hard ordering:** season/view before division/playoff; the **match-card partial** before the pages that render/link match cards (the `ViewMatch` detail page itself can land later — frozen literal URLs decouple a link's source from its target page existing, per the Phase-1 rule); nothing in Phase 2 depends on the deferred auth surface (that's the point of the viewing-first scope).
 
 **New shared partials/behaviors** (added to the Phase-1 set of `team/shield`, `site/icon`, `site/initials`, the `DivisionTable` override, and lounge.js tabs/countdown/toast):
 
