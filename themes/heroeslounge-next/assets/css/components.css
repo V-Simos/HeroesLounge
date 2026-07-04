@@ -418,8 +418,11 @@
 
 /* ---------- focus affordance on clipped elements ---------- */
 /* Focus on clipped elements: outlines outside the border box are clipped
-   away by clip-path, so pull the ring inside the chamfered edge. */
-.btn:focus-visible, .tab:focus-visible, .socials a:focus-visible, .teamchip:focus-visible { outline-offset: -4px; }
+   away by clip-path, so pull the ring inside the chamfered edge.
+   INVARIANT: any new focusable element carrying .chamfer (or its own
+   clip-path) MUST be added here, or its keyboard focus ring is invisible. */
+.btn:focus-visible, .tab:focus-visible, .socials a:focus-visible, .teamchip:focus-visible,
+.post:focus-visible, .event:focus-visible { outline-offset: -4px; }
 .input:focus, .select:focus, .textarea:focus { outline-offset: -4px; }
 
 /* ---------- reduced motion (must stay LAST: @media adds no specificity, so this
