@@ -476,6 +476,30 @@
   filter: blur(7px); transition: filter .2s ease; }
 body.reveal-spoilers .score-masked { filter: none; }
 
+/* ---------- spoilers toggle (SpoilersToggle override — restyled switch) ----------
+   A pill toggle in the design tokens: the native checkbox is overlaid on the
+   track (full-size, transparent) so the whole switch is one click target and
+   the frozen script's `.switch input` selector still finds it; the knob is the
+   track's ::after, slid on :checked. Pill (border-radius) not chamfer: a toggle
+   reads as a switch, so no focus-affordance-list entry is needed (focus ring
+   sits on the track, outside no clip-path). */
+.spoiler-toggle { display: inline-flex; align-items: center; gap: 10px; }
+.spoiler-toggle .lbl { font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--mute); font-weight: 600; }
+.spoiler-switch { position: relative; display: inline-flex; cursor: pointer; }
+.spoiler-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
+  opacity: 0; cursor: pointer; }
+.spoiler-switch .track { width: 46px; height: 25px; border-radius: 999px;
+  background: rgba(136,156,215,0.18); box-shadow: inset 0 0 0 1px var(--line);
+  transition: background .18s ease, box-shadow .18s ease; }
+.spoiler-switch .track::after { content: ""; position: absolute; top: 3px; left: 3px;
+  width: 19px; height: 19px; border-radius: 50%; background: var(--mute);
+  transition: transform .18s ease, background .18s ease; }
+.spoiler-switch input:checked + .track { background: rgba(79,179,242,0.28);
+  box-shadow: inset 0 0 0 1px rgba(79,179,242,0.6); }
+.spoiler-switch input:checked + .track::after { transform: translateX(21px); background: var(--storm); }
+.spoiler-switch input:focus-visible + .track { outline: 2px solid var(--storm); outline-offset: 2px; }
+
 /* ---------- focus affordance on clipped elements ---------- */
 /* Focus on clipped elements: outlines outside the border box are clipped
    away by clip-path, so pull the ring inside the chamfered edge.
@@ -493,4 +517,5 @@ body.reveal-spoilers .score-masked { filter: none; }
   .dot { animation: none; }
   .btn:hover { transform: none; }
   .hl-node-card, .hl-name, .hl-score, .score-masked { transition: none; }
+  .spoiler-switch .track, .spoiler-switch .track::after { transition: none; }
 }

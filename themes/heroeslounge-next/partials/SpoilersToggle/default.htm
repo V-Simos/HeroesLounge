@@ -1,0 +1,48 @@
+{#- Theme override for Rikki\LoungeViews\Components\SpoilersToggle (alias
+    "SpoilersToggle" in plugins/rikki/loungeviews/Plugin.php) — replaces the
+    plugin's Bootstrap .switch/.slider partial, whose CSS lives only in the OLD
+    theme (themes/HeroesLounge-Theme/assets/css/spoilerstoggle.css, NOT loaded
+    here) and would otherwise render as a bare unstyled checkbox.
+
+    Restyled to the design system (.spoiler-switch, components.css). The label
+    keeps a bare `switch` class so the frozen {% put scripts %} block below —
+    copied BYTE-FOR-BYTE from the plugin default so the callback + cookie
+    contract is preserved exactly — can still target `.switch input`:
+      - callCallback() invokes the page callback (hlToggleSpoilers) with
+        showSpoilers, so the page toggles body.reveal-spoilers.
+      - on ready: reflects the showSpoilers COOKIE into the checkbox and fires
+        the callback once (correct initial state across reloads).
+      - on click: persists via the component's onSetShowSpoilers AJAX handler
+        (queues the cookie 30 days) and re-fires the callback on success. -#}
+<div class="spoiler-toggle">
+    <span class="lbl mono">Spoilers</span>
+    <label class="switch spoiler-switch">
+        <input type="checkbox">
+        <span class="track"></span>
+    </label>
+</div>
+
+{% put scripts %}
+<script type="text/javascript">
+function callCallback(data) {
+    {% if __SELF__.callbackName %}
+    if (typeof {{__SELF__.callbackName}} === "function") {
+        {{__SELF__.callbackName}}(data.showSpoilers);
+    }
+    {% endif %}
+}
+
+jQuery(document).ready(function() {
+    var checkbox = jQuery('.switch input');
+    checkbox.prop('checked', {{__SELF__.showSpoilers}} > 0);
+    callCallback({showSpoilers: {{__SELF__.showSpoilers}}});
+
+    checkbox.click(function() {
+        jQuery.request('onSetShowSpoilers', {
+            data: {showSpoilers: jQuery(this).is(':checked') ? 1 : 0},
+            success: callCallback
+        });
+    });
+});
+</script>
+{% endput %}
