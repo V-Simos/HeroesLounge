@@ -43,7 +43,7 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 | 0 — Bracket-render spike (throwaway) | ✅ | ✅ | ✅ (approve-with-nits → fixed) | 160ac0c, 69028c1, 93b79ae |
 | 1 — Shared match-card partial | ✅ | ✅ | ✅ (nits fixed + verified) | 275fe2b, 4795a9c |
 | 2 — Season overview `/:slug` | ✅ (closed state) | ✅ | ✅ (nits fixed + verified) | 4b59d0f, 19c0222 |
-| 3 — Division page `/:slug/:divslug` | — | — | — | |
+| 3 — Division page `/:slug/:divslug` | ✅ | ✅ | ⏳ PENDING (resume here) | edbc0bd, 1c4f677, 8e7bdd1, 5ab67d6 |
 | 4 — Playoff brackets (4a + 4b) | — | — | — | |
 | 5 — Match detail `/match/view/:id` (5a + 5b) | — | — | — | |
 | 6 — Calendar `/calendar` | — | — | — | |
@@ -132,6 +132,43 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 - **Faithful carryover (do NOT "fix"):** the frozen division sort
   `|sort((a,b) => a.title > b.title)` uses a boolean comparator (Twig quirk) —
   replicated as-is per the re-skin mandate.
+
+### Notes from Task 3 (division page — IMPLEMENTED + spec ✅; QUALITY REVIEW PENDING)
+
+**STATUS: not fully done.** 4 commits landed + spec-compliance review PASSED,
+but the code-quality review had NOT run when the session ended. **Next session:
+run the Task-3 code-quality review FIRST, apply fixes, then mark Task 3 done.**
+
+- **Built:** `pages/season/division.htm` + `partials/division/{header,standings,
+  rounds,recent,upcoming,timeline}.htm` + `partials/SpoilersToggle/default.htm`
+  (re-skinned switch, frozen `{% put scripts %}` kept byte-for-byte) + CSS.
+  Verified live on `/season-30/division-1`: standings (3 teams, signed map±),
+  round tabs (R3 active by default, switching works), sidebar recent/upcoming/
+  timeline populated, spoiler toggle masks/reveals + persists via cookie, ZERO
+  Bootstrap leak, clean console/logs, bad slug → themed "Unknown division".
+- **Standings bindings** (confirmed vs `Division::getDivisionTableStandings()`,
+  heroeslounge/models/Division.php): `pivot.match_count`, `match_wins`,
+  `map_wins`, signed `map_score`. `DivisionTable.teams` is a plain Support
+  collection (no `.load()`). Full table — did NOT reuse the 5-row override.
+- **Timeline** uses the `type='division'` + `subsequent=1` chunk branch
+  (`$someTimelines`) — correctly AVOIDS the season branch's `$allTimelines` bug.
+  Switch ported from `plugins/rikki/loungeviews/components/timelineentries/default.htm`.
+- **Spec-review adjudications (accepted):** (A) round cards use
+  `variant = is_played ? 'result' : 'fixture'` — round 3 is unplayed, so a forced
+  `result` would show a misleading masked 0:0; correct improvement. (B)
+  `withDivision=false` on round cards (redundant DIV tag). (C) recent sidebar
+  uses text team names (matches dashboard, narrow sidebar) not shields.
+- **OPEN items for the quality review / fixes (decide next session):**
+  1. **Timeline spoiler leak:** `Match.Played` entries render the score
+     (e.g. "ended 2:1") UNMASKED while spoilers are OFF — faithful to the frozen
+     plugin, but inconsistent with the prominent on-page spoiler toggle. DECIDE:
+     wrap that score in the existing `.score-masked` (small, consistent) vs leave
+     faithful. (The pending quality-review prompt asks the reviewer to recommend.)
+  2. `pages.css`: the new division block was appended AFTER pages.css's own small
+     `@media (prefers-reduced-motion)` block (components.css's is correctly LAST).
+     No functional impact (new pages.css rules add no transitions) — confirm/tidy.
+  3. Standings empty state reads "No active teams **yet**" vs spec "No active
+     teams" — cosmetic.
 
 ## Phase 1 status (archived)
 

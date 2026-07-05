@@ -2,32 +2,34 @@
 
 **How to resume:** `@docs/superpowers/NEXT-SESSION.md Continue`
 
-_Last updated: 2026-07-05, end of the planning session._
+_Last updated: 2026-07-05, mid-execution of Phase 2 Wave 1._
 
 ---
 
 ## Where things stand
 
-**Phase 1 (public site design system + homepage + dashboard + blog + maintenance): ✅ SHIPPED.**
-- All 11 tasks built + spec-reviewed + quality-reviewed + a final whole-theme review (subagent-driven).
-- Open PR **#1** on the fork: https://github.com/V-Simos/HeroesLounge/pull/1 (`ui-rework` → `main`, same-repo, NOT upstream). Not merged yet — user's call.
-- Theme `themes/heroeslounge-next` is the live/active theme on the dev site.
+**Phase 1: ✅ SHIPPED.** Open PR **#1** on the fork (`ui-rework` → `main`, not merged — user's call). Theme `themes/heroeslounge-next` is live/active.
 
-**Phase 2 (public competitive viewing + static content re-skin): 📋 PLANNED, not started.**
-- Scope decided with the user; **account/auth + team management deferred to Phase 3**; statistics/contact/search dropped; ARAM parked (see Open decisions).
-- Spec (approved): `docs/superpowers/specs/2026-07-04-phase-2-public-reskin-design.md`
-- **Wave 1 plan (approved, ready to execute):** `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md` — 10 tasks: bracket spike → match-card → season → division → playoff brackets → match detail → calendar → team page → season archive → finishing pass.
-- Wave 2 (static content: rules/guides/FAQ/legal/hall-of-fame/Division-S) = a **separate later plan**, not yet written.
+**Phase 2 Wave 1 (public competitive viewing): 🚧 IN EXECUTION.**
+- **Mode: subagent-driven** (fresh implementer per task → spec-compliance review → code-quality review → fixes → next task). **Branch: `ui-rework-phase-2`** (off `ui-rework`; both decisions made with the user this session).
+- **Source of truth = `docs/superpowers/PROGRESS.md`** (Phase-2 Wave-1 task table + per-task notes). Read it first.
+- Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`.
+- **Done + fully reviewed:** Task 0 (bracket spike — de-risked; playoff fixtures now seeded), Task 1 (shared match card), Task 2 (season overview, closed state; reg-open participation deferred).
+- **Task 3 (division page): IMPLEMENTED + spec-review PASSED, but code-quality review NOT yet run.** 4 commits landed (`edbc0bd`,`1c4f677`,`8e7bdd1`,`5ab67d6`), verified live on `/season-30/division-1`.
+- **Not started:** Tasks 4–9 (playoff brackets → match detail → calendar → team page → season archive → finishing pass).
 
-## The immediate next action
+## The immediate next action — RESUME TASK 3'S CODE-QUALITY REVIEW
 
-**Execute Wave 1** using the **`superpowers:subagent-driven-development`** skill (same process as Phase 1: fresh implementer per task → spec-compliance review → code-quality review → fixes re-reviewed → next task; final whole-wave review at the end).
+Task 3 is mid-review-gate. Do this, in order:
+1. **Dispatch the Task-3 code-quality reviewer** (`superpowers:code-reviewer`, BASE `cbca1ea` → HEAD `5ab67d6`), focusing on: the 6 partials' organization, the timeline per-type switch maintainability, CSS quality/placement, N+1 traps, AND a **recommendation on the timeline spoiler-leak** (see PROGRESS "Notes from Task 3" open item #1 — `Match.Played` scores render unmasked while spoilers off; decide whether to wrap them in `.score-masked` for consistency vs faithful replication).
+2. Apply fixes (batch: the spoiler-leak decision + pages.css reduced-motion ordering + the "No active teams yet" wording — all in PROGRESS Notes from Task 3), re-verify live, commit.
+3. Mark Task 3 done in PROGRESS; then continue the subagent-driven loop at **Task 4 (playoff brackets)** — which *productionizes the Task-0 spike* (kept `partials/PlayoffOverview/default.htm` is the proven foundation; port the spoiler callback from the old theme's `showHideSpoilersPlayoffView`/`showHideSpoilersSeasonPlayoff` — see PROGRESS Notes from Task 0).
 
-Two things to settle with the user first (both were pending when this session ended):
-1. **Execution mode** — subagent-driven (recommended) vs inline. Not yet chosen.
-2. **Branch** — recommended: create `ui-rework-phase-2` off `ui-rework` so Wave 1 doesn't pile onto PR #1. Not yet created.
-
-Then start at **Task 0 (bracket spike)** — it de-risks the highest-uncertainty piece (playoff brackets) before the rest of the wave.
+## Session gotchas carried forward (trust these)
+- **Git index.lock race:** an IDE/`git fsmonitor--daemon` intermittently grabs `.git/index.lock`, failing commits with "index.lock: File exists". Commit with **`git -c core.fsmonitor=false`** (and `rm -f .git/index.lock` only if no real git op is running). Do NOT kill the fsmonitor daemon — it's legitimate.
+- **DB column names:** matches use **`div_id`** (not `division_id`), table `rikki_heroeslounge_match`; team↔division pivot `rikki_heroeslounge_team_division` also uses `div_id`; timeline table is singular `rikki_heroeslounge_timeline`.
+- **Playoff fixtures now exist** (seeded via the dev plugin in Task 0): se8 `season-30-playoffs` (id 1) + de8 `community-cup` (id 2), both on Season 30. `fixtures:seed --force` is idempotent.
+- Every commit uses the `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>` trailer (implementer work) / `Claude Opus 4.8 (1M context)` (my PROGRESS commits) per repo convention.
 
 ## Binding constraints (do NOT re-litigate)
 
