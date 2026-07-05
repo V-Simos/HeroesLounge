@@ -143,8 +143,8 @@
    global :focus-visible ring applies as-is (no focus-affordance entry needed). */
 .season-head { margin-bottom: 34px; }
 .season-head h1 { font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; letter-spacing: .01em; }
-.season-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-.season-list { list-style: none; }
+.season-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; align-items: start; }
+.season-list { list-style: none; padding: 0; }
 .season-link { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 20px;
   border-bottom: 1px solid var(--line); color: var(--ink);
   font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 15.5px;
