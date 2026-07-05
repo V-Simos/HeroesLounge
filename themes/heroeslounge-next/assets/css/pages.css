@@ -62,6 +62,14 @@
   .dash-grid { grid-template-columns: 1fr; }
 }
 
+/* ---------- playoff bracket scroll wrapper (pages/season/playoff.htm +
+   pages/playoff/view.htm; Task-0 spike foundation) ----------
+   The bracket box is a fixed rem size per playoff.type (se64 is 90x153rem,
+   de16 106x60rem) — far wider/taller than the viewport — so the wrapper must
+   scroll on BOTH axes rather than overflow the page. */
+.hl-bracket-scroll { overflow: auto; -webkit-overflow-scrolling: touch;
+  padding: 4px 4px 16px; max-width: 100%; }
+
 /* ---------- blog (pages/blog/*) ----------
    There is no blog mockup — everything below derives from the established
    system. Inventions: .pager chips restyle the old theme's blogList

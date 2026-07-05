@@ -416,13 +416,60 @@
   font-size: 14px; clip-path: var(--ch);
   overflow-wrap: anywhere; /* server errors carry unbreakable class names/URLs; clip-path would visually truncate overflow */ }
 
+/* ---------- playoff bracket (PlayoffOverview override) ----------
+   Task-0 spike foundation. The node placement + connector geometry are FROZEN
+   in the component (offsets/polylines/13x3.875rem box, 1rem = 1000 SVG units);
+   this block only supplies the positioning context the plugin's heroeslounge.css
+   would otherwise provide (we can't reuse its .bracket/.match selectors — it
+   loads last and would clobber our interior), plus the themed node interior and
+   the spoiler mask. NEW class names only, all under .hl-bracket. */
+.hl-bracket { position: relative; font-family: 'Chakra Petch', sans-serif; }
+/* Absolute at 0,0 so the per-node inline left/top (rem) place against the box. */
+.hl-bracket-nodes { position: absolute; top: 0; left: 0; z-index: 2; }
+.hl-node { position: absolute; }
+/* SVG overlays the whole box: 100% width/height == total_width/height rem, and
+   the viewBox is total_width/height * 1000, so 1000 units == 1rem — the polyline
+   points (rem*1000) then land on the node rem coordinates. Behind the nodes. */
+.hl-bracket-links { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; overflow: visible; }
+.hl-link { stroke: rgba(136,156,215,0.55); stroke-linejoin: miter; shape-rendering: geometricPrecision; }
+
+/* Node interior — the ONLY part we restyle; outer box w/h stay frozen. */
+.hl-node-card { height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 2px;
+  padding: 5px 9px; background: linear-gradient(165deg, var(--panel2), var(--panel));
+  box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; transition: background .15s ease; }
+.hl-node-card:hover { background: var(--panel2); }
+.bracket-finals .hl-node-card { box-shadow: inset 0 0 0 1px rgba(242,190,85,0.5); }
+.hl-side { display: flex; align-items: center; gap: 7px; min-width: 0; line-height: 1.15; }
+.hl-side .hl-logo { flex-shrink: 0; display: inline-flex; }
+.hl-node .badge-sm { width: 17px; height: 19px; font-size: 7px; }
+.hl-name { flex: 1; min-width: 0; font-size: 11.5px; font-weight: 600; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .15s ease, background .15s ease; }
+.hl-name.hl-tbd { color: var(--mute); font-weight: 500; font-style: italic; }
+.hl-score { flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 12.5px;
+  margin-left: auto; transition: color .15s ease, background .15s ease; }
+.hl-score.hl-win { color: var(--storm); }
+.hl-score.hl-loss { color: var(--mute); }
+.hl-when { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .04em;
+  color: var(--storm); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hl-bracket-tz { font-size: 11px; color: var(--mute); margin: 6px 0 20px; }
+.hl-bracket-empty { color: var(--mute); }
+
+/* Spoiler mask (content-integrity, not cosmetic): a masked name/score is fully
+   illegible (transparent text on a token-tinted bar), a masked logo hidden, so a
+   team's identity/result can't be inferred. Markup ships .is-masked; the page's
+   hlToggleSpoilers() toggles it (revealing first appearances, re-masking repeats).
+   TBD names (.hl-tbd) are never masked. */
+.hl-name.is-masked, .hl-score.is-masked { color: transparent; background: rgba(136,156,215,0.28);
+  border-radius: 3px; text-shadow: none; }
+.hl-logo.is-masked { visibility: hidden; }
+
 /* ---------- focus affordance on clipped elements ---------- */
 /* Focus on clipped elements: outlines outside the border box are clipped
    away by clip-path, so pull the ring inside the chamfered edge.
    INVARIANT: any new focusable element carrying .chamfer (or its own
    clip-path) MUST be added here, or its keyboard focus ring is invisible. */
 .btn:focus-visible, .tab:focus-visible, .socials a:focus-visible, .teamchip:focus-visible,
-.post:focus-visible, .event:focus-visible { outline-offset: -4px; }
+.post:focus-visible, .event:focus-visible, .hl-node-card:focus-visible { outline-offset: -4px; }
 .input:focus, .select:focus, .textarea:focus { outline-offset: -4px; }
 
 /* ---------- reduced motion (must stay LAST: @media adds no specificity, so this
@@ -432,4 +479,5 @@
   .ticker-clip { overflow-x: auto; }
   .dot { animation: none; }
   .btn:hover { transform: none; }
+  .hl-node-card, .hl-name, .hl-score { transition: none; }
 }
