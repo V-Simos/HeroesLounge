@@ -35,12 +35,12 @@ maintained — this table is.)
 
 ## Task status (Phase 2 — Wave 1: public competitive viewing)
 
-Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. NOT STARTED.
-Execute Task 0 first (bracket spike) — it de-risks the playoff renderer.
+Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
+(subagent-driven, on branch `ui-rework-phase-2` off `ui-rework`).
 
 | Task | Implemented | Spec review | Quality review | Commits |
 |---|---|---|---|---|
-| 0 — Bracket-render spike (throwaway) | — | n/a | n/a | |
+| 0 — Bracket-render spike (throwaway) | ✅ | ✅ | ✅ (approve-with-nits → fixed) | 160ac0c, 69028c1, 93b79ae |
 | 1 — Shared match-card partial | — | — | — | |
 | 2 — Season overview `/:slug` | — | — | — | |
 | 3 — Division page `/:slug/:divslug` | — | — | — | |
@@ -52,6 +52,39 @@ Execute Task 0 first (bracket spike) — it de-risks the playoff renderer.
 | 9 — Wave 1 finishing pass | — | — | — | |
 
 **Wave 2 (static content) = a separate later plan, not yet written.**
+
+### Notes from Task 0 (bracket spike — proven, de-risked)
+
+- **Fixtures had ZERO playoffs** (blocked live bracket verification). The dev
+  seeder (`plugins/dev/fixtures/console/SeedFixtures.php` → new `seedPlayoffs()`,
+  NOT frozen) now seeds **se8** (id 1, slug `season-30-playoffs`) + **de8**
+  (id 2, slug `community-cup`), both attached to Season 30, with early rounds
+  resolved via the real `Match::afterSave` advancement path so teams re-appear
+  in later nodes (exercises spoiler repeat-team hiding + a real BYE). Idempotent
+  under `fixtures:seed --force`. **Task 2/4/6 depend on this seeding.**
+- **Proven render approach (Task 4 productionizes):** override at
+  `partials/PlayoffOverview/default.htm` (component `PlayoffOverview` lives in
+  **`plugins/rikki/loungeviews`**, NOT heroeslounge) re-emits the frozen geometry
+  VERBATIM — absolute nodes in the locked 13×3.875rem box + one SVG of
+  `polylines` (`viewBox 0 0 total_width*1000 total_height*1000`, `stroke-width
+  62.5`). Measured **0.00px** connector-to-node deviation on both se8 + de8.
+- **Clobber beaten:** all bracket classes freshly scoped under `.hl-bracket`
+  (`.hl-node/.hl-side/.hl-name/.hl-score/.hl-logo/…`) so the last-loaded frozen
+  `heroeslounge.css` can't target them; only `bracket-winners/losers/finals`
+  reused as JS/marker hooks. Overflow via `.hl-bracket-scroll{overflow:auto}`.
+- **Spoiler:** names/scores ship `is-masked` by default; a **page-level**
+  `hlToggleSpoilers(show)` toggles `body.reveal-spoilers`. That callback lived on
+  the reverted scratch page (NOT in repo). **Task 4 ports it** from the frozen
+  old-theme callbacks `showHideSpoilersPlayoffView` (playoff/view.htm) +
+  `showHideSpoilersSeasonPlayoff` (season/playoff.htm), retargeted onto `.hl-*`.
+  The kept partial is INERT until then (no page attaches `[PlayoffOverview]`).
+- **Fixture-blind bracket types** (not producible by current fixtures — verify
+  in Task 4 / real-dump pass): `se16, se32, se64, de4, de16, de8short,
+  playoffv1-4, de6, DivSv1`; also `se64` vertical-scroll + group-stage
+  (`divisionView`) branch. Geometry is frozen so the same markup should serve.
+- **Seeder infra note:** `seedPlayoffs()` relaxes then RESTORES its connection
+  `sql_mode` (the frozen `createMatches()` inserts match rows without the
+  NOT-NULL-no-default `is_played`; prod MySQL runs non-strict). Dev-only, scoped.
 
 ## Phase 1 status (archived)
 
