@@ -42,7 +42,7 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 |---|---|---|---|---|
 | 0 — Bracket-render spike (throwaway) | ✅ | ✅ | ✅ (approve-with-nits → fixed) | 160ac0c, 69028c1, 93b79ae |
 | 1 — Shared match-card partial | ✅ | ✅ | ✅ (nits fixed + verified) | 275fe2b, 4795a9c |
-| 2 — Season overview `/:slug` | — | — | — | |
+| 2 — Season overview `/:slug` | ✅ (closed state) | ✅ | ✅ (nits fixed + verified) | 4b59d0f, 19c0222 |
 | 3 — Division page `/:slug/:divslug` | — | — | — | |
 | 4 — Playoff brackets (4a + 4b) | — | — | — | |
 | 5 — Match detail `/match/view/:id` (5a + 5b) | — | — | — | |
@@ -111,6 +111,27 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 - **Not refactored (optional later cleanup):** Phase-1 `home/results.htm` +
   `dashboard/results.htm` still carry their own inline `.match` markup — not yet
   delegated to the shared card (byte-identical this wave; noted in commit).
+
+### Notes from Task 2 (season overview `/:slug` — closed state)
+
+- **Shipped:** `pages/season/view.htm` + `partials/SeasonOverview/default.htm`
+  (component override, casing `SeasonOverview`) + `partials/season/overview.htm`
+  (divisions/playoffs lists). Closed state verified live on `/season-30`
+  (3 sorted division links + 2 url-encoded playoff links; `type=1` → "Playoffs").
+- **`partials/season/overview.htm` is SHARED with Task 8** — param-driven on
+  `season` only (no `__SELF__`/component coupling); the season-title heading
+  lives in the OVERRIDE, not this partial, so the archive supplies its own
+  per-season heading. Responsive `auto-fit` grid handles lone-section seasons.
+- **reg_open participation is DEFERRED** (Season 30 is `reg_open=0` → the heavy
+  ParticipationOverview branch is unverifiable). The override's reg_open branch
+  calls `{% component 'participationOverview' id=season.id %}` VERBATIM
+  (functional but un-skinned) with a `TODO(wave-1 deferred)`. **Build the themed
+  `partials/participationOverview/default.htm` when a reg_open fixture exists**
+  (or the real dump lands with one) — flagged as the primary risk (runtime-added
+  deferred alias; override-resolution unproven for dynamic aliases).
+- **Faithful carryover (do NOT "fix"):** the frozen division sort
+  `|sort((a,b) => a.title > b.title)` uses a boolean comparator (Twig quirk) —
+  replicated as-is per the re-skin mandate.
 
 ## Phase 1 status (archived)
 
