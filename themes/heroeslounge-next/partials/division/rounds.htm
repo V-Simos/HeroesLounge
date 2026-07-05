@@ -1,0 +1,44 @@
+{#- Round-by-round matches, one lounge.js tab per round.
+
+    Whole section hidden unless the season has started (current_round > 0). Tabs
+    are the lounge.js contract: [data-tabs] container, buttons with
+    data-tab-target=<panel id>, panels toggled via the [hidden] attribute
+    (.round-grid[hidden]{display:none} in pages.css — the grid display would
+    otherwise beat the UA [hidden] rule). The LATEST round is active by default
+    (key == current_round - 1), matching the frozen plugin partial.
+
+    Per round: set the runtime division id + round, invoke RoundMatches.onRender()
+    (RoundMatches.matches = the division's matches WHERE round = i, an Eloquent
+    collection), eager-load the shields' smallLogo + channels (the component only
+    loads teams+logo, so the card's shield + VOD check would otherwise N+1), then
+    render each via the shared match card.
+
+    variant is chosen per match: is_played -> 'result' (played, masked score),
+    else 'fixture' (VS + date; the current round's matches are unplayed, so a
+    forced 'result' would show a misleading 0:0). revealScore=false wires the
+    score into the page spoiler toggle. withDivision=false: every match here is
+    THIS division, so the redundant "DIV n" tag is dropped (also avoids a
+    division lazy-load). Frozen match URL /match/view/:id is the card's job. -#}
+{% if div.season.current_round > 0 %}
+<section class="divblock">
+    <div class="blockhead"><h2>Rounds</h2></div>
+    <div class="round-tabs tabs" data-tabs role="tablist" aria-label="Round">
+        {% for key, i in 1..div.season.current_round %}
+        <button class="tab{% if key == div.season.current_round - 1 %} on{% endif %}" role="tab" aria-selected="{{ key == div.season.current_round - 1 ? 'true' : 'false' }}" aria-controls="round-{{ i }}" data-tab-target="round-{{ i }}">R{{ i }}</button>
+        {% endfor %}
+    </div>
+    {% for key, i in 1..div.season.current_round %}
+    {% do RoundMatches.setProperty('id', div.id) %}
+    {% do RoundMatches.setProperty('round', i) %}
+    {% do RoundMatches.onRender() %}
+    {% if RoundMatches.matches %}{% do RoundMatches.matches.load('teams.smallLogo', 'channels') %}{% endif %}
+    <div class="round-grid" id="round-{{ i }}" role="tabpanel"{% if key != div.season.current_round - 1 %} hidden{% endif %}>
+        {% for m in RoundMatches.matches %}
+        {% partial 'match/card' match=m variant=(m.is_played ? 'result' : 'fixture') revealScore=false withDivision=false %}
+        {% else %}
+        <p class="round-empty">No matches this round.</p>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</section>
+{% endif %}
