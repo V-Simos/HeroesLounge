@@ -1,0 +1,29 @@
+{#- Sidebar: recent results for this division.
+
+    onRender pattern: set the runtime division id, invoke onRender(), read
+    RecentResults.matches (is_played=1, updated_at DESC, take maxItems; the
+    component eager-loads teams + teams.logo). Rendered as the design system's
+    .mrow/.res rows — text team names read better than two shields per row in
+    the narrow sidebar, so smallLogo is not touched (no shield => no N+1).
+
+    Scores sit in .score-masked (Task-1 blur mask) so the page spoiler toggle
+    hides them until body.reveal-spoilers; winner in storm (.w), loser muted
+    (.l). Frozen match URL /match/view/:id. Empty state: muted row. -#}
+{% do RecentResults.setProperty('id', div.id) %}
+{% do RecentResults.onRender() %}
+<section class="p chamfer divside-panel">
+    <div class="p-head"><span>Recent results</span></div>
+    {% for match in RecentResults.matches %}
+    {% set home = match.teams[0] %}
+    {% set away = match.teams[1] %}
+    {% if home and away %}
+    <div class="mrow">
+        <span class="when">{{ (match.wbp ?: match.updated_at)|date('M j')|upper }}</span>
+        <a class="who" href="/match/view/{{ match.id }}">{{ home.title }} <i>vs</i> {{ away.title }}</a>
+        <span class="res"><span class="score-masked"><span class="{{ match.winner_id == home.id ? 'w' : 'l' }}">{{ home.pivot.team_score }}</span> : <span class="{{ match.winner_id == away.id ? 'w' : 'l' }}">{{ away.pivot.team_score }}</span></span></span>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="mrow"><span class="who"><i>No results yet.</i></span></div>
+    {% endfor %}
+</section>

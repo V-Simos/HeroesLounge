@@ -1,0 +1,106 @@
+{#- Sidebar: division activity timeline — a net-new re-skin of TimelineEntries
+    (the legacy #cd-timeline / timeline.css markup is dropped entirely).
+
+    onRender pattern: set the runtime division id, invoke onRender(), iterate
+    TimelineEntries.timeline. Front-matter pins type='division' + subsequent=1,
+    which takes the chunk-based division branch of TimelineEntries::onRender()
+    (the season branch references an undefined $allTimelines — a plugin bug we
+    avoid, per spec). The branch eager-loads teams.logo; match-team logos and
+    sloth avatars lazy-load per entry (<= maxItems=15 rows; the timeline is a
+    Support collection, no eager .load()).
+
+    Per-type sentence + icon switch replicated FAITHFULLY from the frozen plugin
+    partial (plugins/rikki/loungeviews/components/timelineentries/default.htm),
+    with |page(...) swapped for the wave's frozen literals:
+      team -> /team/view/:slug ; user/sloth -> /user/view/:id (Phase-3 page,
+      404s for now — expected). Each row: shield/avatar (or a lucide fallback)
+      + sentence + created_at 'M d H:i'. Empty state: muted "No activity yet". -#}
+{% do TimelineEntries.setProperty('id', div.id) %}
+{% do TimelineEntries.onRender() %}
+<section class="p chamfer divside-panel">
+    <div class="p-head"><span>Timeline</span></div>
+    <div class="tl">
+        {% for e in TimelineEntries.timeline %}
+        {% if e.type != 'Invalid.Type' %}
+
+        {% if e.type == 'Sloth.Created' or e.type == 'Sloth.Deleted' or e.type == 'Sloth.Logo' %}
+        {% set sloth = e.sloths[0] %}
+        <div class="tl-row">
+            <div class="tl-ic">{% if sloth.user.avatar %}<img src="{{ sloth.user.avatar.path | resize(48,48) }}" alt="">{% else %}{% partial 'site/icon' name='users' %}{% endif %}</div>
+            <div class="tl-bd">
+                <p class="tl-txt">
+                    {%- if e.type == 'Sloth.Created' -%}
+                    <a href="/user/view/{{ sloth.id }}">{{ sloth.title }}</a> just created an account. Welcome to Heroes Lounge!
+                    {%- elseif e.type == 'Sloth.Logo' -%}
+                    <a href="/user/view/{{ sloth.id }}">{{ sloth.title }}</a> has a new avatar. Nice!
+                    {%- elseif e.type == 'Sloth.Deleted' -%}
+                    Sadly, {{ sloth.title }} left Heroes Lounge.
+                    {%- endif -%}
+                </p>
+                <span class="tl-when mono">{{ e.created_at | date('M d H:i') }}</span>
+            </div>
+        </div>
+
+        {% elseif e.type == 'Admin.Message' %}
+        <div class="tl-row">
+            <div class="tl-ic">{% partial 'site/icon' name='message-square' %}</div>
+            <div class="tl-bd">
+                <p class="tl-txt">{{ e.message | nl2br }}</p>
+                <span class="tl-when mono">{{ e.created_at | date('M d H:i') }}</span>
+            </div>
+        </div>
+
+        {% elseif e.type == 'Match.Scheduled' or e.type == 'Match.Played' %}
+        {% set m = e.matches[0] %}
+        {% set t0 = m.teams[0] %}
+        {% set t1 = m.teams[1] %}
+        <div class="tl-row">
+            <div class="tl-ic">{% if t0.logo %}<img src="{{ t0.logo.path | resize(48,48) }}" alt="">{% elseif t1.logo %}<img src="{{ t1.logo.path | resize(48,48) }}" alt="">{% else %}{% partial 'site/icon' name='swords' %}{% endif %}</div>
+            <div class="tl-bd">
+                <p class="tl-txt">
+                    {%- if e.type == 'Match.Scheduled' -%}
+                    The match between <a href="/team/view/{{ t0.slug }}">{{ t0.title }}</a> and <a href="/team/view/{{ t1.slug }}">{{ t1.title }}</a> was scheduled for {{ m.wbp | date('M d H:i') }}.
+                    {%- else -%}
+                    The match between <a href="/team/view/{{ t0.slug }}">{{ t0.title }}</a> and <a href="/team/view/{{ t1.slug }}">{{ t1.title }}</a> ended {{ t0.pivot.team_score }}:{{ t1.pivot.team_score }}.
+                    {%- endif -%}
+                </p>
+                <span class="tl-when mono">{{ e.created_at | date('M d H:i') }}</span>
+            </div>
+        </div>
+
+        {% else %}
+        {% set team = e.teams[0] %}
+        {% set sloth = e.sloths[0] %}
+        <div class="tl-row">
+            <div class="tl-ic">{% if team.logo %}<img src="{{ team.logo.path | resize(48,48) }}" alt="">{% else %}{% partial 'site/icon' name='users' %}{% endif %}</div>
+            <div class="tl-bd">
+                <p class="tl-txt">
+                    {%- if e.type == 'Team.Active' -%}
+                    <a href="/team/view/{{ team.slug }}">{{ team.title }}</a> became active and is now ready for adventure!
+                    {%- elseif e.type == 'Team.InActive' -%}
+                    <a href="/team/view/{{ team.slug }}">{{ team.title }}</a> could no longer continue, and is now inactive.
+                    {%- elseif e.type == 'Team.Created' -%}
+                    A new challenger approaches. <a href="/user/view/{{ sloth.id }}">{{ sloth.title }}</a> created the new team <a href="/team/view/{{ team.slug }}">{{ team.title }}</a>!
+                    {%- elseif e.type == 'Team.Deleted' -%}
+                    <a href="/team/view/{{ team.slug }}">{{ team.title }}</a> was deleted. Sorry to see you go!
+                    {%- elseif e.type == 'Team.Logo' -%}
+                    <a href="/team/view/{{ team.slug }}">{{ team.title }}</a> just changed their logo. Fancy!
+                    {%- elseif e.type == 'Team.Message' -%}
+                    A message from <a href="/team/view/{{ team.slug }}">{{ team.title }}</a>: {{ e.message | nl2br }}
+                    {%- elseif e.type == 'Sloth.Joins.Team' -%}
+                    <a href="/user/view/{{ sloth.id }}">{{ sloth.title }}</a> found a new home and joined <a href="/team/view/{{ team.slug }}">{{ team.title }}</a>.
+                    {%- elseif e.type == 'Sloth.Left.Team' -%}
+                    <a href="/user/view/{{ sloth.id }}">{{ sloth.title }}</a> left <a href="/team/view/{{ team.slug }}">{{ team.title }}</a>, and is wandering free.
+                    {%- endif -%}
+                </p>
+                <span class="tl-when mono">{{ e.created_at | date('M d H:i') }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        {% endif %}
+        {% else %}
+        <div class="tl-row"><div class="tl-bd"><p class="tl-txt"><i>No activity yet.</i></p></div></div>
+        {% endfor %}
+    </div>
+</section>
