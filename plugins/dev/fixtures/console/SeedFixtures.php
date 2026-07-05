@@ -13,6 +13,7 @@ use Rikki\Heroeslounge\Models\Division;
 use Rikki\Heroeslounge\Models\Team;
 use Rikki\Heroeslounge\Models\Sloth;
 use Rikki\Heroeslounge\Models\Match as HlMatch;
+use Rikki\Heroeslounge\Models\Playoff;
 use Rikki\Heroeslounge\Models\Game;
 use Rikki\Heroeslounge\Models\Map;
 use Rikki\Heroeslounge\Models\Twitchchannel;
@@ -74,6 +75,7 @@ class SeedFixtures extends Command
         $this->seedTeams();
         $this->seedMatches();
         $this->variedStandings();
+        $this->seedPlayoffs();
         $this->seedBlog();
 
         $this->output->writeln('');
@@ -114,6 +116,8 @@ class SeedFixtures extends Command
             'rikki_heroeslounge_season_freeagent',
             'rikki_heroeslounge_match',
             'rikki_heroeslounge_team_match',
+            'rikki_heroeslounge_playoffs',
+            'rikki_heroeslounge_team_playoff',
             'rikki_heroeslounge_match_caster',
             'rikki_heroeslounge_match_channel',
             'rikki_heroeslounge_games',
@@ -518,6 +522,144 @@ class SeedFixtures extends Command
             ->update(['free_win_count' => 1]);
 
         $this->output->writeln('  - standings variety: bye, inactive division entry, free win');
+    }
+
+    /**
+     * Seed knockout playoffs so the bracket-render surface (PlayoffOverview)
+     * has real data: one single-elimination (se8, with a BYE) and one
+     * double-elimination (de8). Both are attached to Season 30, so BOTH the
+     * in-season route (/season-30/playoff/<title>) and the standalone route
+     * (/tournament/<slug>) resolve. Winners are then set on the early rounds
+     * through the REAL production model events (Match::afterSave advances the
+     * winner to playoff_winner_next and the loser to playoff_loser_next), so a
+     * team that advances re-appears in a later node — the exact condition the
+     * bracket spoiler toggle's repeat-team hiding must handle.
+     */
+    protected function seedPlayoffs()
+    {
+        // Placeholder team the frozen Playoff::seedTeams() looks up by the
+        // literal title 'BYE!' whenever a seed slot is unfilled. Deliberately
+        // NOT attached to any season/division, so it never leaks into
+        // standings, calendars or team listings — it only exists to fill an
+        // empty bracket slot.
+        // The frozen Playoff::createMatches() inserts match rows without setting
+        // the NOT-NULL-without-default `is_played` column; production MySQL runs
+        // in a non-strict sql_mode that coerces the missing value to 0. The dev
+        // container defaults to STRICT mode, which rejects the insert, so relax
+        // it for this seeding connection (session-scoped, dev-only).
+        DB::statement("SET SESSION sql_mode=(SELECT REPLACE(REPLACE(@@sql_mode,'STRICT_TRANS_TABLES',''),'STRICT_ALL_TABLES',''))");
+
+        $bye = Team::where('title', 'BYE!')->first();
+        if (!$bye) {
+            $bye = new Team();
+            $bye->title = 'BYE!';
+            $bye->slug = 'bye-placeholder';
+            $bye->region_id = 1;
+            $this->setIfColumn($bye, 'short_description', '');
+            foreach (['facebook_url', 'twitch_url', 'twitter_url', 'youtube_url', 'website_url', 'server_preference'] as $column) {
+                $this->setIfColumn($bye, $column, '');
+            }
+            $this->setIfColumn($bye, 'accepting_apps', 0);
+            $this->setIfColumn($bye, 'disbanded', 0);
+            $this->setIfColumn($bye, 'slothrating', 0);
+            $this->saveRow($bye);
+        }
+
+        $tz = 'Europe/Berlin';
+        // A near-future kickoff so unplayed nodes render a scheduled date/time.
+        $when = Carbon::now()->addDays(7);
+
+        // Ordered pool of the 10 real fixture teams (seed 1 = first inserted).
+        // Seeds 2/3 are the extreme-long-name and unicode teams on purpose —
+        // free layout stress-test for the fixed 13rem node box.
+        $pool = array_values($this->teams);
+
+        // ---- Single elimination: se8, 7 real teams + 1 BYE (seed 8 empty) ----
+        $se = new Playoff();
+        $se->title = 'Season 30 Playoffs';
+        $se->slug = 'season-30-playoffs';
+        $se->type = 'se8';
+        $se->season_id = $this->season->id;
+        $se->region_id = 1;
+        $this->setIfColumn($se, 'reg_open', 0);
+        $this->saveRow($se);
+        for ($seed = 1; $seed <= 7; $seed++) {
+            $se->teams()->attach($pool[$seed - 1]->id, ['seed' => $seed]);
+        }
+        $se->createMatches($when->year, $when->month, $when->day, $tz);
+        $se->seedTeams(); // seed 8 -> BYE!; its round-1 match auto-resolves
+
+        // Resolve the remaining round-1 matches, then one semifinal, so winners
+        // propagate into round 2 and the final (repeat-team appearances).
+        $this->playPlayoffRound($se, 1, 1, 4);
+        $this->playPlayoffMatch($this->playoffMatchAt($se, 1, 2, 1));
+
+        // ---- Double elimination: de8, full 8 teams ----
+        $de = new Playoff();
+        $de->title = 'Community Cup';
+        $de->slug = 'community-cup';
+        $de->type = 'de8';
+        $de->season_id = $this->season->id;
+        $de->region_id = 1;
+        $this->setIfColumn($de, 'reg_open', 0);
+        $this->saveRow($de);
+        for ($seed = 1; $seed <= 8; $seed++) {
+            $de->teams()->attach($pool[$seed - 1]->id, ['seed' => $seed]);
+        }
+        $de->createMatches($when->year, $when->month, $when->day, $tz);
+        $de->seedTeams();
+
+        // Upper round 1: winners -> upper R2, losers dropped into lower R1.
+        $this->playPlayoffRound($de, 1, 1, 4);
+        // Lower round 1 (now populated by the dropped losers): exercises the
+        // bracket-losers spoiler special-case + more repeat-team appearances.
+        $this->playPlayoffRound($de, 2, 1, 2);
+
+        $this->output->writeln(
+            '  - playoffs: se8 "' . $se->title . '" (id ' . $se->id . ', slug ' . $se->slug . ', +BYE), '
+            . 'de8 "' . $de->title . '" (id ' . $de->id . ', slug ' . $de->slug . ')'
+        );
+    }
+
+    /**
+     * Fetch a playoff match by its Cantor-encoded (bracket, round, matchnumber)
+     * position, the same encoding Playoff::createMatches wrote.
+     */
+    protected function playoffMatchAt($playoff, $bracket, $round, $matchnumber)
+    {
+        $pos = HlMatch::encodePlayoffPosition($bracket, $round, $matchnumber);
+        return $playoff->matches()->where('playoff_position', $pos)->first();
+    }
+
+    /** Resolve matchnumbers 1..$count of a (bracket, round). */
+    protected function playPlayoffRound($playoff, $bracket, $round, $count)
+    {
+        for ($mn = 1; $mn <= $count; $mn++) {
+            $this->playPlayoffMatch($this->playoffMatchAt($playoff, $bracket, $round, $mn));
+        }
+    }
+
+    /**
+     * Give a playoff match a 2:1 result for its first-listed team via the real
+     * production path: setting winner_id and saving fires Match::afterSave,
+     * which advances the winner (and, in double-elim, the loser) into the next
+     * node. Skips nodes that are still TBD or already decided (e.g. a BYE).
+     */
+    protected function playPlayoffMatch($match)
+    {
+        if (!$match) {
+            return;
+        }
+        $match = HlMatch::with('teams')->find($match->id);
+        if ($match->teams->count() < 2 || $match->winner_id) {
+            return;
+        }
+        $winner = $match->teams[0];
+        $loser = $match->teams[1];
+        $match->teams()->updateExistingPivot($winner->id, ['team_score' => 2]);
+        $match->teams()->updateExistingPivot($loser->id, ['team_score' => 1]);
+        $match->winner_id = $winner->id;
+        $this->saveRow($match);
     }
 
     protected function seedBlog()
