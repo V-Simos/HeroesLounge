@@ -4,9 +4,14 @@
 every task/review transition. (The plan file's inline checkboxes are NOT
 maintained — this table is.)
 
-- Spec: `docs/superpowers/specs/2026-07-03-ui-ux-rework-design.md`
-- Plan being executed: `docs/superpowers/plans/2026-07-03-ui-rework-phase-1.md`
-- Branch: `ui-rework` (fork V-Simos/HeroesLounge, upstream Fabian-Sommer/HeroesLounge)
+> **Fresh session?** Read `docs/superpowers/NEXT-SESSION.md` first — it's the launch pad.
+
+- Phase 1 spec: `docs/superpowers/specs/2026-07-03-ui-ux-rework-design.md`
+- Phase 1 plan: `docs/superpowers/plans/2026-07-03-ui-rework-phase-1.md` — ✅ DONE (PR #1 open)
+- Phase 2 spec: `docs/superpowers/specs/2026-07-04-phase-2-public-reskin-design.md`
+- **Phase 2 Wave 1 plan (NEXT TO EXECUTE):** `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`
+- Branch: `ui-rework` (fork V-Simos/HeroesLounge, upstream Fabian-Sommer/HeroesLounge).
+  Phase 2 recommended to start on a new `ui-rework-phase-2` branch off `ui-rework` (not yet created).
 - Process: superpowers subagent-driven development — per task: fresh implementer
   subagent → spec-compliance review → code-quality review → (fixes → re-review) → next task.
 
@@ -28,7 +33,29 @@ maintained — this table is.)
 | 10 — Blog pages | ✅ | ✅ | ✅ (fixes applied + re-approved) | 9330c5d, 0d0347f |
 | 11 — Maintenance + finishing pass | ✅ | ✅ | ✅ | 74f4d7f, 2ec1cec, dc20200 |
 
-**Next action:** ✅ **PHASE 1 COMPLETE + final whole-theme review passed.**
+## Task status (Phase 2 — Wave 1: public competitive viewing)
+
+Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. NOT STARTED.
+Execute Task 0 first (bracket spike) — it de-risks the playoff renderer.
+
+| Task | Implemented | Spec review | Quality review | Commits |
+|---|---|---|---|---|
+| 0 — Bracket-render spike (throwaway) | — | n/a | n/a | |
+| 1 — Shared match-card partial | — | — | — | |
+| 2 — Season overview `/:slug` | — | — | — | |
+| 3 — Division page `/:slug/:divslug` | — | — | — | |
+| 4 — Playoff brackets (4a + 4b) | — | — | — | |
+| 5 — Match detail `/match/view/:id` (5a + 5b) | — | — | — | |
+| 6 — Calendar `/calendar` | — | — | — | |
+| 7 — Team page `/team/view/:slug` | — | — | — | |
+| 8 — Season archive `/season/archive` | — | — | — | |
+| 9 — Wave 1 finishing pass | — | — | — | |
+
+**Wave 2 (static content) = a separate later plan, not yet written.**
+
+## Phase 1 status (archived)
+
+**✅ PHASE 1 COMPLETE + final whole-theme review passed.**
 All 11 tasks through spec + quality review; final cross-cutting review (commit
 `60eb94b`) found & fixed one AA regression (chamfered `.post`/`.event` card
 links had no visible keyboard focus ring — the Task-4 inset-ring convention
