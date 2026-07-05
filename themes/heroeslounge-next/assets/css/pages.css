@@ -162,3 +162,66 @@
 @media (prefers-reduced-motion: reduce) {
   .season-link, .season-link svg { transition: none; }
 }
+/* Unknown-division / empty-season copy links (colour-only links fail WCAG
+   1.4.1 under base.css's global link-stripping — underline them). */
+.season-empty a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
+.season-empty a:hover { color: var(--ink); }
+
+/* ---------- division page (pages/season/division.htm) ----------
+   No mockup — composed from the established design language: the season/
+   division header (eyebrow + h1) beside the spoiler toggle, then a two-column
+   grid (main viewing column + sidebar) that collapses to one column. */
+.divsec { padding-top: 44px; }
+.divtop { display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 18px 24px; flex-wrap: wrap; margin-bottom: 36px; }
+.divhead h1 { font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; letter-spacing: .01em; }
+/* The toggle aligns to the header baseline on wide rows; margin-top nudges it
+   down to sit with the h1 rather than the eyebrow. */
+.divtop .spoiler-toggle { margin-top: 6px; }
+.divwrap { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+.divmain { display: flex; flex-direction: column; gap: 40px; min-width: 0; }
+.divside { display: flex; flex-direction: column; gap: 20px; }
+
+/* main-column block heading (standings / rounds) */
+.blockhead { display: flex; align-items: baseline; justify-content: space-between;
+  gap: 14px; margin-bottom: 16px; }
+.blockhead h2 { font-size: 1.3rem; font-weight: 700; letter-spacing: .01em; }
+.blockmeta { font-size: 11px; letter-spacing: .16em; color: var(--mute); text-transform: uppercase; }
+
+/* round tabs + panels — panels toggle via [hidden] (lounge.js), but the grid
+   display would beat the UA [hidden] rule, so restore display:none explicitly. */
+.round-tabs { flex-wrap: wrap; margin-bottom: 18px; }
+.round-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.round-grid[hidden] { display: none; }
+.round-empty { grid-column: 1 / -1; color: var(--mute); padding: 6px 2px; }
+
+/* sidebar day divider (upcoming groups) + clickable matchup rows */
+.mday { padding: 13px 20px 7px; font-size: 10.5px; letter-spacing: .16em; color: var(--storm);
+  text-transform: uppercase; font-family: 'JetBrains Mono', monospace; font-weight: 600;
+  border-bottom: 1px solid var(--line); }
+.divside-panel a.who:hover { color: var(--storm); }
+
+/* ---------- division timeline (partials/division/timeline.htm) ----------
+   Net-new re-skin of TimelineEntries — the legacy #cd-timeline/timeline.css is
+   dropped. A shield-shaped icon (avatar/logo or a lucide fallback) + a sentence
+   + a mono timestamp, sharing the panel's row rhythm. */
+.tl { display: flex; flex-direction: column; }
+.tl-row { display: grid; grid-template-columns: 40px 1fr; gap: 14px; padding: 14px 20px;
+  border-bottom: 1px solid var(--line); }
+.tl-row:last-child { border-bottom: 0; }
+.tl-ic { width: 40px; height: 40px; flex-shrink: 0; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(136,156,215,0.1); color: var(--storm);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.tl-ic img { width: 100%; height: 100%; object-fit: cover; }
+.tl-ic svg { width: 18px; height: 18px; }
+.tl-bd { min-width: 0; }
+.tl-txt { font-size: 14px; line-height: 1.45; color: var(--ink); overflow-wrap: anywhere; }
+.tl-txt i { font-style: italic; color: var(--mute); }
+.tl-txt a { color: var(--storm); }
+.tl-txt a:hover { color: var(--ink); text-decoration: underline; }
+.tl-when { display: block; margin-top: 5px; font-size: 10.5px; letter-spacing: .1em; color: var(--mute); }
+
+@media (max-width: 980px) {
+  .divwrap { grid-template-columns: 1fr; }
+}

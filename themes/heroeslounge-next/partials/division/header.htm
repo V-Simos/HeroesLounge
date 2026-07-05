@@ -1,0 +1,10 @@
+{#- Division page header. Data faithfully from the frozen plugin partial
+    (plugins/rikki/loungeviews/components/divisionoverview/default.htm):
+    the season title + the division's own title, with overview_display_title
+    (a NULLABLE column) preferred when set. Re-skinned to the design system's
+    eyebrow + heading pattern: the season (+ current round) is the mono eyebrow,
+    the division is the page's single <h1> (the true subject of the page). -#}
+<header class="divhead">
+    <p class="eyebrow mono">{{ div.season.title|upper }}{% if div.season.current_round >= 1 %} &middot; ROUND {{ div.season.current_round }}{% endif %}</p>
+    <h1>{{ div.overview_display_title ?: div.title }}</h1>
+</header>

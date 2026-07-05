@@ -1,0 +1,42 @@
+{#- FULL division standings table (every active team — NOT the 5-row-capped
+    partials/DivisionTable/default.htm used by the homepage widget).
+
+    onRender pattern: set the runtime division id, invoke onRender(), then read
+    the public `teams` property. DivisionTable.teams is
+    Division::getDivisionTableStandings() — an October\Rain\Support\Collection
+    (NOT Eloquent, so no .load()) of Team models carrying:
+      pivot.match_count  matches played (P)
+      match_wins         match wins (W)         } computed onto each Team
+      map_wins           game/map wins (Map W)  } in getDivisionTableStandings()
+      map_score          signed game diff (Map ±)
+    Property names verified against plugins/rikki/heroeslounge/models/Division.php.
+
+    Row markup mirrors the Phase-1 override (partials/DivisionTable/default.htm)
+    but iterates ALL teams (no [start:length] slice). rank = loop.index; gold
+    trophy + .first on the leader; .you highlight only when the component set
+    selTeam (it never does here — no teamId prop — but kept for parity). Shields
+    lazy-load smallLogo per row (<= a handful of rows; a Support collection has
+    no eager .load()). Frozen team URL: /team/view/:slug. -#}
+{% do DivisionTable.setProperty('id', div.id) %}
+{% do DivisionTable.onRender() %}
+<section class="divblock">
+    <div class="blockhead">
+        <h2>Standings</h2>
+        {% if div.season.current_round >= 1 %}<span class="blockmeta mono">ROUND {{ div.season.current_round }}</span>{% endif %}
+    </div>
+    <div class="table chamfer">
+        <div class="tr th mono"><span>#</span><span>Team</span><span>P</span><span>W</span><span>Map W</span><span>Map &plusmn;</span></div>
+        {% for team in DivisionTable.teams %}
+        <div class="tr{% if loop.first %} first{% endif %}{% if DivisionTable.selTeam == team.id %} you{% endif %}{% if team.disbanded %} inact{% endif %}">
+            <span class="rank mono">{{ loop.index }}</span>
+            <span class="tteam">{% if loop.first %}<span class="gold-ic">{% partial 'site/icon' name='trophy' %}</span>{% endif %}{% partial 'team/shield' team=team size='sm' %}<a href="/team/view/{{ team.slug }}">{{ team.title }}</a></span>
+            <span class="num dim">{{ team.pivot.match_count }}</span>
+            <span class="num big">{{ team.match_wins }}</span>
+            <span class="num">{{ team.map_wins }}</span>
+            <span class="num {{ team.map_score > 0 ? 'pos' : (team.map_score < 0 ? 'neg' : 'dim') }}">{{ team.map_score > 0 ? '+' ~ team.map_score : team.map_score }}</span>
+        </div>
+        {% else %}
+        <div class="tr"><span class="rank mono">&ndash;</span><span class="tteam">No active teams yet</span><span class="num dim"></span><span class="num"></span><span class="num"></span><span class="num"></span></div>
+        {% endfor %}
+    </div>
+</section>
