@@ -23,7 +23,14 @@
                    it. T3/T4 consumers pass false; always-reveal consumers pass
                    true. Result variant only — fixtures have no score.
       withDate     default true. Renders the /match/view/:id date tag.
-      withDivision default true. Renders the .divtag from division.title|upper.
+      withDivision default true. Renders the .divtag from
+                   division.title|upper|replace({'DIVISION ': 'DIV '}) (e.g.
+                   renders "DIV 3"). Division-only: a playoff match with no
+                   division renders no tag. Playoff-match labeling is the
+                   consumer's job (T6 calendar / T7 team page build their own
+                   playoff label, or pass withDivision=false) — deliberately
+                   NOT resolved here to keep this leaf free of playoff/Cantor
+                   internals.
       withVod      default true. Renders the VOD link from channels|first.url
                    when a channel is attached.
       withCaster   default false. Renders a read-only accepted-casters credit
@@ -33,11 +40,9 @@
                    set, human dates render in the viewer TZ (fixture adds time);
                    when omitted, app-TZ day granularity (mirrors home/results).
 
-    Date/TZ contract: `wbp` is a RAW db string (no date cast) — always piped
-    through |date. The date tag is day-granularity |date('M j'); any COUNTDOWN
-    would need |date('c') (offset-qualified ISO — the lounge.js contract), but
-    this card renders no countdown. Frozen URLs (NOT | page):
-    /match/view/:id, /team/view/:slug.
+    Date/TZ contract: `wbp` is a RAW db string (no date cast) — always pipe it
+    through |date; this card renders static dates, not live countdowns. Frozen
+    URLs (NOT | page): /match/view/:id, /team/view/:slug.
 
     Guards: result needs home AND away (callers already skip <2-team matches);
     fixture renders a defensive TBD opponent when one side is missing, and
@@ -57,35 +62,53 @@
     the app timezone (|date(fmt, null) == |date(fmt)); a '' would fatal. -#}
 {% set tz           = timezone ?: null %}
 {% set isFixture    = variant == 'fixture' %}
+{#- Winner-state locals: `decided` gates the .side win/loss classes (a fixture or
+    an undecided match shows neither); `homeWon` is the home comparison. The
+    scoreInner macro can't see this scope, so it re-checks match.winner_id. -#}
+{% set decided      = not isFixture and match.winner_id %}
+{% set homeWon      = match.winner_id == home.id %}
 {#- result needs both teams (score card); fixture tolerates one missing side
     (TBD placeholder — bracket-fed upcoming matches may have one team). -#}
 {% set hasTeams     = isFixture ? (home or away) : (home and away) %}
+{#- scoreInner: the played-score <b>:<b> inner markup, shared verbatim by the
+    reveal and .score-masked branches (dedupes a 4-consumer drift hazard). The
+    whitespace trims are load-bearing — .score is display:flex;gap:6px, so this
+    must emit byte-identical HTML with NO leading/trailing whitespace or the
+    flex row shifts. Macros can't see outer scope, hence the explicit params. -#}
+{% macro scoreInner(match, home, away) %}
+{%- if match.winner_id %}<b class="{{ match.winner_id == home.id ? 's-win' : 's-loss' }}">{% else %}<b>{% endif -%}
+{{- home.pivot.team_score -}}</b><i>:</i>
+{%- if match.winner_id %}<b class="{{ match.winner_id == away.id ? 's-win' : 's-loss' }}">{% else %}<b>{% endif -%}
+{{- away.pivot.team_score -}}</b>
+{%- endmacro %}
 {% if hasTeams %}
-{% set showTop = (withDivision and match.division) or withDate or (withVod and match.channels|length > 0) %}
+{% set hasVod = withVod and match.channels|length > 0 %}
+{% set showTop = (withDivision and match.division) or withDate or hasVod %}
 <article class="match chamfer">
     {% if showTop %}
     <div class="match-top mono">
         {% if withDivision and match.division %}<span class="divtag">{{ match.division.title|upper|replace({'DIVISION ': 'DIV '}) }}</span>{% endif %}
         {% if withDate %}<a href="/match/view/{{ match.id }}">{% if isFixture %}{% if match.wbp %}{{ match.wbp|date(tz ? 'M j · H:i T' : 'M j', tz) }}{% else %}Unscheduled{% endif %}{% else %}{{ (match.wbp ?: match.updated_at)|date('M j', tz) }}{% endif %}</a>{% endif %}
-        {% if withVod and match.channels|length > 0 %}<a class="vod" href="{{ (match.channels|first).url }}" target="_blank" rel="noopener">VOD {% partial 'site/icon' name='chevron-right' %}</a>{% endif %}
+        {% if hasVod %}<a class="vod" href="{{ (match.channels|first).url }}" target="_blank" rel="noopener">VOD {% partial 'site/icon' name='chevron-right' %}</a>{% endif %}
     </div>
     {% endif %}
     <div class="match-body">
-        <div class="side{% if not isFixture and match.winner_id == home.id %} win{% elseif not isFixture and match.winner_id %} loss{% endif %}">{% if home %}{% partial 'team/shield' team=home size=size %}<a class="tname" href="/team/view/{{ home.slug }}">{{ home.title }}</a>{% else %}<span class="tname">TBD</span>{% endif %}</div>
+        <div class="side{% if decided and homeWon %} win{% elseif decided %} loss{% endif %}">{% if home %}{% partial 'team/shield' team=home size=size %}<a class="tname" href="/team/view/{{ home.slug }}">{{ home.title }}</a>{% else %}<span class="tname">TBD</span>{% endif %}</div>
         {% if isFixture %}
         <div class="score mono"><i>vs</i></div>
         {% elseif revealScore %}
-        <div class="score mono"><b{% if match.winner_id %} class="{{ match.winner_id == home.id ? 's-win' : 's-loss' }}"{% endif %}>{{ home.pivot.team_score }}</b><i>:</i><b{% if match.winner_id %} class="{{ match.winner_id == away.id ? 's-win' : 's-loss' }}"{% endif %}>{{ away.pivot.team_score }}</b></div>
+        <div class="score mono">{{ _self.scoreInner(match, home, away) }}</div>
         {% else %}
-        <div class="score mono"><span class="score-masked"><b{% if match.winner_id %} class="{{ match.winner_id == home.id ? 's-win' : 's-loss' }}"{% endif %}>{{ home.pivot.team_score }}</b><i>:</i><b{% if match.winner_id %} class="{{ match.winner_id == away.id ? 's-win' : 's-loss' }}"{% endif %}>{{ away.pivot.team_score }}</b></span></div>
+        <div class="score mono"><span class="score-masked">{{ _self.scoreInner(match, home, away) }}</span></div>
         {% endif %}
-        <div class="side right{% if not isFixture and match.winner_id == away.id %} win{% elseif not isFixture and match.winner_id %} loss{% endif %}">{% if away %}<a class="tname" href="/team/view/{{ away.slug }}">{{ away.title }}</a>{% partial 'team/shield' team=away size=size %}{% else %}<span class="tname">TBD</span>{% endif %}</div>
+        <div class="side right{% if decided and match.winner_id == away.id %} win{% elseif decided %} loss{% endif %}">{% if away %}<a class="tname" href="/team/view/{{ away.slug }}">{{ away.title }}</a>{% partial 'team/shield' team=away size=size %}{% else %}<span class="tname">TBD</span>{% endif %}</div>
     </div>
     {#- Read-only accepted-casters credit. Reuses the .match-top meta style (small
         muted mono) as a footer row — inline margin flips its header spacing. -#}
     {% if withCaster %}
     {% set casters = match.getAcceptedCasters %}
     {% if casters|length > 0 %}
+    {# TODO: promote to a .match-cast class when the component CSS freeze lifts #}
     <div class="match-top mono" style="margin:14px 0 0">CAST · {% for c in casters %}{{ c.title }}{% if not loop.last %}, {% endif %}{% endfor %}</div>
     {% endif %}
     {% endif %}
