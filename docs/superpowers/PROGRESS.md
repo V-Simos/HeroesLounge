@@ -41,7 +41,7 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 | Task | Implemented | Spec review | Quality review | Commits |
 |---|---|---|---|---|
 | 0 — Bracket-render spike (throwaway) | ✅ | ✅ | ✅ (approve-with-nits → fixed) | 160ac0c, 69028c1, 93b79ae |
-| 1 — Shared match-card partial | — | — | — | |
+| 1 — Shared match-card partial | ✅ | ✅ | ✅ (nits fixed + verified) | 275fe2b, 4795a9c |
 | 2 — Season overview `/:slug` | — | — | — | |
 | 3 — Division page `/:slug/:divslug` | — | — | — | |
 | 4 — Playoff brackets (4a + 4b) | — | — | — | |
@@ -85,6 +85,32 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 - **Seeder infra note:** `seedPlayoffs()` relaxes then RESTORES its connection
   `sql_mode` (the frozen `createMatches()` inserts match rows without the
   NOT-NULL-no-default `is_played`; prod MySQL runs non-strict). Dev-only, scoped.
+
+### Notes from Task 1 (shared match-card partial)
+
+- **`partials/match/card.htm`** is the canonical param-driven `.match` card.
+  Contract: `match` (req); `home`/`away` (default `match.teams[0]`/`[1]`);
+  `variant` `'result'`|`'fixture'`; `revealScore` (false → score wrapped in
+  `.score-masked`); `withDate`/`withDivision`/`withVod`/`withCaster`; `size`
+  (`'sm'`/`'lg'` shield passthrough); `timezone` (viewer-TZ when passed, else
+  app-TZ day granularity). Consumers: T3 division rounds (`revealScore=false`),
+  T5 match view, T6 calendar, T7 team history. Booleans use `is defined ? x :
+  default` (NOT `|default`) so a passed `false` is honored.
+- **`.score-masked`** (components.css): CSS-only spoiler mask (blur 7px default;
+  revealed by `body.reveal-spoilers`). **Distinct from the bracket's JS-managed
+  `.is-masked`** (transparent block). Intentional visual divergence — **Task 4
+  reconciles the two spoiler languages.**
+- **divtag is DIVISION-ONLY.** A playoff match with a null division renders NO
+  context tag (deliberate — no Cantor/round decode in this leaf; that's T5).
+  T6/T7 own their playoff-match labeling (pass `withDivision=false` + render
+  their own) — decide when those consumers are built. Documented in the header.
+- **Twig `_self` macro gotcha:** the card de-dupes score markup via
+  `{{ _self.scoreInner(...) }}`. Works + auto-safe on this stack's **Twig
+  2.14.4** (MacroAutoImportNodeVisitor); would break on plain Twig 2.x without
+  it. Remember if the engine is ever upgraded.
+- **Not refactored (optional later cleanup):** Phase-1 `home/results.htm` +
+  `dashboard/results.htm` still carry their own inline `.match` markup — not yet
+  delegated to the shared card (byte-identical this wave; noted in commit).
 
 ## Phase 1 status (archived)
 
