@@ -537,32 +537,36 @@ class SeedFixtures extends Command
      */
     protected function seedPlayoffs()
     {
-        // Placeholder team the frozen Playoff::seedTeams() looks up by the
-        // literal title 'BYE!' whenever a seed slot is unfilled. Deliberately
-        // NOT attached to any season/division, so it never leaks into
-        // standings, calendars or team listings — it only exists to fill an
-        // empty bracket slot.
         // The frozen Playoff::createMatches() inserts match rows without setting
         // the NOT-NULL-without-default `is_played` column; production MySQL runs
         // in a non-strict sql_mode that coerces the missing value to 0. The dev
         // container defaults to STRICT mode, which rejects the insert, so relax
-        // it for this seeding connection (session-scoped, dev-only).
+        // it for this seeding connection (session-scoped, dev-only). Capture the
+        // original mode first and restore it as the LAST statement of this
+        // method so the relaxed mode never leaks into the next seed step.
+        $originalSqlMode = DB::selectOne('SELECT @@SESSION.sql_mode AS m')->m;
         DB::statement("SET SESSION sql_mode=(SELECT REPLACE(REPLACE(@@sql_mode,'STRICT_TRANS_TABLES',''),'STRICT_ALL_TABLES',''))");
 
-        $bye = Team::where('title', 'BYE!')->first();
-        if (!$bye) {
-            $bye = new Team();
-            $bye->title = 'BYE!';
-            $bye->slug = 'bye-placeholder';
-            $bye->region_id = 1;
-            $this->setIfColumn($bye, 'short_description', '');
+        // Placeholder team the frozen Playoff::seedTeams() looks up by the
+        // literal title 'BYE!' whenever a seed slot is unfilled. Deliberately
+        // NOT attached to any season/division, so it never leaks into
+        // standings, calendars or team listings — it only exists to fill an
+        // empty bracket slot. (Local placeholder only; distinct from the real
+        // fixture team $this->teams['bye'] "Bye Week Bandits".)
+        $byePlaceholder = Team::where('title', 'BYE!')->first();
+        if (!$byePlaceholder) {
+            $byePlaceholder = new Team();
+            $byePlaceholder->title = 'BYE!';
+            $byePlaceholder->slug = 'bye-placeholder';
+            $byePlaceholder->region_id = 1;
+            $this->setIfColumn($byePlaceholder, 'short_description', '');
             foreach (['facebook_url', 'twitch_url', 'twitter_url', 'youtube_url', 'website_url', 'server_preference'] as $column) {
-                $this->setIfColumn($bye, $column, '');
+                $this->setIfColumn($byePlaceholder, $column, '');
             }
-            $this->setIfColumn($bye, 'accepting_apps', 0);
-            $this->setIfColumn($bye, 'disbanded', 0);
-            $this->setIfColumn($bye, 'slothrating', 0);
-            $this->saveRow($bye);
+            $this->setIfColumn($byePlaceholder, 'accepting_apps', 0);
+            $this->setIfColumn($byePlaceholder, 'disbanded', 0);
+            $this->setIfColumn($byePlaceholder, 'slothrating', 0);
+            $this->saveRow($byePlaceholder);
         }
 
         $tz = 'Europe/Berlin';
@@ -595,30 +599,45 @@ class SeedFixtures extends Command
         $this->playPlayoffMatch($this->playoffMatchAt($se, 1, 2, 1));
 
         // ---- Double elimination: de8, full 8 teams ----
-        $de = new Playoff();
-        $de->title = 'Community Cup';
-        $de->slug = 'community-cup';
-        $de->type = 'de8';
-        $de->season_id = $this->season->id;
-        $de->region_id = 1;
-        $this->setIfColumn($de, 'reg_open', 0);
-        $this->saveRow($de);
-        for ($seed = 1; $seed <= 8; $seed++) {
-            $de->teams()->attach($pool[$seed - 1]->id, ['seed' => $seed]);
+        // de8 fills all 8 seed slots straight from the fixture pool
+        // ($pool[0..7] below), so it is hard-coupled to a >=8-team fixture set.
+        // Make that coupling explicit: with fewer than 8 teams the indexing
+        // would fatal cryptically, so skip ONLY de8 (the se8 above needs 7).
+        if (count($pool) >= 8) {
+            $de = new Playoff();
+            $de->title = 'Community Cup';
+            $de->slug = 'community-cup';
+            $de->type = 'de8';
+            $de->season_id = $this->season->id;
+            $de->region_id = 1;
+            $this->setIfColumn($de, 'reg_open', 0);
+            $this->saveRow($de);
+            for ($seed = 1; $seed <= 8; $seed++) {
+                $de->teams()->attach($pool[$seed - 1]->id, ['seed' => $seed]);
+            }
+            $de->createMatches($when->year, $when->month, $when->day, $tz);
+            $de->seedTeams();
+
+            // Upper round 1: winners -> upper R2, losers dropped into lower R1.
+            $this->playPlayoffRound($de, 1, 1, 4);
+            // Lower round 1 (now populated by the dropped losers): exercises the
+            // bracket-losers spoiler special-case + more repeat-team appearances.
+            $this->playPlayoffRound($de, 2, 1, 2);
+
+            $this->output->writeln(
+                '  - playoffs: se8 "' . $se->title . '" (id ' . $se->id . ', slug ' . $se->slug . ', +BYE), '
+                . 'de8 "' . $de->title . '" (id ' . $de->id . ', slug ' . $de->slug . ')'
+            );
+        } else {
+            $this->output->writeln('<comment>seedPlayoffs: <8 fixture teams; skipping de8.</comment>');
+            $this->output->writeln(
+                '  - playoffs: se8 "' . $se->title . '" (id ' . $se->id . ', slug ' . $se->slug . ', +BYE)'
+            );
         }
-        $de->createMatches($when->year, $when->month, $when->day, $tz);
-        $de->seedTeams();
 
-        // Upper round 1: winners -> upper R2, losers dropped into lower R1.
-        $this->playPlayoffRound($de, 1, 1, 4);
-        // Lower round 1 (now populated by the dropped losers): exercises the
-        // bracket-losers spoiler special-case + more repeat-team appearances.
-        $this->playPlayoffRound($de, 2, 1, 2);
-
-        $this->output->writeln(
-            '  - playoffs: se8 "' . $se->title . '" (id ' . $se->id . ', slug ' . $se->slug . ', +BYE), '
-            . 'de8 "' . $de->title . '" (id ' . $de->id . ', slug ' . $de->slug . ')'
-        );
+        // Restore the sql_mode captured at the top so the relaxed (non-strict)
+        // session mode never leaks into whatever seed step runs after playoffs.
+        DB::statement("SET SESSION sql_mode = ?", [$originalSqlMode]);
     }
 
     /**

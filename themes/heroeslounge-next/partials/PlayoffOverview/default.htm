@@ -22,7 +22,13 @@
     not styled by heroeslounge.css in a way that affects our absolute placement.
 
     Group-stage (divisionView) and reg_open participant branches are Task 4; the
-    spike drives pure-knockout se8/de8, which have neither. -#}
+    spike drives pure-knockout se8/de8, which have neither.
+
+    POINT-OF-USE WARNING: names/scores/logos render MASKED (is-masked) until the
+    consuming page defines hlToggleSpoilers(show) and wires
+    {% component 'SpoilersToggle' callback='hlToggleSpoilers' %}. Task 4 supplies
+    this (port from the old theme — see plan SPIKE FINDINGS). Without it the
+    bracket renders fully masked. -#}
 {% if __SELF__.playoff is null %}
     <section class="sec"><div class="wrap">
         <p class="eyebrow mono">TOURNAMENT</p>
