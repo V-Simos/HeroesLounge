@@ -1,0 +1,59 @@
+{#- Closed-state season lists — SHARED by pages/season/view.htm (Task 2, via the
+    SeasonOverview override) and the season archive (Task 8). Param-driven on a
+    single `season` model (needs season.slug, season.type, and the eager-loaded
+    season.divisions / season.playoffs relations).
+
+    Data logic replicated faithfully from the frozen
+    themes/HeroesLounge-Theme/partials/season/overview.htm:
+      - Divisions: only when any exist; SORTED by title asc
+        (|sort((a,b) => a.title > b.title)).
+      - Playoffs: only when any exist; NOT sorted; heading label switches on the
+        season.type int column — 1 -> Playoffs, 2 -> Tournaments, 3 -> Stages
+        (any other value renders no label, matching the old if/elseif chain).
+
+    URLs are the FROZEN literals for this wave. The old partial used
+    `| page`, which resolves against the ACTIVE theme and would break links to
+    pages not yet ported; we hard-code the frozen routes instead:
+      - division  ->  /{slug}/{divslug}
+      - playoff   ->  /{slug}/playoff/{title|url_encode}
+        (playoff titles contain spaces, so url_encode is REQUIRED).
+
+    Re-skinned as themed .p panels with .season-link rows (NOT Bootstrap
+    .list-group, which the frozen sheets would clobber). -#}
+{% if season.divisions|length > 0 or season.playoffs|length > 0 %}
+<div class="season-grid">
+    {% if season.divisions|length > 0 %}
+    <section class="p season-panel">
+        <div class="p-head">Divisions</div>
+        <ul class="season-list">
+            {% for division in season.divisions|sort((a, b) => a.title > b.title) %}
+            <li>
+                <a class="season-link" href="/{{ season.slug }}/{{ division.slug }}">
+                    <span class="season-link-name">{{ division.title }}</span>
+                    {% partial 'site/icon' name='chevron-right' %}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+
+    {% if season.playoffs|length > 0 %}
+    <section class="p season-panel">
+        <div class="p-head">{% if season.type == 1 %}Playoffs{% elseif season.type == 2 %}Tournaments{% elseif season.type == 3 %}Stages{% endif %}</div>
+        <ul class="season-list">
+            {% for playoff in season.playoffs %}
+            <li>
+                <a class="season-link" href="/{{ season.slug }}/playoff/{{ playoff.title|url_encode }}">
+                    <span class="season-link-name">{{ playoff.title }}</span>
+                    {% partial 'site/icon' name='chevron-right' %}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+</div>
+{% else %}
+<p class="season-empty">Nothing scheduled yet.</p>
+{% endif %}

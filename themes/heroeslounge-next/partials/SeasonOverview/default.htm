@@ -1,0 +1,43 @@
+{#- Theme override for Rikki\LoungeViews\Components\SeasonOverview (registered
+    alias "SeasonOverview" in plugins/rikki/loungeviews/Plugin.php — the dir name
+    MUST match that casing exactly, capital S+O, or October silently renders the
+    plugin's own Bootstrap partial instead).
+
+    Re-skin of plugins/rikki/loungeviews/components/seasonoverview/default.htm.
+    The component's init() sets __SELF__.season (Season by :slug, eager-loaded
+    divisions + playoffs) and this.page.title, and — only when reg_open —
+    dynamically addComponent()s participationOverview under that name. -#}
+{% if __SELF__.season %}
+    {% if __SELF__.season.reg_open == true %}
+        {#- TODO(wave-1 deferred): theme participationOverview when a reg_open
+            fixture exists. Registration-OPEN seasons render the plugin's own
+            (un-skinned) participation partial VERBATIM — Season 30, the only
+            fixture, is reg_open=0, so this branch is unverifiable live. Kept
+            byte-for-byte from the old override so signup/free-agent flows keep
+            working; the theme just doesn't restyle them yet. -#}
+        {% component 'participationOverview' id=__SELF__.season.id %}
+    {% else %}
+        <section class="sec">
+            <div class="wrap">
+                <header class="season-head">
+                    <p class="eyebrow mono">SEASON</p>
+                    <h1>{{ __SELF__.season.title }}</h1>
+                </header>
+                {% partial 'season/overview' season=__SELF__.season %}
+            </div>
+        </section>
+    {% endif %}
+{% else %}
+    {#- Themed empty state — replicates the old override's literal
+        "No such season exists!", styled to match the PlayoffOverview not-found
+        treatment (eyebrow + h1 + muted line) rather than raw text. -#}
+    <section class="sec">
+        <div class="wrap">
+            <header class="season-head">
+                <p class="eyebrow mono">SEASON</p>
+                <h1>Not found</h1>
+            </header>
+            <p class="season-empty">No such season exists!</p>
+        </div>
+    </section>
+{% endif %}

@@ -132,3 +132,33 @@
 @media (max-width: 720px) {
   .post-siblings { grid-template-columns: 1fr; }
 }
+
+/* ---------- season overview (partials/season/overview.htm — SHARED by
+   pages/season/view.htm [Task 2] + the season archive [Task 8]) and the
+   SeasonOverview override's heading / empty state ----------
+   No mockup — derived from the established system: the season title reuses the
+   .welcome h1 type scale; the Divisions/Playoffs lists are standard .p panels
+   whose rows share the 52px .p-head rhythm as .season-link rows (chevron pulled
+   from the shared design language). .season-link carries no clip-path, so the
+   global :focus-visible ring applies as-is (no focus-affordance entry needed). */
+.season-head { margin-bottom: 34px; }
+.season-head h1 { font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; letter-spacing: .01em; }
+.season-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.season-list { list-style: none; }
+.season-link { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 20px;
+  border-bottom: 1px solid var(--line); color: var(--ink);
+  font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 15.5px;
+  transition: background .15s ease, color .15s ease; }
+.season-panel .season-list li:last-child .season-link { border-bottom: 0; }
+.season-link-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.season-link svg { width: 16px; height: 16px; color: var(--mute); flex-shrink: 0;
+  transition: color .15s ease, transform .15s ease; }
+.season-link:hover { background: var(--panel2); color: var(--storm); }
+.season-link:hover svg { color: var(--storm); transform: translateX(2px); }
+.season-empty { color: var(--mute); }
+@media (max-width: 720px) {
+  .season-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .season-link, .season-link svg { transition: none; }
+}
