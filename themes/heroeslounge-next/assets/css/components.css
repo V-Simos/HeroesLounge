@@ -463,6 +463,19 @@
   border-radius: 3px; text-shadow: none; }
 .hl-logo.is-masked { visibility: hidden; }
 
+/* ---------- match-card score spoiler mask (NEW — Task 1) ----------
+   The match card's blur-based spoiler, keyed on a page-level body class so a
+   spoiler toggle can reveal every masked score at once. Consumers that pass
+   revealScore=false wrap the score in .score-masked; the default
+   (revealScore=true) omits the span entirely, so unmasked cards are unaffected.
+   inline-flex+baseline+gap reproduce the parent .score layout inside the span
+   (one flex item), keeping the unblurred geometry identical to an unmasked card.
+   Distinct from the bracket's .is-masked (transparent block, JS per-node walk) —
+   an intentional divergence for now; Task 4 reconciles the two spoiler visuals. */
+.score-masked { display: inline-flex; align-items: baseline; gap: 6px;
+  filter: blur(7px); transition: filter .2s ease; }
+body.reveal-spoilers .score-masked { filter: none; }
+
 /* ---------- focus affordance on clipped elements ---------- */
 /* Focus on clipped elements: outlines outside the border box are clipped
    away by clip-path, so pull the ring inside the chamfered edge.
@@ -479,5 +492,5 @@
   .ticker-clip { overflow-x: auto; }
   .dot { animation: none; }
   .btn:hover { transform: none; }
-  .hl-node-card, .hl-name, .hl-score { transition: none; }
+  .hl-node-card, .hl-name, .hl-score, .score-masked { transition: none; }
 }
