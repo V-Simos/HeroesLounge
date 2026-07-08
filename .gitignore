@@ -22,3 +22,6 @@
 !install_hl.sh
 
 *.pyc
+
+# Superpowers brainstorm mockups (local only)
+.superpowers/
