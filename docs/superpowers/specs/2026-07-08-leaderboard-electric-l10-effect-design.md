@@ -21,7 +21,9 @@ From both standings partials:
 
 - The gold **trophy** icon on the rank-1 row (`{% partial 'site/icon' name='trophy' %}` inside `<span class="gold-ic">`).
 - The **gold leader** styling: the `.first` class application (leader-only gold team name).
-- The **team shield / logo** on each row (the "activity blue boxes" — in the mockup these were placeholder squares standing in for `{% partial 'team/shield' %}`).
+
+**Team logos / shields are kept** — `{% partial 'team/shield' %}` stays on every
+row unchanged.
 
 Dead CSS after removal (to delete from `components.css`):
 
@@ -32,18 +34,16 @@ Dead CSS after removal (to delete from `components.css`):
 The `trophy` case in `partials/site/icon.htm` may stay (harmless; no longer
 referenced by these partials).
 
-> ⚠️ **Confirm before implementing:** removing the shield removes the team
-> *logos* from the standings rows, not just a decorative box. The user asked to
-> "remove the activity blue boxes" while viewing the mockup, where those boxes
-> were logo placeholders. Flagged for explicit confirmation.
-
 ## New column: L10
 
-A right-aligned **L10** column showing the last-10-maps record as a coloured
-**W–L record** (e.g. green `8` – red `2`), monospace.
+An **L10** column showing the last-10-maps record as a coloured **W–L record**
+(e.g. green `8` – red `2`), monospace.
 
 - Header cell `L10` added after `Map ±`.
-- Grid template gains a 7th track (~92px). Existing tracks tightened slightly to fit.
+- Grid template gains a 7th track (~56px), **left-aligned and packed directly
+  against the other stat columns** (no separating gap — L10 reads as part of the
+  stat group, not detached at the far right).
+- Existing tracks unchanged; the row's `column-gap` applies uniformly.
 
 ### Data (placeholder for now)
 
@@ -79,12 +79,19 @@ z-index:4` so it always sits above the effect layers.
 
 ### Stages (driven by L10 wins, kept tame)
 
-| Stage | L10 wins | Bolts | Border | Flash peak |
-|-------|----------|-------|--------|-----------|
-| —     | 0–5      | 0     | none (plain row) | — |
-| `s1`  | 6–7      | 1     | faint electric border, small glow | ~0.28 |
-| `s2`  | 8–9      | 2     | medium border + glow | ~0.42 |
-| `s3`  | 10       | 3     | bright border + glow + subtle bg tint | ~0.50 |
+| Stage | L10 wins | Bolts | Accent hue | Border | Flash peak |
+|-------|----------|-------|-----------|--------|-----------|
+| —     | 0–5      | 0     | — | none (plain row) | — |
+| `s1`  | 6–7      | 1     | muted steel-blue `112,158,205` | very faint 1.25px border, tiny glow, no bg tint | ~0.16 |
+| `s2`  | 8–9      | 2     | storm-blue `79,179,242` | medium 1.5px border + glow, faint bg tint | ~0.40 |
+| `s3`  | 10       | 3     | bright pure blue `130,198,255` (near-white border) | bold 1.9px border + double glow + bg tint | ~0.58 |
+
+The spread is deliberately wide so the three tiers are distinct at a glance:
+`s1` is barely-there, `s3` is unmistakably the hottest. Each stage carries a
+per-stage accent colour (`--ac` as an `R,G,B` triple) that tints its border,
+glow, sheen, flash, and bolt glow — so intensity reads as **both** brightness and
+hue, staying within the blue family (muted steel-blue → storm-blue → bright pure
+blue). Even boosted, `s3` stays tame (thin bolts, contained flash).
 
 Bolt count per stage is handled purely in CSS (`.s1 .bolts path:nth-child(n+2){display:none}`,
 `.s2 .bolts path:nth-child(n+3){display:none}`); the markup always contains all
@@ -102,8 +109,9 @@ Stage class computed inline:
   (`animation: strike 45s ... var(--d) infinite`, `--d` ≥ 10s).
 - Each strike is **visible ~1s** (draw → flicker → fade), then gone for the rest
   of the cycle.
-- Rows are **staggered** so the table never flashes all at once:
-  `--d: 10s + loop.index0 * 2.5s` (computed per row).
+- **All qualifying rows fire simultaneously** — a single synchronized table-wide
+  strike. Every effect row uses the same `--d` (10s) and the same 45s cycle, so
+  the whole board flashes together.
 - The `edge::before` sheen travels around the border over ~8s (uses `@property --a` for a smooth angle animation).
 
 ### Reduced motion
