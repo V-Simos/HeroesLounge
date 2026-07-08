@@ -36,17 +36,13 @@
 .tab.on { background: linear-gradient(135deg, var(--storm), #2E86DD); color: #041020; }
 .table { background: var(--panel); }
 .table[hidden] { display: none; }
-.tr { display: grid; grid-template-columns: 38px 1fr 52px 52px 64px 64px; align-items: center;
+.tr { display: grid; grid-template-columns: 38px 1fr 52px 52px 64px 64px 56px; align-items: center;
   min-height: 56px; padding: 0 20px; border-bottom: 1px solid var(--line); font-size: 15.5px; }
 .tr.th { min-height: 44px; font-size: 11px; letter-spacing: .18em; color: var(--mute); text-transform: uppercase;
   font-family: 'JetBrains Mono', monospace; font-weight: 600; }
 .tr:last-child { border-bottom: 0; }
 .tr.you { background: rgba(79,179,242,0.1); box-shadow: inset 3px 0 0 var(--storm); }
 .tteam { font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 15.5px; display: flex; align-items: center; gap: 9px; color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
-.tr.first .tteam { color: var(--gold); }
-/* .gold-ic color/size ported from the mockups; its box-passing shim (inline-flex
-   wrapper + svg sizing) lives in the "server-rendered shims" block below. */
-.gold-ic { color: var(--gold); width: 14px; height: 14px; }
 .rank { font-family: 'JetBrains Mono', monospace; color: var(--mute); font-size: 14px; }
 .num { font-family: 'JetBrains Mono', monospace; color: var(--ink); font-size: 14.5px; }
 .num.dim { color: var(--mute); }
@@ -54,6 +50,64 @@
 .num.neg { color: var(--red); }
 .num.big { font-weight: 600; }
 .inact { opacity: .5; }
+/* L10 column — last-10-maps record as a coloured W–L pair, packed against the
+   stat group (justify-self:start), left-aligned header cell to match. */
+.l10 { font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: .02em; justify-self: start; }
+.tr.th span:last-child { justify-self: start; }
+.l10 .w { color: var(--green); font-weight: 600; }
+.l10 .s { color: var(--mute); margin: 0 3px; }
+.l10 .l { color: var(--red); font-weight: 600; }
+
+/* ---------- electric effect rows (L10-driven; see partials/division/electric.htm) ----------
+   Applied to a qualifying standings row as `eff` + a stage class (s1/s2/s3).
+   Three absolutely-positioned layers (.edge/.flash/.bolts) are emitted by the
+   shared division/electric partial as the row's first children; they consume no
+   grid cell and sit UNDER the row text (which is lifted to z-index:4). Strike
+   timing is baked to a shared 45s cycle with the first strike at 10s, so every
+   qualifying row across the board flashes together — no per-row delay needed.
+   The accent hue (--ac, an R,G,B triple) shifts per stage, so intensity reads as
+   both brightness and hue while staying in the blue family. Disbanded rows never
+   get `eff` (guarded in Twig). */
+.tr.eff { position: relative; isolation: isolate; --ac: 90,184,255; }
+.tr.eff .rank, .tr.eff .tteam, .tr.eff .num, .tr.eff .l10 { position: relative; z-index: 4; }
+
+.tr.eff .edge { position: absolute; inset: 0; border-radius: 3px; z-index: 3; pointer-events: none; border: 1.5px solid; }
+.tr.eff .edge::before { content: ""; position: absolute; inset: -1px; border-radius: 3px; padding: 1.5px;
+  background: conic-gradient(from var(--a,0deg), transparent 0 80%, rgba(234,247,255,.7) 90%, transparent 97%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: sheen 8s linear infinite; }
+@property --a { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes sheen { to { --a: 360deg; } }
+
+.tr.eff .flash { position: absolute; inset: 0; border-radius: 3px; z-index: 2; pointer-events: none; opacity: 0;
+  background: radial-gradient(120% 160% at 50% 50%, rgba(234,247,255,.5), rgba(var(--ac),.14) 55%, transparent 75%);
+  animation: flashk 45s linear 10s infinite; }
+.tr.eff .bolts { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none;
+  overflow: hidden; border-radius: 3px; }
+.tr.eff .bolts path { fill: none; stroke: #EAF7FF; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(var(--ac),.9)) drop-shadow(0 0 8px rgba(var(--ac),.55));
+  stroke-dasharray: 120; stroke-dashoffset: 120; opacity: 0; animation: strike 45s ease-in-out 10s infinite; }
+
+/* ~1s visible strike inside the 45s cycle — draw, flicker, fade */
+@keyframes strike { 0% { stroke-dashoffset: 120; opacity: 0; } 0.3% { stroke-dashoffset: 0; opacity: 1; }
+  0.9% { opacity: .35; } 1.4% { opacity: 1; } 2.3% { opacity: 0; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes flashk { 0% { opacity: 0; } 0.3% { opacity: var(--fl); } 1% { opacity: calc(var(--fl)*.35); }
+  1.6% { opacity: calc(var(--fl)*.85); } 2.6% { opacity: 0; } 100% { opacity: 0; } }
+
+/* stage strengths (per-stage accent hue R,G,B + flash peak --fl; spread wide so
+   the three tiers are distinct at a glance, but all kept tame) */
+.tr.eff.s1 { --ac: 112,158,205; --fl: .16; }                                                     /* muted steel blue */
+.tr.eff.s2 { --ac: 79,179,242; --fl: .4; background: linear-gradient(90deg, rgba(var(--ac),.07), transparent 72%); }  /* storm blue */
+.tr.eff.s3 { --ac: 130,198,255; --fl: .58; background: linear-gradient(90deg, rgba(var(--ac),.15), rgba(var(--ac),.04) 72%); } /* bright pure blue */
+.tr.eff.s1 .edge { border-width: 1.25px; border-color: rgba(var(--ac),.4); box-shadow: 0 0 4px rgba(var(--ac),.14); }
+.tr.eff.s2 .edge { border-width: 1.5px; border-color: rgba(var(--ac),.82); box-shadow: 0 0 11px rgba(var(--ac),.34), inset 0 0 7px rgba(var(--ac),.09); }
+.tr.eff.s3 .edge { border-width: 1.9px; border-color: rgba(214,246,255,1); box-shadow: 0 0 20px rgba(var(--ac),.62), 0 0 38px rgba(var(--ac),.24), inset 0 0 12px rgba(var(--ac),.22); }
+.tr.eff.s1 .edge::before { opacity: .1; }
+.tr.eff.s2 .edge::before { opacity: .34; }
+.tr.eff.s3 .edge::before { opacity: .58; }
+/* bolt count per stage (markup always ships all three paths) */
+.tr.eff.s1 .bolts path:nth-child(n+2) { display: none; }
+.tr.eff.s2 .bolts path:nth-child(n+3) { display: none; }
 .table-foot { display: flex; align-items: center; justify-content: center; gap: 6px;
   padding: 13px; font-size: 10.5px; letter-spacing: .18em; color: var(--storm); }
 .table-foot:hover { color: var(--ink); }
@@ -97,6 +151,9 @@
   font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: .08em; }
 .logo em { font-style: normal; color: var(--storm); }
 .logo svg { color: var(--storm); width: 22px; height: 22px; }
+/* the brand emblem (site/logo) carries its own fills and is taller than wide —
+   size by height and let width follow the viewBox so it isn't squished. */
+.logo .logo-mark { width: auto; height: 26px; }
 .links { display: flex; align-items: center; gap: 28px; font-weight: 500; font-size: 16px; color: var(--mute); }
 .links a:hover { color: var(--ink); }
 .links .signin { color: var(--ink); }
@@ -336,14 +393,9 @@
 .badge-hue-11 { background: linear-gradient(160deg, hsl(330 60% 30%), hsl(330 65% 16%)); color: hsl(330 90% 80%); box-shadow: inset 0 0 0 1px hsl(330 65% 50% / 0.55); }
 
 /* ---------- server-rendered shims (new — not in the mockups) ----------
-   The mockups rely on lucide.js swapping <i class="gold-ic"> for an <svg>
-   that inherits the class; the theme renders real inline <svg>/<img> inside
-   a classed wrapper instead, so the wrapper needs to pass its box on. */
+   The theme renders a real inline <img> inside a classed .badge wrapper (the
+   mockups only ever held initials); the wrapper needs to pass its box on. */
 .badge img, .badge-lg img { width: 100%; height: 100%; object-fit: cover; }
-/* Shim half of .gold-ic — its mockup-ported color/size declaration lives in
-   the standings-table block near the top of this file. */
-.gold-ic { display: inline-flex; flex-shrink: 0; }
-.gold-ic svg { width: 100%; height: 100%; }
 /* .dot + label composite in the cast panel head (reference-design puts the
    pulse dot inside the head line; .p-head itself is space-between). */
 .p-head .live { display: inline-flex; align-items: center; gap: 8px; }
@@ -376,7 +428,7 @@
   .burger { display: inline-flex; }
   .hero { padding: 56px 0 52px; }
   .match-grid, .event-grid, .post-grid { grid-template-columns: 1fr; }
-  .tr { grid-template-columns: 30px 1fr 40px 40px 52px 44px; padding: 12px 14px; font-size: 13.5px; }
+  .tr { grid-template-columns: 30px 1fr 40px 40px 52px 44px 46px; padding: 12px 14px; font-size: 13.5px; }
   .ticker-label { padding: 11px 14px 11px 14px; }
 }
 @media (max-width: 480px) {
@@ -388,6 +440,11 @@
      shield + trophy stay fixed-width (flex-shrink:0); only the <a> shrinks. */
   .tteam { overflow: hidden; }
   .tteam a { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  /* Retighten the stat tracks below 480px: the L10 column (7th track, added for
+     the electric effect) on top of the ≤720px grid leaves the 1fr name track too
+     narrow to show a name past the shield. Shave the numeric columns to hand the
+     width back to the name (the P/W/Map values are 1–2 digits). */
+  .tr { grid-template-columns: 26px 1fr 28px 28px 42px 38px 44px; padding: 12px 12px; }
   /* .mrow at phone width (new — the mockup rows only ever held short names):
      the 92px timestamp + >=118px pill/score leave the flexible middle ~20px,
      shattering real team names one character per line. Wrap instead:
@@ -518,4 +575,9 @@ body.reveal-spoilers .score-masked { filter: none; }
   .btn:hover { transform: none; }
   .hl-node-card, .hl-name, .hl-score, .score-masked { transition: none; }
   .spoiler-switch .track, .spoiler-switch .track::after { transition: none; }
+  /* Electric rows: kill the strikes and the travelling sheen, but KEEP the
+     static electric border — it's identity, not motion. */
+  .tr.eff .bolts path { animation: none; opacity: 0; }
+  .tr.eff .flash { animation: none; opacity: 0; }
+  .tr.eff .edge::before { animation: none; }
 }
