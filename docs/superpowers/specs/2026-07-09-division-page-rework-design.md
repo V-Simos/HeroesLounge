@@ -106,9 +106,10 @@ shape and size:
 - The `.tl-row` first grid track widens 40px → 52px to match.
 - The `.tl-ic` background/colour fallback tint and centring stay; the lucide
   fallback icon (`users` / `swords` / `message-square`) stays and is now round.
-- In `timeline.htm`, bump the four `resize(48,48)` calls to a size that fills the
-  larger circle crisply (e.g. `resize(64,64)`, matching the old design's source
-  size). Purely the resize dimensions — no other markup change.
+- In `timeline.htm`, bump the three `resize(48,48)` calls (the sloth, match, and
+  generic-team branches) to a size that fills the larger circle crisply (e.g.
+  `resize(64,64)`, matching the old design's source size). Purely the resize
+  dimensions — no other markup change.
 
 ## What is NOT changing
 
