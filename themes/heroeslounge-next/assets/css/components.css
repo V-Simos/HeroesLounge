@@ -429,6 +429,8 @@
   .hero { padding: 56px 0 52px; }
   .match-grid, .event-grid, .post-grid { grid-template-columns: 1fr; }
   .tr { grid-template-columns: 30px 1fr 40px 40px 52px 44px 46px; padding: 12px 14px; font-size: 13.5px; }
+  /* Playoff score standings (5-col): tighten at phone width like .tr. */
+  .tr-score { grid-template-columns: 30px 1fr 40px 52px 52px; padding: 10px 14px; font-size: 13.5px; }
   .ticker-label { padding: 11px 14px 11px 14px; }
 }
 @media (max-width: 480px) {
@@ -556,6 +558,57 @@ body.reveal-spoilers .score-masked { filter: none; }
   box-shadow: inset 0 0 0 1px rgba(79,179,242,0.6); }
 .spoiler-switch input:checked + .track::after { transform: translateX(21px); background: var(--storm); }
 .spoiler-switch input:focus-visible + .track { outline: 2px solid var(--storm); outline-offset: 2px; }
+
+/* ---------- playoff group-stage: Stage/Round tabs, score standings, participants
+   (Task 4b — PlayoffOverview/default.htm + divisionView.htm + DivisionTable
+   showScore branch). All NEW class names, scoped under playoff surfaces. */
+
+/* Stage tabs (outer) + panels — lounge.js tab contract. .stage-panel[hidden]
+   must beat any default block display (mirrors .round-grid[hidden]). */
+.stage-tabs { flex-wrap: wrap; margin: 6px 0 22px; }
+.stage-panel[hidden] { display: none; }
+.stage-group { display: flex; flex-direction: column; gap: 40px; }
+
+/* Score standings — a dedicated 5-col grid (NOT the 7-col .tr): # | Team | P |
+   Score | Map ±. Reuses .rank/.tteam/.num/.pos/.neg/.inact from the .tr styles. */
+.tr-score { display: grid; grid-template-columns: 44px 1fr 60px 72px 72px; align-items: center;
+  min-height: 52px; padding: 8px 18px; border-bottom: 1px solid var(--line); }
+.tr-score:last-child { border-bottom: 0; }
+.tr-score .num, .tr-score .rank { justify-self: end; }
+.tr-score .tteam { justify-self: start; }
+.tr-score.th { min-height: 44px; font-size: 11px; letter-spacing: .18em; color: var(--mute);
+  text-transform: uppercase; border-bottom: 1px solid var(--line); }
+.tr-score.th span { font-family: 'JetBrains Mono', monospace; }
+.tr-score.th span:not(:nth-child(2)) { justify-self: end; }
+.tr-score.th span:nth-child(2) { justify-self: start; }
+
+/* Registration-open: captain signup + participants deck. */
+.playoff-signup { gap: 14px; padding: 20px 22px; margin: 4px 0 28px; max-width: 480px;
+  align-items: flex-start; }
+.playoff-signup-lead { color: var(--mute); font-size: 14px; }
+.playoff-signup-field { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.playoff-signup-field .lbl { font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--mute); font-weight: 600; }
+.playoff-signup-alt { color: var(--mute); font-size: 14px; margin: 0 0 24px; }
+.playoff-signup-alt a { color: var(--storm); }
+
+.playoff-teams { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px; margin-top: 18px; }
+.playoff-team { padding: 16px 18px; gap: 12px; }
+.playoff-team-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.playoff-team-name { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 16px;
+  color: var(--ink); overflow-wrap: anywhere; }
+.playoff-team-name:hover { color: var(--storm); }
+.playoff-roster { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.playoff-roster a { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink);
+  padding: 3px 0; min-width: 0; }
+.playoff-roster a:hover { color: var(--storm); }
+.playoff-roster-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Role tag: text fallback (the theme has no assets/img/roles/ — see partial). */
+.role-tag { flex-shrink: 0; font-size: 9px; letter-spacing: .06em; font-weight: 700;
+  padding: 2px 5px; border-radius: 3px; background: rgba(79,179,242,0.16); color: var(--storm); }
+.cap-star { flex-shrink: 0; display: inline-flex; color: var(--gold); }
+.cap-star svg { width: 13px; height: 13px; }
 
 /* ---------- focus affordance on clipped elements ---------- */
 /* Focus on clipped elements: outlines outside the border box are clipped
