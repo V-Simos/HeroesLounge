@@ -1,0 +1,78 @@
+{#- Group-stage pane for ONE division (Task 4b). Re-skin of the FROZEN
+    plugins/rikki/loungeviews/components/playoffoverview/divisionView.htm.
+    Receives `div`. Rendered inside a Stage tab-panel of PlayoffOverview/default.htm.
+
+    STANDINGS (score mode): {% component 'divisionTable' id=div.id %} fires the
+    nested DivisionTable's onRender with showScore=true (the property set in
+    PlayoffOverview::init()'s addComponent) and renders the theme override
+    partials/DivisionTable/default.htm, whose showScore branch emits the score
+    table (# | Team | P | Score | Map ±) with the score cells wrapped in
+    .hl-score.is-masked — so the page's EXISTING spoiler callback masks/reveals
+    them (it toggles is-masked on every .hl-score). No new callback needed.
+
+    ROUND TABS: reproduce the frozen divisionView round logic re-skinned, but drive
+    the nested roundMatches component the Task-3 way (partials/division/rounds.htm)
+    — {% component 'roundMatches' %} would render the plugin's un-skinned Bootstrap
+    partial, so instead we reach the roundMatches OBJECT (available in this override
+    as the lowercase-alias page variable `roundMatches`; verified {% do
+    roundMatches.setProperty %} works here), set its id+round, invoke onRender(),
+    eager-load the shields' smallLogo + channels, then render each match via the
+    shared match/card. Only when div has matches; per-round tabs only when
+    minRound < maxRound (else the single round, no tabs). Latest round active.
+
+    Round-card scores use match/card's .score-masked (body.reveal-spoilers) mask;
+    the page callback (Task 4a) was extended to also toggle body.reveal-spoilers so
+    both spoiler schemes reveal in sync. No L10 / electric / .you window here
+    (playoff standings have neither). -#}
+{% if div is null %}
+    <p class="hl-bracket-empty">Group not found</p>
+{% else %}
+<div class="stage-group">
+    <section class="divblock">
+        <div class="blockhead"><h2>{{ div.title }} Standings</h2></div>
+        <div class="table chamfer stage-standings">
+            {% component 'divisionTable' id=div.id %}
+        </div>
+    </section>
+
+    {% if div.matches().count() != 0 %}
+    {% set minRound = div.matches().min('round') %}
+    {% set maxRound = div.matches().max('round') %}
+    <section class="divblock">
+        <div class="blockhead"><h2>Rounds</h2></div>
+        {% if minRound < maxRound %}
+        <div class="round-tabs tabs" data-tabs role="tablist" aria-label="Round">
+            {% for key, i in minRound..maxRound %}
+            <button class="tab{% if i == maxRound %} on{% endif %}" role="tab" aria-selected="{{ i == maxRound ? 'true' : 'false' }}" aria-controls="rnd-{{ div.id }}-{{ i }}" data-tab-target="rnd-{{ div.id }}-{{ i }}">R{{ i }}</button>
+            {% endfor %}
+        </div>
+        {% for key, i in minRound..maxRound %}
+        {% do roundMatches.setProperty('id', div.id) %}
+        {% do roundMatches.setProperty('round', i) %}
+        {% do roundMatches.onRender() %}
+        {% if roundMatches.matches %}{% do roundMatches.matches.load('teams.smallLogo', 'channels') %}{% endif %}
+        <div class="round-grid" id="rnd-{{ div.id }}-{{ i }}" role="tabpanel"{% if i != maxRound %} hidden{% endif %}>
+            {% for m in roundMatches.matches %}
+            {% partial 'match/card' match=m variant=(m.is_played ? 'result' : 'fixture') revealScore=false withDivision=false %}
+            {% else %}
+            <p class="round-empty">No matches this round.</p>
+            {% endfor %}
+        </div>
+        {% endfor %}
+        {% else %}
+        {% do roundMatches.setProperty('id', div.id) %}
+        {% do roundMatches.setProperty('round', minRound) %}
+        {% do roundMatches.onRender() %}
+        {% if roundMatches.matches %}{% do roundMatches.matches.load('teams.smallLogo', 'channels') %}{% endif %}
+        <div class="round-grid">
+            {% for m in roundMatches.matches %}
+            {% partial 'match/card' match=m variant=(m.is_played ? 'result' : 'fixture') revealScore=false withDivision=false %}
+            {% else %}
+            <p class="round-empty">No matches this round.</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+</div>
+{% endif %}

@@ -3,92 +3,204 @@
     name MUST match that casing exactly or October silently renders the plugin's
     Bootstrap partial instead).
 
-    TASK-0 SPIKE FOUNDATION (kept for Task 4). Re-emits the FROZEN bracket
-    geometry VERBATIM from the plugin partial: each node is absolutely placed by
-    the component's precomputed offset_left/offset_top (rem) inside a box locked
-    at match_width x match_height (13rem x 3.875rem), and the connectors are the
-    component's precomputed `polylines` (points already in rem*1000) drawn in an
-    SVG whose viewBox is total_width*1000 x total_height*1000 — so 1000 SVG units
-    map to 1rem and the lines meet the node edges. NEVER change the box w/h or the
-    connectors desync.
+    Three-way structure re-skinned from the FROZEN plugin partial
+    (plugins/rikki/loungeviews/components/playoffoverview/default.htm):
+      1. playoff is null        -> not-found literal.
+      2. playoff.reg_open       -> longTitle + optional captain signup form +
+                                   "create a new team" link + Participants deck.
+      3. else                   -> group-stage Stage tabs (one per division, plus
+                                   a Knockout tab when playoff.matches is not
+                                   empty) and/or the knockout bracket.
+
+    KNOCKOUT BRACKET (Task-0 spike foundation, kept VERBATIM). Re-emits the FROZEN
+    bracket geometry: each node is absolutely placed by the component's precomputed
+    offset_left/offset_top (rem) inside a box locked at match_width x match_height
+    (13rem x 3.875rem), and the connectors are the component's precomputed
+    `polylines` (points already in rem*1000) drawn in an SVG whose viewBox is
+    total_width*1000 x total_height*1000 — so 1000 SVG units map to 1rem and the
+    lines meet the node edges. NEVER change the box w/h or the connectors desync.
+    The bracket markup is factored into the `bracket` block below so it renders
+    identically whether standalone (no divisions) or inside the Knockout panel.
+
+    STAGE TABS use the lounge.js tab contract (.tabs[data-tabs] + .tab buttons
+    with data-tab-target + [hidden] panels), same as division/rounds.htm. Active
+    rule (frozen): Knockout active when playoff.matches is not empty, else the
+    first division tab. divisionView.htm reaches the nested divisionTable /
+    roundMatches components (attached in PlayoffOverview::init() with those
+    lowercase aliases) as page variables — verified: {% do roundMatches.setProperty %}
+    works inside this override, so the group panes use the Task-3 card pattern.
 
     Clobber avoidance: the component's onRun() auto-injects heroeslounge.css LAST
     via {% styles %}, so it wins on any shared selector (.bracket, .match,
     .opponent, .name, .logo, .result, .spoiler, .notext, .state ...). Every class
-    here is therefore FRESH and scoped under the .hl-bracket ancestor, so the
-    legacy sheet cannot target it. The only legacy class names re-used are the
-    bracket-winners/bracket-losers/bracket-finals hooks on the positioned wrapper
-    — they are read by the spoiler JS (bracket-losers is a required hook) and are
-    not styled by heroeslounge.css in a way that affects our absolute placement.
-
-    Group-stage (divisionView) and reg_open participant branches are Task 4; the
-    spike drives pure-knockout se8/de8, which have neither.
+    here is therefore FRESH and scoped under a .hl-* ancestor. The only legacy
+    class names re-used are the bracket-winners/bracket-losers/bracket-finals
+    hooks on the positioned wrapper — read by the spoiler JS (bracket-losers is a
+    required hook) and not styled by heroeslounge.css in a way that affects our
+    absolute placement.
 
     POINT-OF-USE WARNING: names/scores/logos render MASKED (is-masked) until the
-    consuming page defines hlToggleSpoilers(show) and wires
-    {% component 'SpoilersToggle' callback='hlToggleSpoilers' %}. Task 4 supplies
-    this (port from the old theme — see plan SPIKE FINDINGS). Without it the
-    bracket renders fully masked. -#}
+    consuming page defines its spoiler callback and wires
+    {% component 'SpoilersToggle' callback='...' %}. Task 4a supplied this on both
+    pages (season/playoff.htm + playoff/view.htm). Without it the bracket renders
+    fully masked; group-stage standings scores likewise ship .hl-score.is-masked
+    and are revealed by the same callback. -#}
+
+{#- ===================== reusable knockout bracket block ===================== -#}
+{% macro bracket(SELF) %}
+    <div class="hl-bracket-scroll">
+        <div class="hl-bracket" style="width: {{ SELF.total_width }}rem; height: {{ SELF.total_height }}rem;">
+            <div class="hl-bracket-nodes">
+                {% for match in SELF.matches %}
+                {% set m = match['model'] %}
+                <div class="bracket-{{ match['position_bracket_name'] }} hl-node"
+                     style="left: {{ match['offset_left'] }}rem; top: {{ match['offset_top'] }}rem; width: {{ SELF.match_width }}rem; height: {{ SELF.match_height }}rem;">
+                    {#- Frozen node link: /match/view/:id -#}
+                    <a class="hl-node-card chamfer" href="/match/view/{{ m.id }}">
+                        <div class="hl-side">
+                            {% if m.teams[0] %}
+                            <span class="hl-logo is-masked">{% partial 'team/shield' team=m.teams[0] size='sm' %}</span>
+                            <span class="hl-name is-masked">{{ m.teams[0].title }}</span>
+                            {% else %}
+                            <span class="hl-name hl-tbd">TBD</span>
+                            {% endif %}
+                            {% if m.is_played and m.teams[0] %}
+                            <span class="hl-score is-masked {{ m.winner_id == m.teams[0].id ? 'hl-win' : 'hl-loss' }}">{{ m.teams[0].pivot.team_score }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="hl-side">
+                            {% if m.teams[1] %}
+                            <span class="hl-logo is-masked">{% partial 'team/shield' team=m.teams[1] size='sm' %}</span>
+                            <span class="hl-name is-masked">{{ m.teams[1].title }}</span>
+                            {% else %}
+                            <span class="hl-name hl-tbd">TBD</span>
+                            {% endif %}
+                            {% if m.is_played and m.teams[1] %}
+                            <span class="hl-score is-masked {{ m.winner_id == m.teams[1].id ? 'hl-win' : 'hl-loss' }}">{{ m.teams[1].pivot.team_score }}</span>
+                            {% endif %}
+                        </div>
+                        {% if not m.is_played and m.wbp is not null %}
+                        <div class="hl-when mono">{{ m.wbp | date('d M', SELF.timezone) }} · {{ m.wbp | date(SELF.timeFormat, SELF.timezone) }}</div>
+                        {% endif %}
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {#- Connectors: viewBox maps rem*1000 -> the 100%-sized SVG, so
+                1000 units == 1rem. stroke-width 62.5 == 0.0625rem (~1px). -#}
+            <svg class="hl-bracket-links" x="0" y="0" viewBox="0 0 {{ SELF.total_width * 1000 }} {{ SELF.total_height * 1000 }}">
+                {% for line in SELF.polylines %}
+                <polyline class="hl-link" points="{% for point in line %}{{ point }}{% if not loop.last %} {% endif %}{% endfor %}" fill="none" style="stroke-width: 62.5;"></polyline>
+                {% endfor %}
+            </svg>
+        </div>
+    </div>
+{% endmacro %}
+
+{% import _self as br %}
+
 {% if __SELF__.playoff is null %}
     <section class="sec"><div class="wrap">
         <p class="eyebrow mono">TOURNAMENT</p>
         <h1>Not found</h1>
         <p class="hl-bracket-empty">We could not find a tournament with this title!</p>
     </div></section>
-{% else %}
+
+{% elseif __SELF__.playoff.reg_open %}
+    {#- ---------- registration-open participants branch ---------- -#}
     <section class="sec"><div class="wrap">
-        <p class="eyebrow mono">BRACKET</p>
+        <p class="eyebrow mono">TOURNAMENT</p>
+        <h1>{{ __SELF__.playoff.longTitle }}</h1>
+
+        {% if __SELF__.user and not __SELF__.userTeamSignedUp and __SELF__.userCaptainedTeams is not empty %}
+        {#- Captain signup. Handler + field names preserved EXACTLY from the frozen
+            partial (data-request onTeamSignup reads hidden POST playoff_id +
+            team_id) or the signup silently no-ops. -#}
+        <form class="playoff-signup p chamfer" data-request-data="playoff_id: {{ __SELF__.playoff.id }}" data-request="{{ __SELF__ }}::onTeamSignup">
+            <p class="playoff-signup-lead">You can participate with one of your existing teams:</p>
+            <label class="playoff-signup-field">
+                <span class="lbl mono">Team</span>
+                <select class="select" name="team_id" id="chooseTeam">
+                    {% for team in __SELF__.userCaptainedTeams %}
+                    <option value="{{ team.id }}">{{ team.title }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <button type="submit" class="btn chamfer">Sign up with your team</button>
+        </form>
+        {% endif %}
+
+        {% if __SELF__.user and not __SELF__.userTeamSignedUp %}
+        {#- Literal /team/create — `| page` won't resolve cross-theme (Wave-1 uses
+            literal URL strings for frozen routes). -#}
+        <p class="playoff-signup-alt">Or <a href="/team/create">create a new team</a> for this tournament.</p>
+        {% endif %}
+
+        <div class="blockhead"><h2>Participants</h2><span class="blockmeta mono">{{ __SELF__.playoff.teams|length }} TEAMS</span></div>
+        <div class="playoff-teams">
+            {% for team in __SELF__.playoff.teams %}
+            <div class="p chamfer playoff-team">
+                <div class="playoff-team-head">
+                    {% partial 'team/shield' team=team size='lg' %}
+                    <a class="playoff-team-name" href="/team/view/{{ team.slug }}">{{ team.title }}</a>
+                </div>
+                <ul class="playoff-roster">
+                    {% for sloth in team.sloths %}
+                    <li>
+                        <a href="/user/view/{{ sloth.id }}" title="{{ sloth.title }} Profile">
+                            {#- Role icon: the frozen partial reads
+                                assets/img/roles/<role>.svg | theme, but that dir
+                                does NOT exist in themes/heroeslounge-next (the SVGs
+                                live only in the FROZEN old theme, unreachable via
+                                | theme). Graceful fallback: a small text role tag,
+                                no broken <img>. See report. -#}
+                            {% if sloth.role %}<span class="role-tag mono" title="{{ sloth.role.title }}">{{ sloth.role.title|slice(0,3)|upper }}</span>{% endif %}
+                            {% if sloth.isCaptainOfTeam(team) %}<span class="cap-star" title="Captain">{% partial 'site/icon' name='star' %}</span>{% endif %}
+                            <span class="playoff-roster-name">{{ sloth.title }}</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div></section>
+
+{% else %}
+    {#- ---------- group-stage + knockout branch ---------- -#}
+    <section class="sec"><div class="wrap">
+        <p class="eyebrow mono">{{ __SELF__.playoff.divisions is not empty ? 'GROUP STAGE' : 'BRACKET' }}</p>
         <h1>{{ __SELF__.playoff.longTitle }}</h1>
         {% if __SELF__.timezone %}<p class="hl-bracket-tz mono">All times in {{ __SELF__.timezone }} {{ __SELF__.timezoneOffset }}</p>{% endif %}
 
-        {% if __SELF__.matches is not empty %}
-        <div class="hl-bracket-scroll">
-            <div class="hl-bracket" style="width: {{ __SELF__.total_width }}rem; height: {{ __SELF__.total_height }}rem;">
-                <div class="hl-bracket-nodes">
-                    {% for match in __SELF__.matches %}
-                    {% set m = match['model'] %}
-                    <div class="bracket-{{ match['position_bracket_name'] }} hl-node"
-                         style="left: {{ match['offset_left'] }}rem; top: {{ match['offset_top'] }}rem; width: {{ __SELF__.match_width }}rem; height: {{ __SELF__.match_height }}rem;">
-                        {#- Frozen node link: /match/view/:id -#}
-                        <a class="hl-node-card chamfer" href="/match/view/{{ m.id }}">
-                            <div class="hl-side">
-                                {% if m.teams[0] %}
-                                <span class="hl-logo is-masked">{% partial 'team/shield' team=m.teams[0] size='sm' %}</span>
-                                <span class="hl-name is-masked">{{ m.teams[0].title }}</span>
-                                {% else %}
-                                <span class="hl-name hl-tbd">TBD</span>
-                                {% endif %}
-                                {% if m.is_played and m.teams[0] %}
-                                <span class="hl-score is-masked {{ m.winner_id == m.teams[0].id ? 'hl-win' : 'hl-loss' }}">{{ m.teams[0].pivot.team_score }}</span>
-                                {% endif %}
-                            </div>
-                            <div class="hl-side">
-                                {% if m.teams[1] %}
-                                <span class="hl-logo is-masked">{% partial 'team/shield' team=m.teams[1] size='sm' %}</span>
-                                <span class="hl-name is-masked">{{ m.teams[1].title }}</span>
-                                {% else %}
-                                <span class="hl-name hl-tbd">TBD</span>
-                                {% endif %}
-                                {% if m.is_played and m.teams[1] %}
-                                <span class="hl-score is-masked {{ m.winner_id == m.teams[1].id ? 'hl-win' : 'hl-loss' }}">{{ m.teams[1].pivot.team_score }}</span>
-                                {% endif %}
-                            </div>
-                            {% if not m.is_played and m.wbp is not null %}
-                            <div class="hl-when mono">{{ m.wbp | date('d M', __SELF__.timezone) }} · {{ m.wbp | date(__SELF__.timeFormat, __SELF__.timezone) }}</div>
-                            {% endif %}
-                        </a>
-                    </div>
-                    {% endfor %}
-                </div>
-                {#- Connectors: viewBox maps rem*1000 -> the 100%-sized SVG, so
-                    1000 units == 1rem. stroke-width 62.5 == 0.0625rem (~1px). -#}
-                <svg class="hl-bracket-links" x="0" y="0" viewBox="0 0 {{ __SELF__.total_width * 1000 }} {{ __SELF__.total_height * 1000 }}">
-                    {% for line in __SELF__.polylines %}
-                    <polyline class="hl-link" points="{% for point in line %}{{ point }}{% if not loop.last %} {% endif %}{% endfor %}" fill="none" style="stroke-width: 62.5;"></polyline>
-                    {% endfor %}
-                </svg>
-            </div>
+        {% if __SELF__.playoff.divisions is not empty %}
+        {#- Active tab: Knockout when playoff.matches is not empty, else first div. -#}
+        {% set knockoutActive = __SELF__.matches is not empty %}
+        <div class="tabs stage-tabs" data-tabs role="tablist" aria-label="Stage">
+            {% for division in __SELF__.playoff.divisions %}
+            {% set active = not knockoutActive and loop.first %}
+            <button class="tab{% if active %} on{% endif %}" role="tab" aria-selected="{{ active ? 'true' : 'false' }}" aria-controls="stage-{{ division.id }}" data-tab-target="stage-{{ division.id }}">{{ division.title }}</button>
+            {% endfor %}
+            {% if __SELF__.matches is not empty %}
+            <button class="tab on" role="tab" aria-selected="true" aria-controls="stage-knockout" data-tab-target="stage-knockout">Knockout Stage</button>
+            {% endif %}
         </div>
+
+        {% for division in __SELF__.playoff.divisions %}
+        <div class="stage-panel" id="stage-{{ division.id }}" role="tabpanel"{% if knockoutActive or not loop.first %} hidden{% endif %}>
+            {% partial 'PlayoffOverview::divisionView' div=division %}
+        </div>
+        {% endfor %}
+
+        {% if __SELF__.matches is not empty %}
+        <div class="stage-panel" id="stage-knockout" role="tabpanel">
+            {{ br.bracket(__SELF__) }}
+        </div>
+        {% endif %}
+
+        {% elseif __SELF__.matches is not empty %}
+        {#- Pure knockout: no divisions, just the bracket (as today). -#}
+        {{ br.bracket(__SELF__) }}
         {% endif %}
     </div></section>
 {% endif %}

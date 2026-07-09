@@ -18,6 +18,12 @@ is_hidden = 0
     exists in the new node markup. The repeat-team + BYE + losers-bracket logic
     is preserved verbatim. -#}
 function showHideSpoilersSeasonPlayoff(showSpoilers) {
+    {#- Group-stage round-tab match cards (partial match/card, revealScore=false)
+        mask their scores with .score-masked keyed on body.reveal-spoilers — a
+        different scheme than the bracket/standings .hl-score.is-masked below.
+        Toggle it here too so BOTH reveal in sync from the one switch (Task 4b). -#}
+    document.body.classList.toggle('reveal-spoilers', showSpoilers > 0);
+
     var scores = jQuery('.hl-score');
     var names = jQuery('.hl-name').not('.hl-tbd');
     var logos = names.siblings('.hl-logo');
