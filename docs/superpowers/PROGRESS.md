@@ -43,7 +43,7 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 | 0 — Bracket-render spike (throwaway) | ✅ | ✅ | ✅ (approve-with-nits → fixed) | 160ac0c, 69028c1, 93b79ae |
 | 1 — Shared match-card partial | ✅ | ✅ | ✅ (nits fixed + verified) | 275fe2b, 4795a9c |
 | 2 — Season overview `/:slug` | ✅ (closed state) | ✅ | ✅ (nits fixed + verified) | 4b59d0f, 19c0222 |
-| 3 — Division page `/:slug/:divslug` | ✅ | ✅ | ⏳ PENDING (resume here) | edbc0bd, 1c4f677, 8e7bdd1, 5ab67d6 |
+| 3 — Division page `/:slug/:divslug` | ✅ (+ design rework) | ✅ | ✅ design-rework review approved (original nits deferred — see notes) | edbc0bd, 1c4f677, 8e7bdd1, 5ab67d6, cde17ef |
 | 4 — Playoff brackets (4a + 4b) | — | — | — | |
 | 5 — Match detail `/match/view/:id` (5a + 5b) | — | — | — | |
 | 6 — Calendar `/calendar` | — | — | — | |
@@ -133,11 +133,23 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
   `|sort((a,b) => a.title > b.title)` uses a boolean comparator (Twig quirk) —
   replicated as-is per the re-skin mandate.
 
-### Notes from Task 3 (division page — IMPLEMENTED + spec ✅; QUALITY REVIEW PENDING)
+### Notes from Task 3 (division page — DONE; design rework reviewed ✅)
 
-**STATUS: not fully done.** 4 commits landed + spec-compliance review PASSED,
-but the code-quality review had NOT run when the session ended. **Next session:
-run the Task-3 code-quality review FIRST, apply fixes, then mark Task 3 done.**
+**STATUS: done.** The original 4 commits + a user-requested **design rework**
+(2026-07-09, commit `cde17ef` — full-width round rows, mini-card recent results,
+round timeline photos; spec `specs/2026-07-09-division-page-rework-design.md`,
+spec-review passed + code-quality review APPROVED). The rework review was scoped
+**design-only per user mandate** ("we are only changing the design, we don't
+touch any other issues"), so the three original open items below were NOT
+addressed and remain **consciously deferred**, not forgotten:
+  1. Timeline spoiler leak (unmasked `Match.Played` score) — deferred.
+  2. `pages.css` reduced-motion block ordering — deferred (no functional impact).
+  3. Standings empty-state wording ("...yet") — deferred (cosmetic).
+Design-rework review left one non-blocking observation (accepted as-is): reusing
+`.match` in the sidebar means `.match:hover{background:--panel2}` now highlights
+recent-result rows on hover — verified live, reads as intentional row-highlighting.
+**Pre-existing bug surfaced (out of scope, tracked below):** the frozen
+`TimelineEntries::onRender()` division branch memory-500 on OLD divisions.
 
 - **Built:** `pages/season/division.htm` + `partials/division/{header,standings,
   rounds,recent,upcoming,timeline}.htm` + `partials/SpoilersToggle/default.htm`
@@ -258,6 +270,14 @@ production cutover; from Task 8 quality review):**
   query cascade grows with season length, ×3 divisions per homepage hit.
 - UpcomingMatches type=all hydrates every unplayed match in 14 days (+5
   eager relations) to show one card — bounded by time, not count.
+- **`TimelineEntries::onRender()` division/season branch memory-500** (found
+  2026-07-09): with `subsequent=1` it `chunk(100)`s the ENTIRE global timeline
+  table with heavy eager-loads (`matches.teams.divisions`, `sloths.teams.divisions`,
+  `teams.logo`, …), filtering in PHP until it collects `maxItems`. For OLD
+  divisions whose entries sit deep in the table it scans most of it and blows
+  past PHP's 128 MB → the division page 500s (confirmed pre-existing; recent
+  divisions like `eu-season-23` resolve cheaply). Fix at cutover: filter the
+  timeline in SQL (join on the division/season) instead of scan-in-PHP.
 - No component caching (October v1) — decide caching strategy for the
   anonymous homepage before cutover.
 - **Dashboard multiplier (Task 9):** logged-in home runs UpcomingMatches
