@@ -44,7 +44,7 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 | 1 — Shared match-card partial | ✅ | ✅ | ✅ (nits fixed + verified) | 275fe2b, 4795a9c |
 | 2 — Season overview `/:slug` | ✅ (closed state) | ✅ | ✅ (nits fixed + verified) | 4b59d0f, 19c0222 |
 | 3 — Division page `/:slug/:divslug` | ✅ (+ design rework) | ✅ | ✅ design-rework review approved (original nits deferred — see notes) | edbc0bd, 1c4f677, 8e7bdd1, 5ab67d6, cde17ef |
-| 4 — Playoff brackets (4a + 4b) | 4a in progress | — | — | |
+| 4 — Playoff brackets (4a + 4b) | 4a ✅, 4b in progress | 4a ✅ | 4a ✅ (approved; doc nit fixed) | 7897c89, dc01150 |
 | 5 — Match detail `/match/view/:id` (5a + 5b) | — | — | — | |
 | 6 — Calendar `/calendar` | — | — | — | |
 | 7 — Team page `/team/view/:slug` | — | — | — | |
@@ -112,6 +112,26 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
   - reg_open participants card-deck (18 signed-up teams): `/tournament/nexus-rumble-v` (id 142)
 - Front-matter note: old-theme pages used `layout = "plain"`; the plan's VERBATIM
   front-matter uses `layout = "default"` (new theme has no plain layout) — correct.
+
+**Task 4a DONE** (commits `7897c89` + doc nit `dc01150`; spec ✅, quality ✅
+approved). Built `pages/season/playoff.htm` (by-title, callback
+`showHideSpoilersSeasonPlayoff`) + `pages/playoff/view.htm` (by-slug, callback
+`showHideSpoilersPlayoffView`). The Task-0 spike had already shipped the override
+geometry + `.hl-bracket` CSS + scroll wrapper UNCHANGED, so 4a = the two page
+shells + the ported spoiler callback (frozen repeat-team + BYE logic retargeted
+from `.result/.name/.logo/spoiler/notext` onto `.hl-score/.hl-name/.hl-logo/
+is-masked`; `span.f100` + results-table `td.score` hooks dropped as non-existent
+in the new node markup; `bracket-losers` hook preserved). BYE score-reveal
+retargeted `elem.parent().parent().find('.result')` → `elem.closest('.hl-node-
+card').find('.hl-score')` (class-based, more robust than the positional hop).
+Verified LIVE: de16 `/tournament/nut-cup` (0.00px connector alignment, 30 nodes),
+de8 `/tournament/eu-offseason-17-18-playoffs` (BYE/losers hooks), se16 in-season
+by title, null → literal not-found, spoiler toggle masks/reveals both directions.
+**Dev-data artifact (not a bug):** the dump ships no team-logo uploads → shields
+404 and the plugin's ResizeSensor/ElementQueries re-request in a ~5s loop; abort
+image requests when driving Playwright. **Two callbacks are near-identical (only
+the fn name differs) — accepted as-is** (page-scoped callbacks, faithful mirror
+of the frozen two-copy theme; revisit only if a 3rd consumer needs the walk).
 
 ### Notes from Task 1 (shared match-card partial)
 
