@@ -44,7 +44,7 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 | 1 — Shared match-card partial | ✅ | ✅ | ✅ (nits fixed + verified) | 275fe2b, 4795a9c |
 | 2 — Season overview `/:slug` | ✅ (closed state) | ✅ | ✅ (nits fixed + verified) | 4b59d0f, 19c0222 |
 | 3 — Division page `/:slug/:divslug` | ✅ (+ design rework) | ✅ | ✅ design-rework review approved (original nits deferred — see notes) | edbc0bd, 1c4f677, 8e7bdd1, 5ab67d6, cde17ef |
-| 4 — Playoff brackets (4a + 4b) | — | — | — | |
+| 4 — Playoff brackets (4a + 4b) | 4a in progress | — | — | |
 | 5 — Match detail `/match/view/:id` (5a + 5b) | — | — | — | |
 | 6 — Calendar `/calendar` | — | — | — | |
 | 7 — Team page `/team/view/:slug` | — | — | — | |
@@ -85,6 +85,33 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 - **Seeder infra note:** `seedPlayoffs()` relaxes then RESTORES its connection
   `sql_mode` (the frozen `createMatches()` inserts match rows without the
   NOT-NULL-no-default `is_played`; prod MySQL runs non-strict). Dev-only, scoped.
+
+### Notes from Task 4 (playoff brackets — IN PROGRESS)
+
+- **DATA CAVEAT RESOLVED — verification path = LIVE real-dump pass (no scoped
+  seed).** The Task-0 se8/de8 fixtures were on Season 30 (gone with the real
+  dump). But the real May-2024 dump is RICH in playoffs — **every** previously
+  "fixture-blind" type now has real data (counts: se8×90, playoffv2×27,
+  playoffv3×19, groups×16, se16×16, de8×12, playoffv1×8, se64×7, se32×6,
+  playoffv4×4, DivSv1×2, groupsOfFour×2, de8short×1, de16×1). So Task 4 verifies
+  against real brackets — a major de-risk vs the spike. `fixtures:seed` is NOT
+  used (superseded + Indikator-shim-incompatible).
+- **URL RESOLUTION GOTCHA (from PlayoffOverview::init()):** the in-season route
+  `/:season-slug/playoff/:playoff-title` resolves the playoff by **TITLE**
+  (`$season->playoffs()->where('title', param)`); the standalone
+  `/tournament/:playoff-title` resolves by **SLUG** (`Playoff::where('slug',…)`).
+  So in-season URLs use the (url-encoded) title, standalone URLs use the slug.
+- **Live verification matrix (active season eu-season-23 = season_id 66):**
+  - se16 (in-season, by title): `/eu-season-23/playoff/Division%201%20Cup` (id 229, 15 m)
+  - playoffv4 (in-season): `/eu-season-23/playoff/Division%202%20Cup` (id 231)
+  - de16 (wide → horizontal scroll): `/tournament/nut-cup` (id 27, 30 m)
+  - de8 (losers bracket + BYE + finals + repeat teams): `/tournament/eu-offseason-17-18-playoffs` (id 157, 21 m) or `/tournament/loukas-meta-mayhem-groupA` (id 112, 42 m)
+  - DivSv1 (special geometry, pure bracket, 0 divisions): `/tournament/eu-division-s-playoffs` (id 38, 8 m)
+  - **group stage + knockout (both)**: `/tournament/group-stage-eu-aram-2` (id 51, se16, 8 divisions + 15 knockout m)
+  - pure group stage (NO bracket): `/tournament/aram-league-eu-stage-1` (id 33, groupsOfFour, 10 divisions, 0 m)
+  - reg_open participants card-deck (18 signed-up teams): `/tournament/nexus-rumble-v` (id 142)
+- Front-matter note: old-theme pages used `layout = "plain"`; the plan's VERBATIM
+  front-matter uses `layout = "default"` (new theme has no plain layout) — correct.
 
 ### Notes from Task 1 (shared match-card partial)
 
