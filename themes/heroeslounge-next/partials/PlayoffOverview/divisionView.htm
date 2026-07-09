@@ -42,6 +42,12 @@
         <div class="blockhead"><h2>Rounds</h2></div>
         {% if minRound < maxRound %}
         <div class="round-tabs tabs" data-tabs role="tablist" aria-label="Round">
+            {#- Active tab uses `i == maxRound` (latest-round-active, correct): a
+                deliberate fix of the frozen partial's `key == maxRound`, which
+                compared the 0-based loop key against the round VALUE (a latent bug
+                that only highlights the right tab when rounds start at 1 and are
+                contiguous). Do NOT "restore" the frozen `key == maxRound` form.
+                Matches the Task-3 division/rounds.htm intent. -#}
             {% for key, i in minRound..maxRound %}
             <button class="tab{% if i == maxRound %} on{% endif %}" role="tab" aria-selected="{{ i == maxRound ? 'true' : 'false' }}" aria-controls="rnd-{{ div.id }}-{{ i }}" data-tab-target="rnd-{{ div.id }}-{{ i }}">R{{ i }}</button>
             {% endfor %}

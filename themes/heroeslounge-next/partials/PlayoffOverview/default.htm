@@ -110,6 +110,9 @@
     {#- ---------- registration-open participants branch ---------- -#}
     <section class="sec"><div class="wrap">
         <p class="eyebrow mono">TOURNAMENT</p>
+        {#- <h2> -> <h1> is an INTENTIONAL promotion (plan text said <h2>): the three
+            top-level branches are mutually exclusive, so exactly one h1 renders per
+            page — this keeps heading order correct (the bracket branch also uses <h1>). -#}
         <h1>{{ __SELF__.playoff.longTitle }}</h1>
 
         {% if __SELF__.user and not __SELF__.userTeamSignedUp and __SELF__.userCaptainedTeams is not empty %}
