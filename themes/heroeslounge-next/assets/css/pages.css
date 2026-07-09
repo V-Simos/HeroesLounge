@@ -191,7 +191,7 @@
 /* round tabs + panels — panels toggle via [hidden] (lounge.js), but the grid
    display would beat the UA [hidden] rule, so restore display:none explicitly. */
 .round-tabs { flex-wrap: wrap; margin-bottom: 18px; }
-.round-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.round-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
 .round-grid[hidden] { display: none; }
 .round-empty { grid-column: 1 / -1; color: var(--mute); padding: 6px 2px; }
 
@@ -200,21 +200,25 @@
   text-transform: uppercase; font-family: 'JetBrains Mono', monospace; font-weight: 600;
   border-bottom: 1px solid var(--line); }
 .divside-panel a.who:hover { color: var(--storm); }
+/* recent results reuse match/card; the card shares the panel's --panel bg, so
+   align it to the panel's 20px gutter and separate the stacked rows. */
+.divside-panel .match { padding: 14px 20px; }
+.divside-panel .match + .match { border-top: 1px solid var(--line); }
 
 /* ---------- division timeline (partials/division/timeline.htm) ----------
    Net-new re-skin of TimelineEntries — the legacy #cd-timeline/timeline.css is
    dropped. A shield-shaped icon (avatar/logo or a lucide fallback) + a sentence
    + a mono timestamp, sharing the panel's row rhythm. */
 .tl { display: flex; flex-direction: column; }
-.tl-row { display: grid; grid-template-columns: 40px 1fr; gap: 14px; padding: 14px 20px;
+.tl-row { display: grid; grid-template-columns: 52px 1fr; gap: 14px; padding: 14px 20px;
   border-bottom: 1px solid var(--line); }
 .tl-row:last-child { border-bottom: 0; }
-.tl-ic { width: 40px; height: 40px; flex-shrink: 0; overflow: hidden;
+.tl-ic { width: 52px; height: 52px; flex-shrink: 0; overflow: hidden;
   display: inline-flex; align-items: center; justify-content: center;
   background: rgba(136,156,215,0.1); color: var(--storm);
-  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+  border-radius: 50%; }
 .tl-ic img { width: 100%; height: 100%; object-fit: cover; }
-.tl-ic svg { width: 18px; height: 18px; }
+.tl-ic svg { width: 22px; height: 22px; }
 .tl-bd { min-width: 0; }
 .tl-txt { font-size: 14px; line-height: 1.45; color: var(--ink); overflow-wrap: anywhere; }
 .tl-txt i { font-style: italic; color: var(--mute); }

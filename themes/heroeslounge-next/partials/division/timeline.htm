@@ -26,7 +26,7 @@
         {% if e.type == 'Sloth.Created' or e.type == 'Sloth.Deleted' or e.type == 'Sloth.Logo' %}
         {% set sloth = e.sloths[0] %}
         <div class="tl-row">
-            <div class="tl-ic">{% if sloth.user.avatar %}<img src="{{ sloth.user.avatar.path | resize(48,48) }}" alt="">{% else %}{% partial 'site/icon' name='users' %}{% endif %}</div>
+            <div class="tl-ic">{% if sloth.user.avatar %}<img src="{{ sloth.user.avatar.path | resize(64,64) }}" alt="">{% else %}{% partial 'site/icon' name='users' %}{% endif %}</div>
             <div class="tl-bd">
                 <p class="tl-txt">
                     {%- if e.type == 'Sloth.Created' -%}
@@ -55,7 +55,7 @@
         {% set t0 = m.teams[0] %}
         {% set t1 = m.teams[1] %}
         <div class="tl-row">
-            <div class="tl-ic">{% if t0.logo %}<img src="{{ t0.logo.path | resize(48,48) }}" alt="">{% elseif t1.logo %}<img src="{{ t1.logo.path | resize(48,48) }}" alt="">{% else %}{% partial 'site/icon' name='swords' %}{% endif %}</div>
+            <div class="tl-ic">{% if t0.logo %}<img src="{{ t0.logo.path | resize(64,64) }}" alt="">{% elseif t1.logo %}<img src="{{ t1.logo.path | resize(64,64) }}" alt="">{% else %}{% partial 'site/icon' name='swords' %}{% endif %}</div>
             <div class="tl-bd">
                 <p class="tl-txt">
                     {%- if e.type == 'Match.Scheduled' -%}
@@ -72,7 +72,7 @@
         {% set team = e.teams[0] %}
         {% set sloth = e.sloths[0] %}
         <div class="tl-row">
-            <div class="tl-ic">{% if team.logo %}<img src="{{ team.logo.path | resize(48,48) }}" alt="">{% else %}{% partial 'site/icon' name='users' %}{% endif %}</div>
+            <div class="tl-ic">{% if team.logo %}<img src="{{ team.logo.path | resize(64,64) }}" alt="">{% else %}{% partial 'site/icon' name='users' %}{% endif %}</div>
             <div class="tl-bd">
                 <p class="tl-txt">
                     {%- if e.type == 'Team.Active' -%}
