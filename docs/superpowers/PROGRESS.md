@@ -44,7 +44,7 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 | 1 — Shared match-card partial | ✅ | ✅ | ✅ (nits fixed + verified) | 275fe2b, 4795a9c |
 | 2 — Season overview `/:slug` | ✅ (closed state) | ✅ | ✅ (nits fixed + verified) | 4b59d0f, 19c0222 |
 | 3 — Division page `/:slug/:divslug` | ✅ (+ design rework) | ✅ | ✅ design-rework review approved (original nits deferred — see notes) | edbc0bd, 1c4f677, 8e7bdd1, 5ab67d6, cde17ef |
-| 4 — Playoff brackets (4a + 4b) | 4a ✅, 4b in progress | 4a ✅ | 4a ✅ (approved; doc nit fixed) | 7897c89, dc01150 |
+| 4 — Playoff brackets (4a + 4b) | ✅ | ✅ | ✅ (approved; doc nits fixed) | 7897c89, dc01150, ddb3b1c, abdb5b7, 497cf43, d325c13 |
 | 5 — Match detail `/match/view/:id` (5a + 5b) | — | — | — | |
 | 6 — Calendar `/calendar` | — | — | — | |
 | 7 — Team page `/team/view/:slug` | — | — | — | |
@@ -82,6 +82,10 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
   in Task 4 / real-dump pass): `se16, se32, se64, de4, de16, de8short,
   playoffv1-4, de6, DivSv1`; also `se64` vertical-scroll + group-stage
   (`divisionView`) branch. Geometry is frozen so the same markup should serve.
+  **→ RESOLVED in Task 4:** the real dump has all these types; the frozen
+  geometry served every one verified (de16/de8/se16/DivSv1 + group-stage +
+  pure-group + reg_open). `de4`/`de6` have no rows in this dump (still
+  render-blind) but share the frozen geometry paths that DID verify.
 - **Seeder infra note:** `seedPlayoffs()` relaxes then RESTORES its connection
   `sql_mode` (the frozen `createMatches()` inserts match rows without the
   NOT-NULL-no-default `is_played`; prod MySQL runs non-strict). Dev-only, scoped.
@@ -112,6 +116,67 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
   - reg_open participants card-deck (18 signed-up teams): `/tournament/nexus-rumble-v` (id 142)
 - Front-matter note: old-theme pages used `layout = "plain"`; the plan's VERBATIM
   front-matter uses `layout = "default"` (new theme has no plain layout) — correct.
+
+**Task 4 DONE (4a + 4b).** All bracket types + group stage + participants render
+live on the real dump. Spec + quality reviews passed both halves.
+
+**Task 4b DONE** (commits `ddb3b1c` override branches + `divisionView.htm` + pages
++ star icon, `abdb5b7` DivisionTable showScore, `497cf43` CSS, doc `d325c13`;
+spec ✅, quality ✅ approved). Extended `partials/PlayoffOverview/default.htm` from
+the 4a knockout-only path to the full three-way structure (null / reg_open
+participants / group-stage+knockout), matching the frozen component partial
+re-skinned. The bracket markup is factored into a Twig `{% macro bracket(SELF) %}`
+(explicit component param — macros don't inherit context) so it renders both
+standalone (pure knockout) and inside a lounge.js "Knockout Stage" tab panel;
+geometry byte-identical to 4a (verified). New `partials/PlayoffOverview/
+divisionView.htm` (group pane: showScore standings + round tabs via the Task-3
+`match/card` pattern). `partials/DivisionTable/default.htm` gained an ADDITIVE
+`{% if __SELF__.showScore %}` branch (# | Team | P | Score | Map ±, from
+`getTeamsSortedByScore()` → `team.score`/`team.map_score`; scores wrapped
+`.hl-score.is-masked`); the non-showScore homepage/dashboard branch is
+byte-unchanged.
+- **SPOILER RECONCILIATION DONE (resolves the Task-1/Task-4 flag):** the two
+  spoiler languages now share one switch. Both page callbacks additionally toggle
+  `body.reveal-spoilers` (which the match-card `.score-masked` uses) alongside the
+  bracket/standings `.hl-score.is-masked` JS scheme. Disjoint element sets, no
+  double-mask; in-sync across cookie-init / click / lounge.js tab-switch (tabs are
+  client-side `[hidden]`, no AJAX re-render). One toggle reveals bracket nodes +
+  group standings + round-tab match cards.
+- **Nested component access (the key unknown, now proven):** components added in
+  `PlayoffOverview::init()` via `addComponent(..., 'roundMatches'/'divisionTable')`
+  ARE reachable inside the override as **lowercase-alias page vars**;
+  `{% do roundMatches.setProperty(...) %}`/`.onRender()` work — so group rounds use
+  the re-skinned `match/card` path, NOT the plugin's Bootstrap partial. (No
+  RoundMatches theme override was needed/created.) Standings render via
+  `{% component 'divisionTable' id=div.id %}` → the DivisionTable override's
+  showScore branch.
+- **Two intentional deviations from frozen, now code-commented** (so a future
+  faithfulness pass won't revert): divisionView active round uses `i == maxRound`
+  (correct latest-round-active) — the frozen partial's `key == maxRound` is a
+  latent bug; and the reg_open heading is `<h1>` (frozen/plan said `<h2>`) —
+  promoted for one-h1-per-page heading order (all 3 branches mutually exclusive).
+- **`assets/img/roles/` does NOT exist** in the new theme (role SVGs live only in
+  the frozen old theme, unreachable via `| theme`; no plugin roles dir). Participant
+  rosters use a graceful text `.role-tag` badge (e.g. FLE/SUP/TAN) — no broken
+  `<img>`, no assets copied in. **TODO (real-icon swap):** drop role SVGs into
+  `themes/heroeslounge-next/assets/img/roles/` and swap `.role-tag` for
+  `<img … | theme>` when the icons are available.
+- **VERIFY-BLIND (real dump):** the captain **signup form** (reg_open branch)
+  needs a logged-in captain with an eligible, un-signed-up team — no such fixture,
+  so only the anonymous path (Participants list, no form) was verified live. Markup
+  + frozen `onTeamSignup` handler/`playoff_id`/`team_id` field names are byte-exact.
+- **Verified LIVE** (real May-2024 dump): group+knockout `/tournament/
+  group-stage-eu-aram-2` (9 Stage tabs, Knockout active, 8 score standings masked,
+  60 round cards, 16 nodes, tab-switch works); pure group `/tournament/
+  aram-league-eu-stage-1` (10 tabs, first active, no bracket, mobile OK); reg_open
+  `/tournament/nexus-rumble-v` (18 participant panels, captain stars, no form for
+  anon); knockout regressions `/tournament/nut-cup` (de16, restyle survives, no
+  heroeslounge.css clobber), `/tournament/eu-offseason-17-18-playoffs` (de8, BYE +
+  bracket-losers), in-season `/eu-season-23/playoff/Division%201%20Cup`. Console
+  clean bar the documented logo-404 dev-data artifact; `storage/logs` clean.
+- **Optional DRY left as-is** (non-blocking, faithful-re-skin mirrors): the two
+  round-render blocks in divisionView (`minRound<maxRound` vs single) duplicate the
+  card-render body; `.tr-score` column magic numbers duplicated desktop/mobile.
 
 **Task 4a DONE** (commits `7897c89` + doc nit `dc01150`; spec ✅, quality ✅
 approved). Built `pages/season/playoff.htm` (by-title, callback
