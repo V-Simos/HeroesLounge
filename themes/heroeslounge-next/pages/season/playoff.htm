@@ -10,11 +10,13 @@ is_hidden = 0
 {% put scripts %}
 <script type="text/javascript">
 {#- Ported from the FROZEN old-theme page (themes/HeroesLounge-Theme/pages/
-    season/playoff.htm), retargeted from the legacy .result/.f100/.score/
-    .opponent .name/.logo/.spoiler/.notext hooks onto the new .hl-* bracket
-    hooks emitted by partials/PlayoffOverview/default.htm. The single masking
-    class is `is-masked` (backed by components.css). The repeat-team + BYE +
-    losers-bracket logic is preserved verbatim. -#}
+    season/playoff.htm), retargeted onto the new .hl-* bracket hooks emitted by
+    partials/PlayoffOverview/default.htm: .name -> .hl-name, .logo -> .hl-logo,
+    .result/td.score -> .hl-score, and legacy .spoiler/.notext masking -> the
+    single `is-masked` class (backed by components.css). The legacy span.f100
+    (and the separate results-table td.score hooks) were dropped: no equivalent
+    exists in the new node markup. The repeat-team + BYE + losers-bracket logic
+    is preserved verbatim. -#}
 function showHideSpoilersSeasonPlayoff(showSpoilers) {
     var scores = jQuery('.hl-score');
     var names = jQuery('.hl-name').not('.hl-tbd');
