@@ -21,15 +21,18 @@ class Blog extends Model
 
     protected $fillable = [
         'title', 'slug', 'summary', 'content', 'image', 'images', 'files',
-        'featured', 'published', 'published_at', 'author_id'
+        'featured', 'status', 'published_at', 'author_id'
     ];
 
+    // Real Indikator.Content schema (from the production dump): the categories
+    // pivot is `indikator_content_blog_relations(blog_id, blog_categories_id)`,
+    // NOT the fixtures shim's original `indikator_content_blog_category`.
     public $belongsToMany = [
         'categories' => [
             'Indikator\Content\Models\Category',
-            'table'    => 'indikator_content_blog_category',
+            'table'    => 'indikator_content_blog_relations',
             'key'      => 'blog_id',
-            'otherKey' => 'category_id'
+            'otherKey' => 'blog_categories_id'
         ]
     ];
 
@@ -40,8 +43,10 @@ class Blog extends Model
 
     public function scopeIsPublished($query)
     {
+        // Real Indikator.Content uses a `status` column (1 = published, 2 = draft),
+        // not the fixtures shim's boolean `published`.
         return $query
-            ->where('published', true)
+            ->where('status', 1)
             ->whereNotNull('published_at')
             ->where('published_at', '<=', Carbon::now());
     }

@@ -9,7 +9,10 @@ class Category extends Model
 {
     use \October\Rain\Database\Traits\Sluggable;
 
-    public $table = 'indikator_content_categories';
+    // Real Indikator.Content schema (from the production dump): categories live
+    // in `indikator_content_blog_categories`, joined via
+    // `indikator_content_blog_relations(blog_id, blog_categories_id)`.
+    public $table = 'indikator_content_blog_categories';
 
     protected $slugs = ['slug' => 'name'];
 
@@ -18,14 +21,14 @@ class Category extends Model
     public $belongsToMany = [
         'posts' => [
             'Indikator\Content\Models\Blog',
-            'table'    => 'indikator_content_blog_category',
-            'key'      => 'category_id',
+            'table'    => 'indikator_content_blog_relations',
+            'key'      => 'blog_categories_id',
             'otherKey' => 'blog_id'
         ],
         'posts_count' => [
             'Indikator\Content\Models\Blog',
-            'table'    => 'indikator_content_blog_category',
-            'key'      => 'category_id',
+            'table'    => 'indikator_content_blog_relations',
+            'key'      => 'blog_categories_id',
             'otherKey' => 'blog_id',
             'count'    => true
         ]

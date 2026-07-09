@@ -398,6 +398,13 @@ default.htm is rewritten):**
 
 ## Blocked/waiting
 
-- Real team DB dump + October Project ID: user will obtain later. When available:
-  follow "swap in the real dump" in dev/README.md, stop using fixtures:seed,
-  re-run visual verification of all pages built so far.
+- ~~Real team DB dump~~ **LANDED 2026-07-08** (partial dump imported —
+  `hl_test_data_dump_05_2024.sql`). See `docs/superpowers/DB-DUMP-IMPORT.md` for
+  the full import record, gaps, and bridge workarounds. Site now runs on real
+  data (active season `eu-season-23`). fixtures:seed is superseded (and now
+  incompatible with the uncommitted Indikator-shim edits). Still recommended:
+  obtain a **complete** dump to drop the workarounds; October Project ID still
+  pending for real marketplace plugins.
+- Deferred real-data verification unblocked for: homepage/season/division/
+  calendar/blog (done). Still blocked on data even with this dump: upcoming-match
+  rendering + match-detail draft breakdowns (see DB-DUMP-IMPORT.md caveats).
