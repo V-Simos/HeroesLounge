@@ -26,7 +26,7 @@ description = "Sticky site nav (markup from docs/superpowers/specs mockups)"
 {% set currentSeason = Navigation.current_eu_amateurseasons ? Navigation.current_eu_amateurseasons.first : null %}
 <header class="nav">
     <div class="wrap nav-in">
-        <a class="logo" href="{{ 'home' | page }}">{% partial 'site/icon' name='swords' %}<span>HEROES <em>LOUNGE</em></span></a>
+        <a class="logo" href="{{ 'home' | page }}">{% partial 'site/logo' %}<span>HEROES <em>LOUNGE</em></span></a>
         {#- Burger sits BEFORE the menu in the DOM so on mobile the Tab order is
             toggle → menu links (the .links panel is position:fixed at <=720px,
             so source order doesn't affect the flex row; desktop hides the
