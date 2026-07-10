@@ -239,6 +239,15 @@
 /* two team panels side by side; stack under 720px. */
 .roster-deck { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 
+/* Game tabs + panels (Task 5b) — same lounge.js tab contract as .round-tabs:
+   [data-tabs] buttons toggle .game-panel via the [hidden] attribute. The panel
+   has no special display, so [hidden] already hides it, but the explicit rule
+   documents the contract and future-proofs against a display change. Tabs wrap
+   on long series (match 1061 has 18 games — the flex row wraps rather than
+   overflowing). */
+.game-tabs { flex-wrap: wrap; margin-bottom: 20px; }
+.game-panel[hidden] { display: none; }
+
 @media (max-width: 720px) {
   .roster-deck { grid-template-columns: 1fr; }
 }

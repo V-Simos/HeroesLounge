@@ -1,0 +1,17 @@
+{#- ============================================================================
+    partials/gameStatistic/default.htm — THEME OVERRIDE of the nested
+    `gameStatistic` component's partial (alias registered by
+    Rikki\LoungeViews\Components\ViewMatch::init → Rikki\LoungeStatistics\
+    Components\GameStatistics, deferredBinding). October resolves a component's
+    partial from the theme FIRST, by the registered alias, so this file wins over
+    the plugin's Bootstrap+DataTables partial
+    (plugins/rikki/loungestatistics/components/gamestatistics/default.htm) — the
+    directory name MUST match the alias casing EXACTLY (lowercase-g
+    `gameStatistic`) or October silently falls back to the plugin partial.
+
+    The component's onRender exposes __SELF__.game (Game::find(game_id), with
+    gameParticipations/.sloth/.hero/.talents eager-loaded when winner_id is set)
+    and __SELF__.lazy ('lazy' | 'auto', driving the images' loading attribute).
+    This partial is a thin delegate — the re-skinned markup lives in
+    partials/match/game-stats.htm (same data, no Bootstrap, no DataTables). -#}
+{% partial 'match/game-stats' game=__SELF__.game lazy=__SELF__.lazy %}

@@ -662,13 +662,133 @@ body.reveal-spoilers .score-masked { filter: none; }
 .roster-role { flex-shrink: 0; width: 26px; height: 26px; padding: 3px; border-radius: 5px;
   background: rgba(79,179,242,0.16); box-sizing: border-box; }
 
+/* ---------- match detail: per-game statistics (Task 5b) --------------------
+   Re-skin of the frozen GameStatistics partial. Rendered per game inside a
+   .game-panel by the theme override at partials/gameStatistic/default.htm →
+   partials/match/game-stats.htm. NO Bootstrap, NO DataTables. team-one accent
+   = storm blue, team-two accent = arc violet (the two-team read the frozen
+   partial encoded as bg-primary / bg-danger). On the current dump every game
+   renders .gstat-empty (no gameParticipation rows); the populated .gstat view
+   is fixture-blind but styled here for fidelity. */
+.gstat { padding: 4px 0 8px; }
+
+/* (a) teams header — shield + name, mirrored left/right. */
+.gstat-teams { display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.gstat-team { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.gstat-team-two { flex-direction: row; justify-content: flex-end; text-align: right; }
+.gstat-team-name { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 17px;
+  color: var(--ink); overflow-wrap: anywhere; }
+.gstat-team-one .gstat-team-name { color: var(--storm); }
+.gstat-team-two .gstat-team-name { color: var(--arc); }
+.gstat-team-name:hover { color: var(--ink); }
+
+/* (b) first-pick pill — floats to whichever side drafted first. */
+.gstat-firstpick { display: flex; margin: 12px 0; }
+.gstat-fp { background: rgba(79,179,242,0.16); color: var(--storm); min-width: 0; }
+.gstat-fp.is-one { margin-right: auto; }
+.gstat-fp.is-two { margin-left: auto; }
+
+/* (c) hero picks — two columns of hero tiles + caption. */
+.gstat-picks { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.gstat-picks-side { display: flex; flex-wrap: wrap; gap: 10px; }
+.gstat-picks-two { justify-content: flex-end; }
+.gstat-pick { width: 70px; margin: 0; text-align: center; }
+.gstat-hero { width: 64px; height: 64px; border-radius: 8px; object-fit: cover;
+  background: rgba(136,156,215,0.08); }
+.gstat-pick-cap { font-size: 11px; color: var(--mute); margin-top: 4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gstat-pick-cap a { color: var(--storm); }
+.gstat-pick-cap a:hover { color: var(--ink); }
+
+/* (d)+(e) bans (left/right) + map/replay (center). */
+.gstat-bansrow { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px;
+  align-items: start; margin-bottom: 18px; }
+.gstat-bans { display: flex; flex-direction: column; gap: 8px; }
+.gstat-bans-two { align-items: flex-end; }
+.gstat-banlbl { background: rgba(242,110,110,0.16); color: var(--red); min-width: 0; }
+.gstat-ban-imgs { display: flex; flex-wrap: wrap; gap: 8px; }
+.gstat-bans-two .gstat-ban-imgs { justify-content: flex-end; }
+.gstat-ban { width: 48px; height: 48px; border-radius: 6px; object-fit: cover;
+  background: rgba(136,156,215,0.08); }
+.gstat-map { text-align: center; }
+.gstat-map-fig { margin: 0; display: inline-flex; flex-direction: column; align-items: center; gap: 8px; }
+.gstat-map-img { max-width: 234px; width: 100%; border-radius: 8px; display: block; }
+.gstat-map-cap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.gstat-maplbl { background: rgba(79,179,242,0.16); color: var(--storm); min-width: 0; }
+.gstat-replay { background: rgba(87,212,154,0.16); color: var(--green); min-width: 0;
+  text-transform: none; display: inline-flex; align-items: center; gap: 4px; }
+.gstat-replay:hover { color: var(--ink); }
+
+/* (f) collapsible stats — native <details>. No reveal animation (so no
+   reduced-motion entry needed). The summary is the toggle affordance. */
+.gstat-details { border-top: 1px solid var(--line); padding-top: 12px; }
+.gstat-toggle { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 12px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--storm); padding: 8px 14px; background: rgba(79,179,242,0.1);
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+.gstat-toggle::-webkit-details-marker { display: none; }
+.gstat-toggle::before { content: '\25B8'; display: inline-block; transition: transform .18s ease; }
+.gstat-details[open] .gstat-toggle::before { transform: rotate(90deg); }
+.gstat-body { padding-top: 16px; }
+
+/* score/duration summary row. */
+.gstat-score { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center;
+  margin-bottom: 12px; }
+.gstat-score-side { display: flex; align-items: center; gap: 10px; }
+.gstat-score-two { justify-content: flex-end; }
+.gstat-score-team { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 15px; }
+.gstat-score-one .gstat-score-team { color: var(--storm); }
+.gstat-score-two .gstat-score-team { color: var(--arc); }
+.gstat-kills { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 26px; color: var(--ink); }
+.gstat-swords { display: inline-flex; color: var(--mute); }
+.gstat-swords svg { width: 20px; height: 20px; }
+.gstat-duration { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--mute); text-align: center; }
+.gstat-levels { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.gstat-levels-side { display: flex; gap: 8px; align-items: center; }
+.gstat-levels-two { justify-content: flex-end; }
+.gstat-level { background: rgba(136,156,215,0.14); color: var(--mute); min-width: 0; }
+.gstat-winner { min-width: 0; }
+
+/* (g)+(h) stat + talent tables — real <table>, many numeric cols. Team accent
+   as a left edge on each player row (storm = team one, arc = team two). */
+.gstat-tablewrap { overflow-x: auto; margin-bottom: 16px; }
+.gstat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.gstat-table th, .gstat-table td { padding: 8px 10px; text-align: center; white-space: nowrap; }
+.gstat-table thead th { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 10.5px;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--mute);
+  border-bottom: 1px solid var(--line); }
+.gstat-table tbody tr { border-bottom: 1px solid var(--line); }
+.gstat-table tbody tr:last-child { border-bottom: 0; }
+.gstat-prow.is-one { box-shadow: inset 3px 0 0 var(--storm); }
+.gstat-prow.is-two { box-shadow: inset 3px 0 0 var(--arc); }
+.gstat-cell-hero { width: 56px; }
+.gstat-rowhero { width: 40px; height: 40px; border-radius: 6px; object-fit: cover;
+  background: rgba(136,156,215,0.08); vertical-align: middle; }
+.gstat-cell-player { text-align: left; font-family: 'Chakra Petch', sans-serif; font-weight: 600;
+  white-space: normal; overflow-wrap: anywhere; }
+.gstat-cell-player a { color: var(--ink); }
+.gstat-cell-player a:hover { color: var(--storm); }
+.gstat-table .num { text-align: center; }
+.gstat-cell-talent { width: 40px; }
+.gstat-talent { width: 32px; height: 32px; border-radius: 5px; object-fit: cover;
+  background: rgba(136,156,215,0.08); }
+
+/* (i) empty state — the only branch rendered on the current dump. */
+.gstat-empty { text-align: center; padding: 22px 12px; }
+.gstat-empty-lead { color: var(--mute); font-size: 15px; }
+.gstat-empty-winner { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;
+  font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 16px; color: var(--gold); }
+.gstat-empty-winner svg { width: 18px; height: 18px; color: var(--gold); }
+
 /* ---------- focus affordance on clipped elements ---------- */
 /* Focus on clipped elements: outlines outside the border box are clipped
    away by clip-path, so pull the ring inside the chamfered edge.
    INVARIANT: any new focusable element carrying .chamfer (or its own
    clip-path) MUST be added here, or its keyboard focus ring is invisible. */
 .btn:focus-visible, .tab:focus-visible, .socials a:focus-visible, .teamchip:focus-visible,
-.post:focus-visible, .event:focus-visible, .hl-node-card:focus-visible { outline-offset: -4px; }
+.post:focus-visible, .event:focus-visible, .hl-node-card:focus-visible,
+.gstat-toggle:focus-visible, .gstat-replay:focus-visible { outline-offset: -4px; }
 .input:focus, .select:focus, .textarea:focus { outline-offset: -4px; }
 
 /* ---------- reduced motion (must stay LAST: @media adds no specificity, so this
@@ -680,6 +800,8 @@ body.reveal-spoilers .score-masked { filter: none; }
   .btn:hover { transform: none; }
   .hl-node-card, .hl-name, .hl-score, .score-masked { transition: none; }
   .spoiler-switch .track, .spoiler-switch .track::after { transition: none; }
+  /* Game-stats <details> marker: kill the open/close rotate transition. */
+  .gstat-toggle::before { transition: none; }
   /* Electric rows: kill the strikes and the travelling sheen, but KEEP the
      static electric border — it's identity, not motion. */
   .tr.eff .bolts path { animation: none; opacity: 0; }

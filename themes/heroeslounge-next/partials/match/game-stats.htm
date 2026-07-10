@@ -1,0 +1,276 @@
+{#- ============================================================================
+    match/game-stats — one game's per-game statistics. Faithful re-skin of the
+    frozen plugin partial
+    (plugins/rikki/loungestatistics/components/gamestatistics/default.htm) with
+    NO Bootstrap and NO DataTables: same data bindings, same order, same guards,
+    same number_format, same talent-pad and ban-grouping. Rendered via the
+    theme override at partials/gameStatistic/default.htm (see that file).
+
+    PARAMS: game (Rikki\Heroeslounge\Models\Game — has gameParticipations/.sloth/
+    .hero/.talents eager-loaded when winner_id is set); lazy ('lazy' | 'auto',
+    the <img loading> value the component derived from `lazy = not loop.first`).
+
+    DATA REALITY: the May-2024 dump has ZERO gameParticipation rows, so on this
+    dump EVERY game renders the ELSE (empty) branch — the whole stats view below
+    is gated by `game.gameParticipations is not empty` exactly as the frozen
+    partial gated it. The populated branch is reproduced faithfully but cannot be
+    seen on this dump (fixture-blind).
+
+    Image fallbacks: hero/map/talent images derive from dynamic model fields and
+    fail silently on a bad/missing image_url. Each dynamic <img> carries an
+    onerror that swaps to a neutral placeholder tile and clears the handler (so a
+    404 can't loop). heroImg()/mapImg()/talentImg() macros centralise this. -#}
+
+{% import 'match/game-stats' as gs %}
+
+{#- ---- image macros: dynamic src + graceful onerror fallback ------------------
+    The frozen partial built `assets/img/heroes/<image_url>.png` etc. and piped
+    through |theme; a bad image_url just left a broken <img>. We keep the SAME
+    path derivation, and add a neutral fallback tile so nothing renders broken.
+    The placeholder is the site profile-icon shipped with the heroeslounge plugin
+    (always present); onerror nulls itself first to avoid a fallback loop. -#}
+{% macro heroImg(hero, cls, lazy) %}
+{%- set ph = 'assets/img/game-stat-placeholder.svg'|theme -%}
+<img src="{{ ('assets/img/heroes/' ~ hero.image_url ~ '.png')|theme }}" class="{{ cls }}" alt="{{ hero.title }}" title="{{ hero.title }}" loading="{{ lazy }}" onerror="this.onerror=null;this.src='{{ ph }}'">
+{%- endmacro %}
+
+{% macro talentImg(talent, cls, lazy) %}
+{%- set ph = 'assets/img/game-stat-placeholder.svg'|theme -%}
+<img src="{{ ('assets/img/talents/' ~ talent.image_url)|theme }}" class="{{ cls }}" alt="{{ talent.title }}" title="{{ talent.title }}" loading="{{ lazy }}" onerror="this.onerror=null;this.src='{{ ph }}'">
+{%- endmacro %}
+
+{% if game.gameParticipations is not empty %}
+<div class="gstat">
+
+    {#- (a) Teams header — design-system shield + /team/view/:slug link (frozen
+        used raw logo + | page). teamOne left, teamTwo right. -#}
+    <div class="gstat-teams">
+        <div class="gstat-team gstat-team-one">
+            <a class="gstat-team-name" href="/team/view/{{ game.teamOne.slug }}">{{ game.teamOne.title }}</a>
+            {% partial 'team/shield' team=game.teamOne size='sm' %}
+        </div>
+        <div class="gstat-team gstat-team-two">
+            {% partial 'team/shield' team=game.teamTwo size='sm' %}
+            <a class="gstat-team-name" href="/team/view/{{ game.teamTwo.slug }}">{{ game.teamTwo.title }}</a>
+        </div>
+    </div>
+
+    {#- (b) First-pick badge — themed pill, floated to the team that drafted
+        first (draft_order == 1). getFirstPickTeamId returns '' when unknown. -#}
+    <div class="gstat-firstpick">
+        <span class="pill gstat-fp {% if game.getFirstPickTeamId == game.teamOne.id %}is-one{% else %}is-two{% endif %}">First Pick</span>
+    </div>
+
+    {#- (c) Hero picks — teamOne participants left, teamTwo right. Caption is the
+        sloth-view link when a sloth is attached, else the plain participant title
+        (frozen url /user/view/:id). -#}
+    <div class="gstat-picks">
+        <div class="gstat-picks-side gstat-picks-one">
+            {% for participant in game.getTeamOneParticipants %}
+            <figure class="gstat-pick">
+                {{ gs.heroImg(participant.hero, 'gstat-hero', lazy) }}
+                <figcaption class="gstat-pick-cap" title="{% if participant.sloth %}{{ participant.sloth.title }}{% else %}{{ participant.title }}{% endif %}">
+                    {% if participant.sloth %}<a href="/user/view/{{ participant.sloth.id }}">{{ participant.sloth.title }}</a>{% else %}{{ participant.title }}{% endif %}
+                </figcaption>
+            </figure>
+            {% endfor %}
+        </div>
+        <div class="gstat-picks-side gstat-picks-two">
+            {% for participant in game.getTeamTwoParticipants %}
+            <figure class="gstat-pick">
+                {{ gs.heroImg(participant.hero, 'gstat-hero', lazy) }}
+                <figcaption class="gstat-pick-cap" title="{% if participant.sloth %}{{ participant.sloth.title }}{% else %}{{ participant.title }}{% endif %}">
+                    {% if participant.sloth %}<a href="/user/view/{{ participant.sloth.id }}">{{ participant.sloth.title }}</a>{% else %}{{ participant.title }}{% endif %}
+                </figcaption>
+            </figure>
+            {% endfor %}
+        </div>
+    </div>
+
+    {#- (d) Bans (left/right) + (e) Map + replay (center). The frozen partial
+        renders teamOneFirstBan AND teamOneSecondBan TOGETHER inside the single
+        `{% if teamOneFirstBan %}` guard, then teamOneThirdBan under its own guard
+        — that grouping is preserved verbatim (same for teamTwo). -#}
+    <div class="gstat-bansrow">
+        <div class="gstat-bans gstat-bans-one">
+            <span class="pill gstat-banlbl">Bans</span>
+            <div class="gstat-ban-imgs">
+                {% if game.teamOneFirstBan %}
+                {{ gs.heroImg(game.teamOneFirstBan, 'gstat-ban', lazy) }}
+                {{ gs.heroImg(game.teamOneSecondBan, 'gstat-ban', lazy) }}
+                {% endif %}
+                {% if game.teamOneThirdBan %}
+                {{ gs.heroImg(game.teamOneThirdBan, 'gstat-ban', lazy) }}
+                {% endif %}
+            </div>
+        </div>
+
+        {#- (e) Map + replay. Map bg image name = 'bg_<title spaces→dashes lower>.jpg'.
+            When a replay File is attached, the map image links to game.replay.path
+            (download) and a "Replay" download pill appears beneath; else map only.
+            The site icon set has no download glyph, so the replay affordance is a
+            text "Replay" pill (a themed download affordance — see report). -#}
+        {% set mapImg = ('assets/img/maps/bg_' ~ game.map.title|replace({' ':'-'})|lower ~ '.jpg')|theme %}
+        {% set mapPh = 'assets/img/game-stat-placeholder.svg'|theme %}
+        <div class="gstat-map">
+            <figure class="gstat-map-fig">
+                {% if game.replay %}
+                <a href="{{ game.replay.path }}" download title="Click to download the replay file">
+                    <img class="gstat-map-img" src="{{ mapImg }}" alt="{{ game.map.title }}" loading="{{ lazy }}" onerror="this.onerror=null;this.src='{{ mapPh }}'">
+                </a>
+                <figcaption class="gstat-map-cap">
+                    <span class="pill gstat-maplbl">{{ game.map.title }}</span>
+                    <a class="pill gstat-replay" href="{{ game.replay.path }}" download>&#8595; Replay</a>
+                </figcaption>
+                {% else %}
+                <img class="gstat-map-img" src="{{ mapImg }}" alt="{{ game.map.title }}" loading="{{ lazy }}" onerror="this.onerror=null;this.src='{{ mapPh }}'">
+                <figcaption class="gstat-map-cap">
+                    <span class="pill gstat-maplbl">{{ game.map.title }}</span>
+                </figcaption>
+                {% endif %}
+            </figure>
+        </div>
+
+        <div class="gstat-bans gstat-bans-two">
+            <span class="pill gstat-banlbl">Bans</span>
+            <div class="gstat-ban-imgs">
+                {% if game.teamTwoFirstBan %}
+                {{ gs.heroImg(game.teamTwoFirstBan, 'gstat-ban', lazy) }}
+                {{ gs.heroImg(game.teamTwoSecondBan, 'gstat-ban', lazy) }}
+                {% endif %}
+                {% if game.teamTwoThirdBan %}
+                {{ gs.heroImg(game.teamTwoThirdBan, 'gstat-ban', lazy) }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {#- (f) Collapsible stats — native <details>/<summary> (accessible, no JS, no
+        Bootstrap collapse). Inside: a kills/duration summary row + Level/Winner
+        badges, then the player stats table and the talents table. -#}
+    <details class="gstat-details">
+        <summary class="gstat-toggle">Toggle Statistics</summary>
+        <div class="gstat-body">
+
+            <div class="gstat-score">
+                <div class="gstat-score-side gstat-score-one">
+                    <a class="gstat-score-team" href="/team/view/{{ game.teamOne.slug }}">{{ game.teamOne.title }}</a>
+                    <span class="gstat-kills">{{ game.getTeamOneKills }}</span>
+                    <span class="gstat-swords" aria-hidden="true">{% partial 'site/icon' name='swords' %}</span>
+                </div>
+                <div class="gstat-duration">
+                    {% if game.duration %}Duration: {{ game.duration|date('i:s') }}{% endif %}
+                </div>
+                <div class="gstat-score-side gstat-score-two">
+                    <span class="gstat-swords" aria-hidden="true">{% partial 'site/icon' name='swords' %}</span>
+                    <span class="gstat-kills">{{ game.getTeamTwoKills }}</span>
+                    <a class="gstat-score-team" href="/team/view/{{ game.teamTwo.slug }}">{{ game.teamTwo.title }}</a>
+                </div>
+            </div>
+
+            <div class="gstat-levels">
+                <div class="gstat-levels-side gstat-levels-one">
+                    <span class="pill gstat-level">Level {{ game.team_one_level }}</span>
+                    {% if game.winner.id == game.teamOne.id %}<span class="pill ok gstat-winner">Winner</span>{% endif %}
+                </div>
+                <div class="gstat-levels-side gstat-levels-two">
+                    <span class="pill gstat-level">Level {{ game.team_two_level }}</span>
+                    {% if game.winner.id == game.teamTwo.id %}<span class="pill ok gstat-winner">Winner</span>{% endif %}
+                </div>
+            </div>
+
+            {#- (g) Player stats table. getTeamsGrouped already returns rows grouped
+                by team (outer: teams, inner: players) — so the frozen DataTables
+                sort-by-hidden-TGroup is redundant and DROPPED. Row accent is
+                team-one vs team-two. number_format on the four damage/heal/exp
+                columns is preserved. -#}
+            <div class="gstat-tablewrap">
+                <table class="gstat-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Hero</th>
+                            <th scope="col">Player</th>
+                            <th scope="col" title="Kills">K</th>
+                            <th scope="col" title="Assists">A</th>
+                            <th scope="col" title="Deaths">D</th>
+                            <th scope="col">Siege Dmg</th>
+                            <th scope="col">Hero Dmg</th>
+                            <th scope="col">Healing</th>
+                            <th scope="col">Dmg Taken</th>
+                            <th scope="col" title="Experience Contribution">Exp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in game.getTeamsGrouped %}
+                        {% for player in team %}
+                        <tr class="gstat-prow {% if player.team.id == game.teamOne.id %}is-one{% else %}is-two{% endif %}">
+                            <th scope="row" class="gstat-cell-hero">{{ gs.heroImg(player.hero, 'gstat-rowhero', 'lazy') }}</th>
+                            <td class="gstat-cell-player">
+                                {% if player.sloth %}<a href="/user/view/{{ player.sloth.id }}" title="{{ player.title }} Profile">{{ player.title }}</a>{% else %}<span>{{ player.title }}</span>{% endif %}
+                            </td>
+                            <td class="num">{{ player.kills }}</td>
+                            <td class="num">{{ player.assists }}</td>
+                            <td class="num">{{ player.deaths }}</td>
+                            <td class="num">{{ player.siege_damage|number_format }}</td>
+                            <td class="num">{{ player.hero_damage|number_format }}</td>
+                            <td class="num">{{ player.healing|number_format }}</td>
+                            <td class="num">{{ player.damage_taken|number_format }}</td>
+                            <td class="num">{{ player.experience_contribution|number_format }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {#- (h) Talents table. Columns: Hero | Player | levels 1,4,7,10,13,16,20
+                (7 talent cols). talent.image_url INCLUDES the extension → the path
+                is NOT suffixed with .png. Pad to 7 cells when a player has fewer
+                talents (same `loop.last and loop.length != 7` pad as the frozen). -#}
+            <div class="gstat-tablewrap">
+                <table class="gstat-table gstat-talents">
+                    <thead>
+                        <tr>
+                            <th scope="col">Hero</th>
+                            <th scope="col">Player</th>
+                            <th scope="col">1</th>
+                            <th scope="col">4</th>
+                            <th scope="col">7</th>
+                            <th scope="col">10</th>
+                            <th scope="col">13</th>
+                            <th scope="col">16</th>
+                            <th scope="col">20</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in game.getTeamsGrouped %}
+                        {% for player in team %}
+                        <tr class="gstat-prow {% if player.team.id == game.teamOne.id %}is-one{% else %}is-two{% endif %}">
+                            <th scope="row" class="gstat-cell-hero">{{ gs.heroImg(player.hero, 'gstat-rowhero', 'lazy') }}</th>
+                            <td class="gstat-cell-player">
+                                {% if player.sloth %}<a href="/user/view/{{ player.sloth.id }}" title="{{ player.title }} Profile">{{ player.title }}</a>{% else %}<span>{{ player.title }}</span>{% endif %}
+                            </td>
+                            {% for talent in player.talents %}
+                            <td class="gstat-cell-talent">{{ gs.talentImg(talent, 'gstat-talent', 'lazy') }}</td>
+                            {% if loop.last and loop.length != 7 %}{% for i in 1..(7 - loop.length) %}<td class="gstat-cell-talent"></td>{% endfor %}{% endif %}
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </details>
+</div>
+{% else %}
+{#- (i) Empty state — the ONLY branch that renders on this dump. The frozen
+    partial's literal "No Replay File found!" is misleading (it means "no stats",
+    not "no replay") and is NOT a must-preserve string, so we render a CLEAR
+    themed empty state. The "Winner: X" line is kept when a winner is recorded. -#}
+<div class="gstat-empty">
+    <p class="gstat-empty-lead">No statistics recorded for this game.</p>
+    {% if game.winner %}<p class="gstat-empty-winner">{% partial 'site/icon' name='trophy' %} Winner: {{ game.winner.title }}</p>{% endif %}
+</div>
+{% endif %}

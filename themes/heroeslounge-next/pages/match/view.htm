@@ -59,7 +59,26 @@ function onEnd()
         {% if match.games is empty %}
         {% partial 'match/team-roster' match=match %}
         {% else %}
-        {# Task 5b: per-game statistics render here (tabs + gameStatistic component). #}
+        {#- Task 5b: per-game statistics. One lounge.js tab per game (same tab
+            contract as division rounds / playoff stages: [data-tabs] container,
+            .tab buttons with data-tab-target=<panel id>, panels toggled via the
+            [hidden] attribute — .game-panel[hidden]{display:none} in pages.css).
+            The FIRST tab is active; the rest render lazy (lazy=not loop.first →
+            the component sets loading="lazy" on its images, matching the frozen
+            page's `lazy = not loop.first`). Each panel is rendered by the nested
+            `gameStatistic` component (alias registered by ViewMatch::init, casing
+            EXACT); its onRender does the Game::find + eager-load, then renders our
+            theme override at partials/gameStatistic/default.htm. -#}
+        <div class="game-tabs tabs" data-tabs role="tablist" aria-label="Game">
+            {% for game in match.games %}
+            <button class="tab{% if loop.first %} on{% endif %}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="game-{{ game.id }}" data-tab-target="game-{{ game.id }}">Game {{ loop.index }}</button>
+            {% endfor %}
+        </div>
+        {% for game in match.games %}
+        <div class="game-panel" id="game-{{ game.id }}" role="tabpanel"{% if not loop.first %} hidden{% endif %}>
+            {% component 'gameStatistic' game_id=game.id lazy=(not loop.first) %}
+        </div>
+        {% endfor %}
         {% endif %}
         {% else %}
         <header class="matchhead">
