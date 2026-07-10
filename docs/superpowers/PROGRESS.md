@@ -46,7 +46,7 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 | 3 — Division page `/:slug/:divslug` | ✅ (+ design rework) | ✅ | ✅ design-rework review approved (original nits deferred — see notes) | edbc0bd, 1c4f677, 8e7bdd1, 5ab67d6, cde17ef |
 | 4 — Playoff brackets (4a + 4b) | ✅ | ✅ | ✅ (approved; doc nits fixed) | 7897c89, dc01150, ddb3b1c, abdb5b7, 497cf43, d325c13 |
 | 5 — Match detail `/match/view/:id` (5a + 5b) | ✅ | ✅ | ✅ (5a+5b review nits fixed + verified) | ae96c3c, 8b8023c, 4486577, 15cea60, c680934 |
-| 6 — Calendar `/calendar` | — | — | — | |
+| 6 — Calendar `/calendar` | ✅ | ✅ | ✅ (multi-lens review; nits fixed + verified) | 3a5800f, f7ebaf0 |
 | 7 — Team page `/team/view/:slug` | — | — | — | |
 | 8 — Season archive `/season/archive` | — | — | — | |
 | 9 — Wave 1 finishing pass | — | — | — | |
@@ -383,6 +383,99 @@ Commits: `ae96c3c` (image-asset port), `8b8023c` (5a), `4486577` (5a nits),
 - **Plugin residue (harmless, frozen):** `GameStatistics::init()` still
   `addJs/addCss`'s DataTables assets on every game render; they load unused (no
   init runs) — same accepted-residue class as Task 4's ResizeSensor.
+
+### Notes from Task 6 (calendar `/calendar` — DONE)
+
+**Task 6 DONE.** Adversarial multi-lens review (spec + fidelity + quality + a11y,
+each finding adversarially verified) passed — the ONLY confirmed finding was
+downgraded to a doc nit; everything else was faithful-to-frozen (mandated),
+objectively-better (kept), or deferred theme-wide a11y. Commits: `3a5800f`
+(calendar page), `f7ebaf0` (review-nit doc/dead-CSS follow-up).
+
+- **Shipped:** `pages/calendar.htm` + `partials/calendar/{event-list,caster-requests}.htm`
+  + `partials/site/icon.htm` (added `mic`/`calendar-plus`/`calendar-x` lucide
+  icons — that partial is in the NEW theme, editable) + `assets/css/pages.css`
+  (`.cal-*` block, token-driven, responsive @760px, reduced-motion). Front-matter
+  VERBATIM from the frozen page (dropped its vestigial `onStart(){ Match::find(1) }`
+  — the `data` var was unused; the themed page needs no PHP).
+
+- **Card-reuse decision (HAND-ROLLED the row, did NOT compose `match/card`).** The
+  fixture card is a self-contained chamfered `<article>` with its own `.match-top`
+  (division/date/vod) row; nesting it in a per-date event row reads as a card-in-row,
+  and the calendar row needs several things the card deliberately omits (kickoff-
+  time-only, playoff/division precedence label+link, per-channel Twitch links, the
+  `[REGION]` tag, the interactive caster column). So the row reuses the shared
+  design *vocabulary* (`team/shield` + `.side`/`.tname`, `.mday`-style day header)
+  but owns its shape. All 4 review lenses concurred (faithful + defensible).
+
+- **Wiring facts (record for T7 which reuses UpcomingMatches):**
+  - `UpcomingMatches` type=`all` is onRender-only; the PAGE calls
+    `{% do UpcomingMatches.onRender() %}` once, and the attached component is
+    readable by alias inside partials rendered within the page (same as the T3
+    division sidebar). `datesToMatches` is grouped `'d-M-y'` AFTER
+    `orderBy('wbp','asc')` → **iterate AS-IS; never re-sort the day-first keys.**
+  - Caster `data-request` alias is **HARDCODED** `UpcomingMatches::onCastRequest` /
+    `onCastRetract` (in a theme partial `__SELF__` is the PARTIAL, not the component,
+    so the old `{{ __SELF__ }}` prefix can't be used); container id
+    `divCasterRequests{{ match.id }}` kept **verbatim** (the plugin's AJAX handlers
+    target it). Caster gate replicated byte-exact incl. sub-conditions; `user`
+    passed in as `user=UpcomingMatches.user`.
+  - Literal frozen URLs throughout (playoff precedence division.playoff > playoff >
+    division; in-season-by-title vs standalone-by-slug; `|url_encode` on titles).
+
+- **Two INTENTIONAL deviations from frozen, now code-commented** (so a future
+  faithfulness pass won't revert): branch-3 label gated `elseif match.division`
+  (the frozen unconditional `else` emitted an empty href-less `<a>` for an orphaned
+  match with no division AND no playoff — a nameless dead anchor; suppressing it is
+  better a11y and only differs for a data anomaly since type=`all` eager-loads
+  `division`); and `<time datetime>` uses valid ISO `Y-m-d` (the frozen read `.wbp`
+  off the grouped *Collection* — not a real timestamp — with the HTML-invalid
+  `m/d/Y`).
+
+- **KNOWN LIMITATION (un-skinnable, frozen):** the caster apply/retract AJAX
+  response re-renders the plugin's Bootstrap `@casterRequests` fragment (un-skinned)
+  into `#divCasterRequests{id}` — only the INITIAL render is themed. (The `renderPartial('@casterRequests')` could in principle be theme-overridden at
+  `partials/UpcomingMatches/casterRequests.htm`, but that was NOT attempted — the
+  plan accepts the un-skinned swap; revisit if the interactive caster path is ever
+  productionized.)
+
+- **Verified LIVE:** `/calendar` HTTP 200, guest empty-state renders, console clean
+  (bar the known logo-404 dev-data artifact), `storage/logs` CLEAN after reload.
+  The real May-2024 dump's matches ALL predate the container clock (today
+  2026-07-10), so the 100-day window is **naturally EMPTY** — populated verification
+  was done by temporarily forcing 4 representative matches into the window (one per
+  precedence branch → correct URLs: `/season-4/playoff/Championship`,
+  `/tournament/nut-cup`, `/season-5/playoff/Cup`, `[EU] /euseason-14/division-4` +
+  twitch; VS→`/match/view/:id`; accepted-caster mic links), plus a TZ test
+  (Europe/Athens vs America/New_York) that shifted a row time AND moved a
+  date-group boundary — **all DB values restored afterward** (data-only, no code).
+
+- **FIXTURE-BLIND on this dump:** (1) the positive `can('cast_matches')` apply/retract
+  branch — no caster user available; the gate renders nothing for a guest/non-caster
+  without error (all that could be confirmed). (2) A *naturally* populated calendar
+  (all live matches are past-dated) — populated rendering rests on the forced-match
+  live test + the binding-by-binding review.
+
+- **PERF (flagged, NOT a defect):** with ~598 matches force-loaded, `/calendar`
+  server-render took ~66–99s — the frozen type=`all` N+1 (`division.playoff`,
+  `division.season`, `playoff.season`, `teams.region` are NOT eager-loaded; the
+  reused `team/shield` adds one `smallLogo` lazy-load per team). Inherited verbatim
+  from the frozen plugin + old theme (the re-skin adds no overhead) — do NOT optimize
+  (plugins frozen). Same class as the Task-8 "UpcomingMatches type=all hydrates every
+  unplayed match" pre-production hardening note; real production windows differ from
+  this synthetic worst case.
+
+- **DEFERRED (theme-wide a11y, NOT calendar-local):** (a) the caster apply/retract
+  controls are `<a role="button">` with NO href → not keyboard-focusable/operable
+  (FAITHFUL to the frozen partial; the re-skin *added* the `aria-label`s the frozen
+  lacked) — same bucket as the Task-5 deferred `[data-tabs]` a11y sweep; fix once
+  with `tabindex`+Enter/Space handler when the interactive caster path is exercised.
+  (b) a chamfered CONTAINER's `clip-path` (`.cal-group`, like every `.chamfer` panel
+  — `.divside-panel`, `.p.chamfer`) can clip a descendant link's positive-offset
+  focus ring at the 14px corners; a **pre-existing theme-wide characteristic**, not a
+  calendar regression (adversarially refuted as material) — the focus-affordance
+  invariant only covers elements that THEMSELVES carry `.chamfer`/clip-path. Revisit
+  theme-wide if it ever bites.
 
 ## Phase 1 status (archived)
 
