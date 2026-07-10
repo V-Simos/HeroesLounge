@@ -1,0 +1,56 @@
+{#- ============================================================================
+    match/team-roster — pre-game rosters (rendered when match.games is empty).
+    Faithful re-skin of the frozen ViewMatch .card-deck (two team cards): team
+    shield + team-view link + player roster with role icons + user links.
+
+    PARAM: match (required).
+
+    Old → new mapping:
+      .card-deck            → a flex row of two .p panels (.roster-deck)
+      raw 200px logo <img>  → the design-system team/shield size='lg' (§7: do NOT
+                              drop a raw 200px object-fit img that clashes with the
+                              panel look; the hex shield is the theme's team badge).
+      card-outline-success/ → win / loss classes, BUT neutral-when-undecided:
+      card-outline-danger     when winner_id is null neither panel gets a win/loss
+                              tint (consistent with match/card's `decided` gate).
+                              DEVIATION from the frozen partial, which paints the
+                              non-winner (incl. an unplayed match) "danger" — see
+                              report.
+      role <img background   → themed .roster-role class (no inline #2e93cd); role
+        :#2e93cd>              SVGs now live at assets/img/roles/<role>.svg |theme.
+                              Null role → nothing (no broken <img>).
+
+    Bye / incomplete guard: a match may have <2 teams (bye) — we just render the
+    teams that exist, and skip any null team. Frozen team url /team/view/:slug and
+    deferred user url /user/view/:id are literal (Task 7 team pages ship later). -#}
+{% set decided = match.winner_id %}
+<div class="roster-deck">
+    {% for team in match.teams %}
+    {% if team %}
+    {% set won = match.winner_id == team.id %}
+    <section class="p chamfer roster-card{% if decided and won %} win{% elseif decided %} loss{% endif %}">
+        <div class="p-head roster-head">
+            {% partial 'team/shield' team=team size='lg' %}
+            <a class="roster-team-name" href="/team/view/{{ team.slug }}">{{ team.title }}</a>
+        </div>
+        <ul class="roster-list">
+            {% for sloth in team.sloths %}
+            <li>
+                <a href="/user/view/{{ sloth.id }}" title="{{ sloth.title }} Profile">
+                    {%- if sloth.role %}
+                        {%- set rolePath = 'assets/img/roles/' ~ sloth.role.title|replace({' ':'-'})|lower ~ '.svg' -%}
+                        <img class="roster-role" src="{{ rolePath|theme }}" title="{{ sloth.role.title }}" alt="{{ sloth.role.title }}">
+                    {%- endif %}
+                    <span class="roster-name">{{ sloth.title }}</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="roster-empty"><i>No players listed.</i></li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+    {% else %}
+    <p class="season-empty">Teams for this match have not been set yet.</p>
+    {% endfor %}
+</div>

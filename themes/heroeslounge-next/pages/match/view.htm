@@ -1,0 +1,72 @@
+title = "View Match"
+url = "/match/view/:id"
+layout = "default"
+is_hidden = 0
+
+[ViewMatch]
+==
+<?php
+function onEnd()
+{
+    // ViewMatch is onRender-only (no onRun), so ViewMatch.match is NOT populated
+    // yet at onEnd time — the body's {% do ViewMatch.onRender() %} runs later,
+    // during Twig render. So do our OWN PK lookup here to drive the 404 + title
+    // (mirrors pages/blog/post.htm, which can read $this->post only because its
+    // component HAS an onRun). The Match model has no `title` column, so derive a
+    // human title from the two team names ("A vs B"); fall back to "Match #id".
+    $match = \Rikki\Heroeslounge\Models\Match::find($this->param('id'));
+    if ($match) {
+        $names = $match->teams->pluck('title')->all();
+        $this->page->title = count($names)
+            ? 'Match: ' . implode(' vs ', $names)
+            : 'Match #' . $match->id;
+    } else {
+        $this->page->title = 'Match not found';
+        $this->setStatusCode(404);
+    }
+}
+?>
+==
+{#- ============================================================================
+    Match detail — /match/view/:id (Task 5a: header + pre-game rosters).
+
+    Re-skins the frozen ViewMatch plugin partial
+    (plugins/rikki/loungeviews/components/viewmatch/default.htm — Bootstrap):
+    same data bindings + behavior + FROZEN urls, only markup/CSS change.
+
+    ViewMatch is onRender-only (empty onRun), so we MUST call
+    {% do ViewMatch.onRender() %} before reading ViewMatch.match (the same
+    pattern the division partials use). onEnd() above does a SEPARATE lookup for
+    the 404 (see its note). Exposed by onRender(): match, decoded_playoff_position
+    (assoc: bracket/round/matchnumber — ALREADY Cantor-decoded by the component),
+    timezone, timezoneOffset, datetimeFormat.
+
+    GAMES BRANCH: when match.games is NOT empty the frozen page renders per-game
+    statistics tabs — that is Task 5b. Here that branch is a marked placeholder;
+    the header + scheduled state still render for a with-games match (no 500). -#}
+{% do ViewMatch.onRender() %}
+{% set match = ViewMatch.match %}
+<section class="sec matchsec">
+    <div class="wrap">
+        {% if match %}
+        {% partial 'match/header'
+            match=match
+            decoded_playoff_position=ViewMatch.decoded_playoff_position
+            timezone=ViewMatch.timezone
+            timezoneOffset=ViewMatch.timezoneOffset
+            datetimeFormat=ViewMatch.datetimeFormat %}
+
+        {% if match.games is empty %}
+        {% partial 'match/team-roster' match=match %}
+        {% else %}
+        {# Task 5b: per-game statistics render here (tabs + gameStatistic component). #}
+        {% endif %}
+        {% else %}
+        <header class="matchhead">
+            <p class="eyebrow mono">MATCH</p>
+            <h1>Match not found</h1>
+        </header>
+        <p class="season-empty">We couldn&rsquo;t find that match. It may have been removed &mdash; head back to the <a href="/">home page</a> to find a current match.</p>
+        {% endif %}
+    </div>
+</section>
