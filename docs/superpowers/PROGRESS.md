@@ -45,7 +45,7 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 | 2 — Season overview `/:slug` | ✅ (closed state) | ✅ | ✅ (nits fixed + verified) | 4b59d0f, 19c0222 |
 | 3 — Division page `/:slug/:divslug` | ✅ (+ design rework) | ✅ | ✅ design-rework review approved (original nits deferred — see notes) | edbc0bd, 1c4f677, 8e7bdd1, 5ab67d6, cde17ef |
 | 4 — Playoff brackets (4a + 4b) | ✅ | ✅ | ✅ (approved; doc nits fixed) | 7897c89, dc01150, ddb3b1c, abdb5b7, 497cf43, d325c13 |
-| 5 — Match detail `/match/view/:id` (5a + 5b) | — | — | — | |
+| 5 — Match detail `/match/view/:id` (5a + 5b) | ✅ | ✅ | ✅ (5a+5b review nits fixed + verified) | ae96c3c, 8b8023c, 4486577, 15cea60, c680934 |
 | 6 — Calendar `/calendar` | — | — | — | |
 | 7 — Team page `/team/view/:slug` | — | — | — | |
 | 8 — Season archive `/season/archive` | — | — | — | |
@@ -294,6 +294,96 @@ recent-result rows on hover — verified live, reads as intentional row-highligh
   3. Standings empty state reads "No active teams **yet**" vs spec "No active
      teams" — cosmetic.
 
+### Notes from Task 5 (match detail `/match/view/:id` — DONE)
+
+**Task 5 DONE (5a + 5b).** Adversarial multi-lens reviews (spec + fidelity +
+quality + a11y) passed both halves; all findings were minor nits, fixed + verified.
+Commits: `ae96c3c` (image-asset port), `8b8023c` (5a), `4486577` (5a nits),
+`15cea60` (5b), `c680934` (5b nits).
+
+- **Image assets ported (`ae96c3c`):** `heroes/` (90), `maps/` (17), `talents/`
+  (2079), `roles/` (8 SVGs) copied verbatim from the old theme into
+  `assets/img/` (plugin-derived filenames resolve unchanged via `| theme`).
+  Separate prep commit so the markup diffs stayed reviewable. (The old
+  `assets/img/icons/` stat SVGs were copied then removed — 5b used lucide `swords`
+  + text headers instead, leaving them dead.)
+
+- **5a — page + header + rosters + scheduled (`8b8023c`, nits `4486577`).**
+  `pages/match/view.htm` attaches `[ViewMatch]`, drives `{% do ViewMatch.onRender()
+  %}`, reads `ViewMatch.match`. **onEnd 404 GOTCHA:** ViewMatch is onRender-ONLY
+  (no onRun) → `ViewMatch.match` is NOT populated during the page `onEnd()` (onEnd
+  runs before Twig). The blog/post `$this->post` pattern does NOT transfer — onEnd
+  does its OWN `\Rikki\Heroeslounge\Models\Match::find(param('id'))` for the 404 +
+  title. `partials/match/header.htm` re-skins the frozen 4-branch hierarchy
+  (season/round + division-or-playoff + Cantor context) as eyebrow + ONE `<h1>` +
+  sub-labels; the subject blocks are chained with `elseif` so at most one `<h1>`
+  fires, every `season.slug` deref is null-guarded, and a `playoffHref(p)` macro
+  centralises in-season (`/:season/playoff/:title`) vs standalone
+  (`/tournament/:slug`) — also fixing the frozen's latent standalone-group-stage
+  broken link. `decoded_playoff_position` comes from the component (Cantor decode
+  NOT re-ported). Casters = `getAcceptedCasters` + per-channel `site/icon` twitch
+  links (aria-label disambiguated per channel). `partials/match/team-roster.htm`
+  (games-empty branch): `.p` panels, `team/shield size='lg'`, role SVG chips
+  (null-role skipped), **neutral-when-undecided** winner/loss (deviation from the
+  frozen paint-every-non-winner-danger; matches `match/card`'s `decided` gate).
+
+- **5b — game tabs + per-game statistics (`15cea60`, nits `c680934`).** The
+  games-present branch renders lounge.js game tabs; each panel invokes `{% component
+  'gameStatistic' game_id=game.id lazy=(not loop.first) %}`. The **override at
+  `partials/gameStatistic/default.htm`** (case-sensitive alias `gameStatistic`,
+  registered in `ViewMatch::init()` — PROVEN to resolve over the plugin's
+  Bootstrap+DataTables partial) is a thin delegate reading `__SELF__.game`/`.lazy`
+  → `partials/match/game-stats.htm` (278-line faithful re-skin). **DataTables
+  DROPPED entirely** — its only job was sorting rows by the hidden TGroup column,
+  but `game.getTeamsGrouped` already returns rows team-grouped, so the sort was
+  redundant. Bootstrap collapse → native `<details>/<summary>`; Bootstrap tables →
+  semantic `<table class="gstat-table">` (sr-only captions + robust `<th
+  scope="row">` names); every dynamic hero/map/talent `<img>` has an `onerror` →
+  neutral placeholder. Empty-branch copy clarified ("No statistics recorded for
+  this game." — the frozen "No Replay File found!" was misleading, not a
+  must-preserve string). Fidelity confirmed binding-by-binding (ban
+  First+Second-grouped/Third-separate, talent pad-to-7, `number_format` on the 4
+  damage/heal/exp cols only, team-accent rows).
+
+- **⚠ ENVIRONMENT FIX (dev DB, not code) — MUST survive re-import:** 5b exposed
+  that the partial dump's recreated `rikki_heroeslounge_gameparticipation` was
+  missing `team_id` + 9 stat columns (recreation ran only the `create` migration,
+  not the `_update_*` ones). GameStatistics' `byTeam` scope (`orderBy('team_id')`)
+  eager-loads for any game with a `winner_id`, so **every with-games match 500'd**
+  before any markup (would 500 the OLD theme too). Fixed via `ALTER TABLE` to
+  production schema — **recorded + reproducible in `DB-DUMP-IMPORT.md` (§A + step
+  5)**. Table stays 0-rows (stats still fixture-blind); page no longer crashes.
+
+- **FIXTURE-BLIND on this dump (verify with a complete dump):** the ENTIRE
+  populated per-game stats view (teams header, first-pick, hero picks, bans, map +
+  replay download, kills/duration/level/winner summary, stats table, talents
+  table) — `gameparticipation`/`_talent` = 0 rows, so every game renders the empty
+  branch; replays (36K files) + talents live inside the guard, also blind. Also
+  blind: populated pre-game ROSTERS — no-games matches have 0 `team_match` rows
+  (teams attach alongside games), so the roster always hits the bye-guard. Fidelity
+  of the blind markup rests on the binding-by-binding adversarial review (which
+  substituted for the missing live test).
+
+- **Verified LIVE (real May-2024 dump):** header hierarchy + links on division
+  (`/match/view/1061`) and playoff (`/match/view/21642`, Cantor "Winner Bracket /
+  Round 1 - Match 3" + casters + twitch); scheduled TZ time vs red "not scheduled
+  yet" (`/match/view/22463`); exactly one `<h1>` + well-formed hrefs on every
+  shape; game tabs render + switch (3-game `22383`, 18-game `1061`) each panel =
+  themed empty state + "Winner: X"; `/match/view/999999` → 404 + themed not-found;
+  console clean; `storage/logs` CLEAN (truncate + reload all shapes → empty).
+
+- **DEFERRED (theme-wide a11y sweep, NOT Task-5-local):** the shared lounge.js
+  `[data-tabs]` pattern lacks (a) `aria-labelledby` linking each tabpanel to its
+  tab and (b) roving-tabindex arrow-key nav for `role=tablist` (APG) — both affect
+  rounds/playoff/game tabs identically; fix once in the shared handler. Accepted
+  minor: the Hero+Player row-head cell duplicates across the stats + talents
+  tables (a `playerRowHead` macro would DRY it — left to avoid refactoring
+  fixture-blind, fidelity-verified markup).
+
+- **Plugin residue (harmless, frozen):** `GameStatistics::init()` still
+  `addJs/addCss`'s DataTables assets on every game render; they load unused (no
+  init runs) — same accepted-residue class as Task 4's ResizeSensor.
+
 ## Phase 1 status (archived)
 
 **✅ PHASE 1 COMPLETE + final whole-theme review passed.**
@@ -538,5 +628,9 @@ default.htm is rewritten):**
   obtain a **complete** dump to drop the workarounds; October Project ID still
   pending for real marketplace plugins.
 - Deferred real-data verification unblocked for: homepage/season/division/
-  calendar/blog (done). Still blocked on data even with this dump: upcoming-match
-  rendering + match-detail draft breakdowns (see DB-DUMP-IMPORT.md caveats).
+  calendar/blog (done) + match-detail (Task 5 built; header/scheduled/tabs render
+  live). Still blocked on data even with this dump: upcoming-match rendering,
+  match-detail **per-game statistics + pre-game rosters** (gameparticipation
+  empty / no-games matches have 0 team_match rows — all fixture-blind, see the
+  Task-5 notes + DB-DUMP-IMPORT.md caveats). NOTE the Task-5 dev-DB schema fix
+  (gameparticipation columns) must be re-applied after any re-import.

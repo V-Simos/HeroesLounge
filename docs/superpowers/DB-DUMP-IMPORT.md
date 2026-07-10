@@ -25,7 +25,7 @@ Real data now live in the dev DB and verified rendering on the new theme:
 | Division page | `/eu-season-23/division-1` | ✅ 200 — standings + rounds |
 | Calendar | `/calendar` | ✅ 200 |
 | Blog list | `/blog` | ✅ 200 |
-| Match detail | `/match/view/:id` | 404 — **page not built yet** (Phase 2 Task 5) |
+| Match detail | `/match/view/:id` | ✅ 200 — **Task 5 built** (header/rosters/scheduled + game tabs); per-game stats fixture-blind (`gameparticipation` empty) |
 | Team page | `/team/view/:slug` | 404 — **page not built yet** (Phase 2 Task 7) |
 
 Real-data volume: 68 seasons, 554 divisions, 2,747 teams, 14,012 sloths,
@@ -51,7 +51,16 @@ Created empty from the frozen plugin migrations
   renders a match card. **Reconstructed** (see below).
 - `rikki_heroeslounge_gameparticipation` + `_talent` — per-game draft / hero /
   talent picks. **Left empty** (no source to reconstruct from). Affects the
-  Task-5 match-detail breakdown.
+  Task-5 match-detail per-game breakdown. **Schema gap (found Task 5b, 2026-07-10):**
+  the recreation ran only `builder_table_create_gameparticipation`, so the table
+  was missing every column the later `_update_*` migrations add — `team_id` + the
+  9 stat columns. `GameStatistics::onRender()` eager-loads `gameParticipations`
+  with a `byTeam` scope (`orderBy('team_id')`) for any game with a `winner_id`, so
+  **every match that HAS games 500'd** (`SQLSTATE 42S22 Unknown column 'team_id'
+  in 'order clause'`) — in the plugin PHP, before any markup renders (would 500
+  the OLD theme identically). Fixed by bringing the table to production schema
+  (ALTER in step 5 below); table stays 0-rows so per-game stats remain
+  fixture-blind, but the page no longer crashes.
 - `rikki_heroeslounge_team_apps` — team join applications. Left empty.
 
 ### B. Missing core System tables (had to be recreated)
@@ -159,6 +168,21 @@ Then, **only needed because THIS dump is partial** (a complete dump skips 4–6)
 
 # 5. Recreate the 4 missing plugin tables (tinker running their migration up()):
 #    team_match, gameparticipation, gameparticipation_talent, team_apps
+#    ⚠ Running only the builder_table_create_* migration leaves gameparticipation
+#    missing the columns the _update_* migrations add — WITHOUT them every
+#    with-games match 500s in GameStatistics (byTeam scope orderBy team_id).
+#    Bring it to production schema:
+#      ALTER TABLE rikki_heroeslounge_gameparticipation
+#        ADD COLUMN team_id                 int(10) unsigned DEFAULT NULL,
+#        ADD COLUMN draft_order             int(10) unsigned DEFAULT NULL,
+#        ADD COLUMN kills                   int(10) unsigned DEFAULT NULL,
+#        ADD COLUMN deaths                  int(10) unsigned DEFAULT NULL,
+#        ADD COLUMN assists                 int(10) unsigned DEFAULT NULL,
+#        ADD COLUMN experience_contribution int(10) unsigned DEFAULT NULL,
+#        ADD COLUMN healing                 int(10) unsigned DEFAULT NULL,
+#        ADD COLUMN siege_damage            int(10) unsigned DEFAULT NULL,
+#        ADD COLUMN hero_damage             int(10) unsigned DEFAULT NULL,
+#        ADD COLUMN damage_taken            int(10) unsigned DEFAULT NULL;
 
 # 6. Reconstruct team_match from games (SQL above), then null unrecoverable winners (SQL above)
 
@@ -177,8 +201,11 @@ docker compose -f dev/docker-compose.yml exec -T web php artisan cache:clear
 
 - **Not verifiable against real data on this dump:** upcoming-match rendering
   (homepage "next match", calendar upcoming, division upcoming — no participants
-  for the 624 upcoming matches), match-detail draft/hero/talent breakdowns
-  (`gameparticipation*` empty), team-application flows.
+  for the 624 upcoming matches), match-detail per-game statistics (the Task-5
+  page IS built, but `gameparticipation*` is empty → every game renders the empty
+  branch; hero picks / bans / stats table / talents / replay download are all
+  fixture-blind), match-detail pre-game rosters (no-games matches have 0
+  `team_match` rows → the bye-guard always fires), team-application flows.
 - **Standings accuracy:** win counts come from the `team_division` pivot (intact,
   real), so standings are correct; only head-to-head *tiebreaks* on the 60
   nulled active-season matches are slightly affected.
