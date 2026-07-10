@@ -1,0 +1,43 @@
+title = "Calendar"
+url = "/calendar"
+layout = "default"
+is_hidden = 0
+
+[UpcomingMatches]
+daysInFuture = 100
+showLogo = 1
+showName = 1
+showCasters = 1
+type = "all"
+casterFilter = "off"
+==
+{#- Calendar — global upcoming matches (next 100 days) grouped by DATE.
+
+    [UpcomingMatches] type="all" is onRender-only: onRun is empty, so the page
+    body must call {% do UpcomingMatches.onRender() %} once before reading its
+    public properties (user / timezone / timezoneOffset / timeFormat /
+    datesToMatches / showLogo / showName / showCasters). datesToMatches is a
+    Laravel Collection grouped by 'd-M-y' in the viewer TZ, already ordered by
+    wbp asc (the component runs orderBy('wbp','asc') before groupBy, and groupBy
+    preserves first-appearance order) — iterate the groups AS-IS; the 'd-M-y'
+    day-first key does NOT sort chronologically, so do NOT re-sort the keys.
+
+    The old page (themes/HeroesLounge-Theme/pages/calendar.htm) had a vestigial
+    onStart() that loaded Match::find(1) into an UNUSED `data` var — dropped; the
+    themed page needs no PHP. layout "plain-with-sidebar" -> "default" chrome.
+
+    Partials rendered within this page can read the attached [UpcomingMatches]
+    component directly by its alias (proven by the division page + its sidebar
+    partials). daysInFuture=100 can hydrate 500+ matches (teams/logo/casters/
+    channels/division eager-loaded; label/region logic lazy-loads the rest, an
+    accepted N+1 mirrored from the old theme — do NOT "fix": plugins frozen). -#}
+{% do UpcomingMatches.onRender() %}
+<section class="sec calsec">
+    <div class="wrap">
+        <header class="calhead">
+            <p class="eyebrow mono">SCHEDULE</p>
+            <h1>Calendar</h1>
+        </header>
+        {% partial 'calendar/event-list' %}
+    </div>
+</section>
