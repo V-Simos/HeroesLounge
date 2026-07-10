@@ -36,6 +36,12 @@
     {%- endif %}
 {% endmacro %}
 
+{#- playoffHref: in-season playoff → /:seasonslug/playoff/:title, standalone
+    (no season) → /tournament/:slug. Centralises the season-vs-standalone url so
+    both the division.playoff and the direct match.playoff branches stay in sync
+    and neither emits a malformed href when season is null. -#}
+{% macro playoffHref(p) %}{% if p.season %}/{{ p.season.slug }}/playoff/{{ p.title|url_encode }}{% else %}/tournament/{{ p.slug }}{% endif %}{% endmacro %}
+
 <header class="matchhead">
     {#- Eyebrow: season (+ round when match.round > 0). The frozen partial only
         emits the season/round h1 when round > 0; keep that gate. -#}
@@ -45,25 +51,24 @@
     </p>
     {% endif %}
 
-    {#- Primary subject line. Division match → the division is the <h1>; a playoff
-        match → the playoff longTitle is the <h1>. These are mutually exclusive per
-        match, so exactly one <h1> renders (matches the frozen partial's layout). -#}
+    {#- Primary subject = exactly ONE <h1> (chained so at most one fires; the branches
+        are mutually exclusive per match in real data). Season is null-guarded before
+        every dereference so a season-less division/playoff can't emit a malformed href
+        (the frozen partial assumed season non-null here — this hardens it). Standalone
+        playoffs resolve via playoffHref → /tournament/:slug. The Cantor label shows
+        only for a DIRECT playoff match (not a group-stage division match), matching
+        the frozen partial. -#}
     {% if match.division %}
         {% if match.division.playoff %}
-        <h1><a href="/{{ match.division.playoff.season.slug }}/playoff/{{ match.division.playoff.title|url_encode }}">{{ match.division.playoff.longTitle }}</a></h1>
+        <h1><a href="{{ _self.playoffHref(match.division.playoff) }}">{{ match.division.playoff.longTitle }}</a></h1>
         <p class="matchhead-sub">{{ match.division.title }}</p>
-        {% else %}
+        {% elseif match.division.season %}
         <h1><a href="/{{ match.division.season.slug }}/{{ match.division.slug }}">{{ match.division.title }}</a></h1>
+        {% else %}
+        <h1>{{ match.division.title }}</h1>
         {% endif %}
-    {% endif %}
-
-    {% if match.playoff and match.playoff.season %}
-    <h1><a href="/{{ match.playoff.season.slug }}/playoff/{{ match.playoff.title|url_encode }}">{{ match.playoff.longTitle }}</a></h1>
-    {{ _self.playoffLabel(decoded_playoff_position) }}
-    {% endif %}
-
-    {% if match.playoff and not match.playoff.season %}
-    <h1><a href="/tournament/{{ match.playoff.slug }}">{{ match.playoff.longTitle }}</a></h1>
+    {% elseif match.playoff %}
+    <h1><a href="{{ _self.playoffHref(match.playoff) }}">{{ match.playoff.longTitle }}</a></h1>
     {{ _self.playoffLabel(decoded_playoff_position) }}
     {% endif %}
 
@@ -74,7 +79,7 @@
     <p class="matchhead-cast mono">
         <span class="matchhead-cast-lbl">Casted by:</span>
         {% for caster in casters %}{{ caster.title }}{% if not loop.last %}, {% endif %}{% endfor %}
-        {% for channel in match.channels %}<a class="matchhead-twitch" href="{{ channel.url }}" rel="noopener" target="_blank" aria-label="Watch on Twitch">{% partial 'site/icon' name='twitch' %}</a>{% endfor %}
+        {% for channel in match.channels %}<a class="matchhead-twitch" href="{{ channel.url }}" rel="noopener" target="_blank" aria-label="Watch on Twitch{% if channel.title %} — {{ channel.title }}{% endif %}">{% partial 'site/icon' name='twitch' %}</a>{% endfor %}
     </p>
     {% endif %}
 
@@ -83,7 +88,7 @@
         not-scheduled literal is reproduced exactly; .is-unscheduled carries the
         danger colour (replaces Bootstrap .text-danger). -#}
     {% if match.wbp %}
-    <p class="matchhead-time" id="matchtime">
+    <p class="matchhead-time">
         {% partial 'site/icon' name='calendar-clock' %}
         <span>Scheduled for {{ match.wbp|date(datetimeFormat, timezone) }} <span class="matchhead-tz">({{ timezone }} {{ timezoneOffset }})</span></span>
     </p>

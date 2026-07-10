@@ -640,8 +640,10 @@ body.reveal-spoilers .score-masked { filter: none; }
    panel head; NEUTRAL when the match is undecided (winner_id null) — deviation
    from the frozen partial's paint-the-non-winner-danger, matching match/card. */
 .roster-card { overflow: hidden; }
-.roster-head { display: flex; justify-content: flex-start; align-items: center; gap: 14px;
-  min-width: 0; height: auto; min-height: 52px; padding: 12px 20px; }
+/* inherits display:flex / align-items:center from base .p-head; only the
+   genuinely-differing declarations live here (base min-height:52px is moot —
+   the 'lg' shield makes the row ~70px tall regardless). */
+.roster-head { justify-content: flex-start; gap: 14px; min-width: 0; padding: 12px 20px; }
 .roster-team-name { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px;
   color: var(--ink); overflow-wrap: anywhere; text-transform: none; letter-spacing: normal; }
 .roster-team-name:hover { color: var(--storm); }
