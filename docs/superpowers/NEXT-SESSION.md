@@ -2,7 +2,7 @@
 
 **How to resume:** `@docs/superpowers/NEXT-SESSION.md Continue`
 
-_Last updated: 2026-07-05, mid-execution of Phase 2 Wave 1._
+_Last updated: 2026-07-11, mid-execution of Phase 2 Wave 1 (Tasks 0–6 done; Task 7 next)._
 
 ---
 
@@ -11,24 +11,27 @@ _Last updated: 2026-07-05, mid-execution of Phase 2 Wave 1._
 **Phase 1: ✅ SHIPPED.** Open PR **#1** on the fork (`ui-rework` → `main`, not merged — user's call). Theme `themes/heroeslounge-next` is live/active.
 
 **Phase 2 Wave 1 (public competitive viewing): 🚧 IN EXECUTION.**
-- **Mode: subagent-driven** (fresh implementer per task → spec-compliance review → code-quality review → fixes → next task). **Branch: `ui-rework-phase-2`** (off `ui-rework`; both decisions made with the user this session).
+- **Mode: subagent-driven** (fresh implementer per task → spec + code-quality/adversarial-multi-lens review → fixes → next task). **Branch: `ui-rework-phase-2`** (off `ui-rework`).
 - **Source of truth = `docs/superpowers/PROGRESS.md`** (Phase-2 Wave-1 task table + per-task notes). Read it first.
 - Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`.
-- **Done + fully reviewed:** Task 0 (bracket spike — de-risked; playoff fixtures now seeded), Task 1 (shared match card), Task 2 (season overview, closed state; reg-open participation deferred).
-- **Task 3 (division page): IMPLEMENTED + spec-review PASSED, but code-quality review NOT yet run.** 4 commits landed (`edbc0bd`,`1c4f677`,`8e7bdd1`,`5ab67d6`), verified live on `/season-30/division-1`.
-- **Not started:** Tasks 4–9 (playoff brackets → match detail → calendar → team page → season archive → finishing pass).
+- **Done + fully reviewed: Tasks 0–6.** 0 (bracket spike — de-risked), 1 (shared match card), 2 (season overview, closed state; reg-open participation deferred), 3 (division page + design rework), 4 (playoff brackets 4a+4b), 5 (match detail 5a+5b), **6 (calendar — just landed: `3a5800f` page, `f7ebaf0` review nits, `f17473c` progress)**.
+- **NEXT: Task 7 (team page `/team/view/:slug`).** Then 8 (season archive), 9 (Wave 1 finishing pass). Wave 2 (static content) = a separate later plan.
 
-## The immediate next action — RESUME TASK 3'S CODE-QUALITY REVIEW
+## The immediate next action — TASK 7 (team page `/team/view/:slug`)
 
-Task 3 is mid-review-gate. Do this, in order:
-1. **Dispatch the Task-3 code-quality reviewer** (`superpowers:code-reviewer`, BASE `cbca1ea` → HEAD `5ab67d6`), focusing on: the 6 partials' organization, the timeline per-type switch maintainability, CSS quality/placement, N+1 traps, AND a **recommendation on the timeline spoiler-leak** (see PROGRESS "Notes from Task 3" open item #1 — `Match.Played` scores render unmasked while spoilers off; decide whether to wrap them in `.score-masked` for consistency vs faithful replication).
-2. Apply fixes (batch: the spoiler-leak decision + pages.css reduced-motion ordering + the "No active teams yet" wording — all in PROGRESS Notes from Task 3), re-verify live, commit.
-3. Mark Task 3 done in PROGRESS; then continue the subagent-driven loop at **Task 4 (playoff brackets)** — which *productionizes the Task-0 spike* (kept `partials/PlayoffOverview/default.htm` is the proven foundation; port the spoiler callback from the old theme's `showHideSpoilersPlayoffView`/`showHideSpoilersSeasonPlayoff` — see PROGRESS Notes from Task 0).
+The **highest-risk remaining Wave-1 task.** Plan §"Task 7". First read PROGRESS.md "Notes from Task 6" (UpcomingMatches wiring the team page reuses) + Notes from Tasks 2/3/5 (ViewTeam reuses the same onRender/component-override + onEnd-404 patterns). Key traps from the plan:
+1. **camelCase alias casing trap (the primary risk).** `[ViewTeam]` `addComponent()`s SIX camelCase children rendered via `{% component 'alias' %}`: `recentResults`, **`divisionTable` (lowercase — ≠ the existing `partials/DivisionTable/` CAPITAL dir!)**, `upcomingMatches`, `roundMatches`, `timeLine`, `teamStatistics`. Each needs a theme override at `partials/<exact-alias>/default.htm` (case-sensitive FS) or it silently falls back to Bootstrap. Prove each resolves with a temp marker before styling. The lowercase `divisionTable` override can delegate to the existing `DivisionTable` override body.
+2. **Guest-vs-auth roster split — PRESERVE.** Page declares NO `[session]` (inherits `security="all"` from layout). Guests see names+roles only; logged-in users see full player cards (battle_tag/discord/heroesprofile). Reuse the calendar/upcoming lesson: the old guest upcoming empty-state derefs `user.username` and BREAKS for guests — ship a clean guest-safe empty state.
+3. **Statistics tab = a DataTables mini-app (scope-cut candidate).** Restyle tables WITHOUT DataTables; ship a static current-season table first and DEFER the AJAX season-change + sortable (note the deferral) — exactly as Task 5b dropped DataTables.
+4. **Missing icons** (globe/website, discord, battlenet, captain crown) → add to `site/icon.htm` (same additive move as calendar's mic/calendar-plus/calendar-x).
+5. `[ViewTeam]` resolves `.team` in `init()` + registers its children; add an `onEnd()` 404 mirroring `blog/post.htm` (as match/view did). Spoiler toggle via `hlToggleSpoilers` + `.score-masked` (as Tasks 3/4/5). Banner wants a full-bleed container (old `plain-fluid`).
+
+Recommended phasing (per plan Step 9): banner + roster + sidebar → matches + timeline → statistics; multi-lens review after, then Task 8.
 
 ## Session gotchas carried forward (trust these)
 - **Git index.lock race:** an IDE/`git fsmonitor--daemon` intermittently grabs `.git/index.lock`, failing commits with "index.lock: File exists". Commit with **`git -c core.fsmonitor=false`** (and `rm -f .git/index.lock` only if no real git op is running). Do NOT kill the fsmonitor daemon — it's legitimate.
 - **DB column names:** matches use **`div_id`** (not `division_id`), table `rikki_heroeslounge_match`; team↔division pivot `rikki_heroeslounge_team_division` also uses `div_id`; timeline table is singular `rikki_heroeslounge_timeline`.
-- **Playoff fixtures now exist** (seeded via the dev plugin in Task 0): se8 `season-30-playoffs` (id 1) + de8 `community-cup` (id 2), both on Season 30. `fixtures:seed --force` is idempotent.
+- **Real May-2024 DB dump LANDED (2026-07-08)** — site runs on real data (active season `eu-season-23`), rich in playoffs/matches. `fixtures:seed` is **SUPERSEDED** (and incompatible with the uncommitted indikator-shim edits) — do NOT reseed. Import record, gaps, and the **Task-5 `gameparticipation` schema fix that MUST be re-applied after any re-import/`down -v`**: `docs/superpowers/DB-DUMP-IMPORT.md`. Caveat: dump matches are **past-dated** vs the container clock, so time-windowed views (calendar/upcoming) render empty unless matches are temporarily forced forward (see PROGRESS "Notes from Task 6").
 - Every commit uses the `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>` trailer (implementer work) / `Claude Opus 4.8 (1M context)` (my PROGRESS commits) per repo convention.
 
 ## Binding constraints (do NOT re-litigate)
@@ -47,7 +50,7 @@ Site: http://localhost:8090 (should show the new theme). If it shows the OLD the
 ```
 docker compose -f dev/docker-compose.yml exec -T web php artisan theme:use heroeslounge-next
 ```
-Full resume steps + credentials: `dev/README.md` and PROGRESS.md § "Resuming a session". Frontend login is by **email** (`alphacap@dev.local` / `dev12345`); dashboard/team pages need the theme-switch login dance (see PROGRESS.md). Real team DB dump still pending — fixture verification only.
+Full resume steps + credentials: `dev/README.md` and PROGRESS.md § "Resuming a session". Frontend login is by **email** (`alphacap@dev.local` / `dev12345`); dashboard/team pages need the theme-switch login dance (see PROGRESS.md). Real May-2024 DB dump is imported (active season `eu-season-23`) — see the DB-dump note above (matches past-dated; re-apply the gameparticipation schema fix after any re-import).
 
 ## Open decisions (for the user)
 
