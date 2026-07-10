@@ -24,6 +24,9 @@
     {% for day, dayMatches in UpcomingMatches.datesToMatches %}
     {% set head = dayMatches|first %}
     <li class="cal-group">
+        {#- datetime: deliberate correction of the frozen source, which read `.wbp`
+            off the grouped Collection itself (not a real timestamp) and emitted the
+            HTML-invalid `m/d/Y`. We read the first match's wbp in valid ISO `Y-m-d`. -#}
         <time class="cal-date" datetime="{{ head.wbp|date('Y-m-d', UpcomingMatches.timezone) }}">
             <span class="cal-weekday">{{ head.wbp|date('l', UpcomingMatches.timezone) }}</span>
             <span class="cal-day">{{ head.wbp|date('d', UpcomingMatches.timezone) }}</span>
@@ -37,9 +40,15 @@
             <div class="cal-row">
                 <div class="cal-meta">
                     <span class="cal-time mono">{{ match.wbp|date(UpcomingMatches.timeFormat, UpcomingMatches.timezone) }}</span>
-                    {#- Label precedence (replicate the old partial EXACTLY, null-guarded):
+                    {#- Label precedence (mirrors the old partial, null-guarded):
                         1. division.playoff  2. match.playoff  3. plain division.
-                        In-season playoffs (has .season) link by TITLE; standalone by SLUG. -#}
+                        In-season playoffs (has .season) link by TITLE; standalone by SLUG.
+                        DELIBERATE DEVIATION: branch 3 is gated `elseif match.division`
+                        where the frozen partial closed the chain with an unconditional
+                        `{% else %}` that emitted an empty, href-less <a> for an orphaned
+                        match with NEITHER a division nor a playoff. Suppressing that dead
+                        anchor is intentional — type='all' eager-loads division, so this
+                        only differs for a data anomaly, and a nameless <a> is worse a11y. -#}
                     {% if match.division and match.division.playoff %}
                         {% set po = match.division.playoff %}
                         <a class="cal-label" href="{% if po.season %}/{{ po.season.slug }}/playoff/{{ po.title|url_encode }}{% else %}/tournament/{{ po.slug }}{% endif %}" title="{{ po.longTitle }}">{{ po.longTitle }}</a>

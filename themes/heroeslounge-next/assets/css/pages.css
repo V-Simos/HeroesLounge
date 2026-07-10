@@ -344,7 +344,6 @@
     border-right: 0; border-bottom: 1px solid var(--line); text-align: left; }
   .cal-day { font-size: 18px; }
   .cal-row { grid-template-columns: 1fr; gap: 10px; }
-  .cal-casters:empty { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .cal-row { transition: none; }
