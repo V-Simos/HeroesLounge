@@ -21,7 +21,7 @@
     onerror that swaps to a neutral placeholder tile and clears the handler (so a
     404 can't loop). heroImg()/mapImg()/talentImg() macros centralise this. -#}
 
-{% import 'match/game-stats' as gs %}
+{% import _self as gs %}
 
 {#- ---- image macros: dynamic src + graceful onerror fallback ------------------
     The frozen partial built `assets/img/heroes/<image_url>.png` etc. and piped
@@ -186,6 +186,7 @@
                 columns is preserved. -#}
             <div class="gstat-tablewrap">
                 <table class="gstat-table">
+                    <caption class="sr-only">Player statistics</caption>
                     <thead>
                         <tr>
                             <th scope="col">Hero</th>
@@ -204,7 +205,7 @@
                         {% for team in game.getTeamsGrouped %}
                         {% for player in team %}
                         <tr class="gstat-prow {% if player.team.id == game.teamOne.id %}is-one{% else %}is-two{% endif %}">
-                            <th scope="row" class="gstat-cell-hero">{{ gs.heroImg(player.hero, 'gstat-rowhero', 'lazy') }}</th>
+                            <th scope="row" class="gstat-cell-hero">{{ gs.heroImg(player.hero, 'gstat-rowhero', 'lazy') }}<span class="sr-only">{% if player.hero %}{{ player.hero.title }}{% endif %}</span></th>
                             <td class="gstat-cell-player">
                                 {% if player.sloth %}<a href="/user/view/{{ player.sloth.id }}" title="{{ player.title }} Profile">{{ player.title }}</a>{% else %}<span>{{ player.title }}</span>{% endif %}
                             </td>
@@ -229,6 +230,7 @@
                 talents (same `loop.last and loop.length != 7` pad as the frozen). -#}
             <div class="gstat-tablewrap">
                 <table class="gstat-table gstat-talents">
+                    <caption class="sr-only">Talent picks by level</caption>
                     <thead>
                         <tr>
                             <th scope="col">Hero</th>
@@ -246,7 +248,7 @@
                         {% for team in game.getTeamsGrouped %}
                         {% for player in team %}
                         <tr class="gstat-prow {% if player.team.id == game.teamOne.id %}is-one{% else %}is-two{% endif %}">
-                            <th scope="row" class="gstat-cell-hero">{{ gs.heroImg(player.hero, 'gstat-rowhero', 'lazy') }}</th>
+                            <th scope="row" class="gstat-cell-hero">{{ gs.heroImg(player.hero, 'gstat-rowhero', 'lazy') }}<span class="sr-only">{% if player.hero %}{{ player.hero.title }}{% endif %}</span></th>
                             <td class="gstat-cell-player">
                                 {% if player.sloth %}<a href="/user/view/{{ player.sloth.id }}" title="{{ player.title }} Profile">{{ player.title }}</a>{% else %}<span>{{ player.title }}</span>{% endif %}
                             </td>
