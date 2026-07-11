@@ -2,7 +2,7 @@
 
 **How to resume:** `@docs/superpowers/NEXT-SESSION.md Continue`
 
-_Last updated: 2026-07-11, mid-execution of Phase 2 Wave 1 (Tasks 0–6 done; Task 7 next)._
+_Last updated: 2026-07-11, mid-execution of Phase 2 Wave 1 (Tasks 0–7 done; Task 8 next)._
 
 ---
 
@@ -14,21 +14,21 @@ _Last updated: 2026-07-11, mid-execution of Phase 2 Wave 1 (Tasks 0–6 done; Ta
 - **Mode: subagent-driven** (fresh implementer per task → spec + code-quality/adversarial-multi-lens review → fixes → next task). **Branch: `ui-rework-phase-2`** (off `ui-rework`).
 - **Source of truth = `docs/superpowers/PROGRESS.md`** (Phase-2 Wave-1 task table + per-task notes). Read it first.
 - Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`.
-- **Done + fully reviewed: Tasks 0–6.** 0 (bracket spike — de-risked), 1 (shared match card), 2 (season overview, closed state; reg-open participation deferred), 3 (division page + design rework), 4 (playoff brackets 4a+4b), 5 (match detail 5a+5b), **6 (calendar — just landed: `3a5800f` page, `f7ebaf0` review nits, `f17473c` progress)**.
-- **NEXT: Task 7 (team page `/team/view/:slug`).** Then 8 (season archive), 9 (Wave 1 finishing pass). Wave 2 (static content) = a separate later plan.
+- **Done + fully reviewed: Tasks 0–7.** 0 (bracket spike), 1 (shared match card), 2 (season overview, closed state), 3 (division page + rework), 4 (playoff brackets), 5 (match detail), 6 (calendar), **7 (team page — just landed: `dca6be1`/`fba5068`/`92b9510` build + `1421a61` review fixes, incl. the critical `divisionTable` override-casing fix)**.
+- **NEXT: Task 8 (season archive `/season/archive`).** Then 9 (Wave 1 finishing pass). Wave 2 (static content) = a separate later plan.
 
-## The immediate next action — TASK 7 (team page `/team/view/:slug`)
+## The immediate next action — TASK 8 (season archive `/season/archive`)
 
-The **highest-risk remaining Wave-1 task.** Plan §"Task 7". First read PROGRESS.md "Notes from Task 6" (UpcomingMatches wiring the team page reuses) + Notes from Tasks 2/3/5 (ViewTeam reuses the same onRender/component-override + onEnd-404 patterns). Key traps from the plan:
-1. **camelCase alias casing trap (the primary risk).** `[ViewTeam]` `addComponent()`s SIX camelCase children rendered via `{% component 'alias' %}`: `recentResults`, **`divisionTable` (lowercase — ≠ the existing `partials/DivisionTable/` CAPITAL dir!)**, `upcomingMatches`, `roundMatches`, `timeLine`, `teamStatistics`. Each needs a theme override at `partials/<exact-alias>/default.htm` (case-sensitive FS) or it silently falls back to Bootstrap. Prove each resolves with a temp marker before styling. The lowercase `divisionTable` override can delegate to the existing `DivisionTable` override body.
-2. **Guest-vs-auth roster split — PRESERVE.** Page declares NO `[session]` (inherits `security="all"` from layout). Guests see names+roles only; logged-in users see full player cards (battle_tag/discord/heroesprofile). Reuse the calendar/upcoming lesson: the old guest upcoming empty-state derefs `user.username` and BREAKS for guests — ship a clean guest-safe empty state.
-3. **Statistics tab = a DataTables mini-app (scope-cut candidate).** Restyle tables WITHOUT DataTables; ship a static current-season table first and DEFER the AJAX season-change + sortable (note the deferral) — exactly as Task 5b dropped DataTables.
-4. **Missing icons** (globe/website, discord, battlenet, captain crown) → add to `site/icon.htm` (same additive move as calendar's mic/calendar-plus/calendar-x).
-5. `[ViewTeam]` resolves `.team` in `init()` + registers its children; add an `onEnd()` 404 mirroring `blog/post.htm` (as match/view did). Spoiler toggle via `hlToggleSpoilers` + `.score-masked` (as Tasks 3/4/5). Banner wants a full-bleed container (old `plain-fluid`).
+The **lowest-complexity remaining Wave-1 task** ("free-rider"). Plan §"Task 8". First read PROGRESS.md "Notes from Task 2" — Task 8 REUSES the shared `partials/season/overview.htm` (divisions/playoffs link lists, param-driven on `season` only) built there. Key points from the plan:
+1. **NO components — pure page `onStart()` data binding.** Front-matter query VERBATIM from the old page: `Season::where('type',1)->with('divisions','playoffs')->where('is_active',0)->orderBy('created_at','desc')->get()->groupBy('region_id')` (use the correct namespace `\Rikki\Heroeslounge\Models\Season`).
+2. **Replace the Bootstrap accordion with semantic `<details>/<summary>` + minimal CSS — NO new JS.** Per region `<h2>{{ season.region.title }}</h2>`; per season `<details><summary>{{ season.title }}</summary>` + `{% partial 'season/overview' season=season %}`.
+3. **region_id `groupBy` is insertion-order (non-deterministic)** — sort regions explicitly if order matters.
+4. If a `summary` gets a `clip-path`/`.chamfer`, add it to the focus-affordance list. Empty DB → muted "No archived seasons." (fixture DB may have few/none — note it). Empty division/playoff sections are already hidden by the `season/overview` guards.
 
-Recommended phasing (per plan Step 9): banner + roster + sidebar → matches + timeline → statistics; multi-lens review after, then Task 8.
+Then Task 9 (Wave 1 finishing pass — responsive/keyboard/reduced-motion/tz/console sweep across all Wave-1 pages). Wave 2 (static content) = a separate later plan.
 
 ## Session gotchas carried forward (trust these)
+- **Component-override dirs must be ALL-LOWERCASE (Task-7 learning).** October's `ComponentPartial::loadOverrideCached` probes `partials/strtolower(alias)/default.htm` BEFORE `partials/<exact-alias>/default.htm`. A CamelCase override dir only resolves when the invoking alias is byte-identical; any lowercase RUNTIME alias added via `addComponent()` (e.g. `divisionTable` from ViewTeam + PlayoffOverview) then silently falls back to the plugin's Bootstrap partial on case-sensitive prod Linux. **Dev's Docker-Desktop bind mount is case-INSENSITIVE even inside the Linux container, so this is INVISIBLE in dev** — prove casing with `git ls-files`, NEVER a live render. Fixed in Task 7 (`1421a61`) by renaming `partials/DivisionTable/` → `partials/divisiontable/` (one lowercase dir serves every alias casing). Name all new override dirs lowercase.
 - **Git index.lock race:** an IDE/`git fsmonitor--daemon` intermittently grabs `.git/index.lock`, failing commits with "index.lock: File exists". Commit with **`git -c core.fsmonitor=false`** (and `rm -f .git/index.lock` only if no real git op is running). Do NOT kill the fsmonitor daemon — it's legitimate.
 - **DB column names:** matches use **`div_id`** (not `division_id`), table `rikki_heroeslounge_match`; team↔division pivot `rikki_heroeslounge_team_division` also uses `div_id`; timeline table is singular `rikki_heroeslounge_timeline`.
 - **Real May-2024 DB dump LANDED (2026-07-08)** — site runs on real data (active season `eu-season-23`), rich in playoffs/matches. `fixtures:seed` is **SUPERSEDED** (and incompatible with the uncommitted indikator-shim edits) — do NOT reseed. Import record, gaps, and the **Task-5 `gameparticipation` schema fix that MUST be re-applied after any re-import/`down -v`**: `docs/superpowers/DB-DUMP-IMPORT.md`. Caveat: dump matches are **past-dated** vs the container clock, so time-windowed views (calendar/upcoming) render empty unless matches are temporarily forced forward (see PROGRESS "Notes from Task 6").

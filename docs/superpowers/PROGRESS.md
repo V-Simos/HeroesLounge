@@ -47,7 +47,7 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 | 4 — Playoff brackets (4a + 4b) | ✅ | ✅ | ✅ (approved; doc nits fixed) | 7897c89, dc01150, ddb3b1c, abdb5b7, 497cf43, d325c13 |
 | 5 — Match detail `/match/view/:id` (5a + 5b) | ✅ | ✅ | ✅ (5a+5b review nits fixed + verified) | ae96c3c, 8b8023c, 4486577, 15cea60, c680934 |
 | 6 — Calendar `/calendar` | ✅ | ✅ | ✅ (multi-lens review; nits fixed + verified) | 3a5800f, f7ebaf0 |
-| 7 — Team page `/team/view/:slug` | — | — | — | |
+| 7 — Team page `/team/view/:slug` | ✅ | ✅ | ✅ (adversarial multi-lens; 8 confirmed → fixed + verified) | dca6be1, fba5068, 92b9510, 1421a61 |
 | 8 — Season archive `/season/archive` | — | — | — | |
 | 9 — Wave 1 finishing pass | — | — | — | |
 
@@ -476,6 +476,91 @@ objectively-better (kept), or deferred theme-wide a11y. Commits: `3a5800f`
   calendar regression (adversarially refuted as material) — the focus-affordance
   invariant only covers elements that THEMSELVES carry `.chamfer`/clip-path. Revisit
   theme-wide if it ever bites.
+
+### Notes from Task 7 (team page `/team/view/:slug` — DONE)
+
+**Task 7 DONE (3 build commits + 1 review-fix commit).** Adversarial multi-lens
+review (spec + fidelity + quality + a11y, each finding independently verified):
+10 raw findings → 8 confirmed (2 critical [same root cause], 2 minor, 4 nit) + 2
+refuted (sanctioned deviations). All fixed + verified live. Commits: `dca6be1`
+(banner+roster+sidebar), `fba5068` (matches+timeline), `92b9510` (statistics),
+`1421a61` (review fixes).
+
+- **Shipped:** `pages/team/view.htm` (onEnd 404 reads
+  `$this->page->components['ViewTeam']->team` — ViewTeam populates `.team` in
+  `init()` every request, so onEnd can 404 directly; SIMPLER than ViewMatch's
+  onRender-only 404 dance in Task 5) + `partials/ViewTeam/default.htm` (full-bleed
+  banner + lounge.js tabs + sidebar) + `partials/team/{roster,social}.htm` + the
+  SIX camelCase component overrides + ported `assets/img/{battlenet,discord}.svg`
+  + a `globe` lucide icon + `.team-*` CSS.
+
+- **⚠ CRITICAL CROSS-TASK LEARNING — component-override alias resolution is
+  strtolower-FIRST.** October's `ComponentPartial::loadOverrideCached`
+  (modules/cms) probes `partials/strtolower(alias)/default.htm` BEFORE
+  `partials/<exact-alias>/default.htm`. The DivisionTable override dir was
+  `partials/DivisionTable/` (CamelCase) — that matches the `[DivisionTable]` PAGE
+  alias via the exact probe, but NOT the lowercase RUNTIME alias `divisionTable`
+  that BOTH ViewTeam (Task 7) AND PlayoffOverview's group-stage (Task 4)
+  `addComponent()`. On case-sensitive prod Linux neither probe matched → the
+  plugin's un-skinned Bootstrap table leaked into the team-sidebar Standings AND
+  the playoff group-stage standings. **Dev's Docker-Desktop bind mount is
+  case-INSENSITIVE even inside the Linux container, so this was 100% invisible in
+  dev** (live rendering does NOT prove casing — only `git ls-files` + the October
+  source do). FIX (`1421a61`): renamed `partials/DivisionTable/` → all-lowercase
+  `partials/divisiontable/`, which the strtolower-first probe matches for EVERY
+  alias casing on any FS — one dir, and it closes the Task-4 latent leak for free.
+  **RULE for all future component overrides: name the override dir ALL-LOWERCASE
+  (strtolower is always probed first); a CamelCase dir only works when the
+  invoking alias is byte-identical, which silently breaks any lowercase
+  runtime-alias consumer on prod Linux. Do NOT rename `divisiontable` back.**
+  Verified live post-fix: home (5 themed widgets), team sidebar, division page,
+  playoff group-stage all themed, 0 `table-striped`, logs clean of errors.
+
+- **Guest-vs-auth roster split PRESERVED:** page declares NO `[session]` (inherits
+  `security="all"`); guests see names + captain star + role only; the `{% if user
+  %}` block adds battle_tag/discord/heroesprofile deep-link + per-player socials.
+  Guest-safe: the upcoming override NEVER derefs `user.username` (the frozen
+  jumbotron empty-state crash for guests is avoided). Authed path exercised live
+  by setting password `dev12345` on user id 41 (DOF captain) via tinker (data-only
+  dev change, noted — survives).
+
+- **camelCase overrides:** five resolve via the EXACT probe as-is (`recentResults`,
+  `upcomingMatches`, `roundMatches`, `timeLine` [capital L], `teamStatistics`);
+  only `divisionTable` needed the lowercase-dir fix above. `upcomingMatches` has
+  showCasters=false/showName=false → NO caster column (simpler than the calendar).
+  `roundMatches` type='team' round=null → `matches` GROUPED by division/playoff
+  `longTitle` (NOT per-round) → re-authored as one lounge.js tab per group; shows
+  the team's FULL match history (DOF = 41 groups / 218 cards). The `timeLine`
+  per-type switch was extracted to a shared `partials/division/timeline-entries.htm`
+  (also consumed by the Task-3 division sidebar — one source of truth; de-risks the
+  Phase-3 `/user/view` URL change).
+
+- **Statistics tab (scope-cut per plan):** static themed hero + map tables (NO
+  DataTables, NO Bootstrap collapse); the AJAX `onSeasonChange` season-select +
+  client-side sorting are DEFERRED. PARTIALLY fixture-populated: hero BANS derive
+  from the `games` table (49k rows) so the tables render, but PICKS/winrate show
+  `-`/empty because `gameparticipation` = 0 rows (same fixture-blind class as Task
+  5). Empty-state ("No statistics yet", now an `<h2>` for heading order) shows for
+  teams with 0 participated seasons (e.g. `testus`).
+
+- **Two sanctioned deviations (refuted as findings — documented + objectively
+  better):** roundMatches null-group tab labels "Other" not the frozen "Playoffs"
+  (a real playoff match is keyed by `playoff.longTitle` and never hits the null
+  branch, so "Playoffs" was a frozen misnomer); upcomingMatches renders team
+  titles despite showName=false (a shields-only text row is ambiguous in the
+  sidebar).
+
+- **FIXTURE-BLIND / deferred:** populated hero-pick/winrate stats
+  (`gameparticipation`=0); statistics AJAX season-change + sorting (deferred);
+  `/user/view/:id` links emit frozen literals but 404 under the new theme
+  (Phase-3, expected). Team-logo uploads absent in the dump → shield 404 +
+  ResizeSensor re-request loop (known dev-data artifact, not a bug).
+
+- **Frozen INFO-log noise (pre-existing, NOT a Task-7 defect):** `Division.php:190`
+  `Log::info` serializes full standings on EVERY DivisionTable render, so the
+  group-stage page (many tables) writes multi-hundred-KB INFO lines to
+  `system.log`. Already tracked under "pre-production hardening" above; `system.log`
+  is clean of ERROR/exception/Twig lines.
 
 ## Phase 1 status (archived)
 
