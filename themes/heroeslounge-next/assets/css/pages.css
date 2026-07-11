@@ -514,3 +514,39 @@
 @media (max-width: 560px) {
   .team-banner-inner { flex-direction: column; align-items: flex-start; text-align: left; padding: 32px 24px 28px; }
 }
+
+/* ---------- season archive (pages/season/archive.htm, Task 8) ----------
+   No mockup — the old Bootstrap #accordion/.card/.collapse is re-skinned as
+   native <details>/<summary> (no JS). The summary is a panel row sharing the
+   .season-link rhythm (52px, Chakra Petch, chevron) and deliberately carries
+   NO clip-path/.chamfer, so the global :focus-visible ring applies as-is — no
+   focus-affordance entry needed (same call as .season-link, pages.css above).
+   The native marker is replaced by the shared chevron-right icon, rotated 90deg
+   when [open]. */
+.archsec { padding: 40px 0 64px; }
+.arch-head { margin-bottom: 30px; }
+.arch-head h1 { font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; letter-spacing: .01em; }
+.arch-region + .arch-region { margin-top: 44px; }
+.arch-region-title { font-size: 1.3rem; font-weight: 700; letter-spacing: .01em; margin-bottom: 16px; }
+.arch-season + .arch-season { margin-top: 10px; }
+.arch-summary { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 20px;
+  background: var(--panel); cursor: pointer; color: var(--ink); list-style: none;
+  font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 15.5px;
+  -webkit-user-select: none; user-select: none;
+  transition: background .15s ease, color .15s ease; }
+.arch-summary::-webkit-details-marker { display: none; }
+.arch-summary:hover { background: var(--panel2); color: var(--storm); }
+.arch-summary-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.arch-summary svg { width: 16px; height: 16px; color: var(--mute); flex-shrink: 0;
+  transition: transform .15s ease, color .15s ease; }
+.arch-summary:hover svg { color: var(--storm); }
+.arch-season[open] > .arch-summary { color: var(--storm); }
+.arch-season[open] > .arch-summary svg { color: var(--storm); transform: rotate(90deg); }
+.arch-body { padding: 16px 0 24px; }
+/* the shared partial's bare "Nothing scheduled yet." line aligns with the
+   summary's 20px text gutter (the .season-grid panels self-align full-width). */
+.arch-body > .season-empty { padding: 0 20px; }
+.arch-empty { color: var(--mute); }
+@media (prefers-reduced-motion: reduce) {
+  .arch-summary, .arch-summary svg { transition: none; }
+}
