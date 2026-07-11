@@ -21,7 +21,7 @@
 <div class="p chamfer team-disbanded">
     <div class="team-disbanded-ic">{% partial 'site/icon' name='users' %}</div>
     <div>
-        <h3>Team disbanded</h3>
+        <h2>Team disbanded</h2>
         <p>This team is no longer active. Its roster has disbanded and it is not competing in any current season.</p>
     </div>
 </div>
@@ -38,7 +38,7 @@
                     {% if sloth.pivot.is_captain %}<span class="cap-star" title="Captain">{% partial 'site/icon' name='star' %}</span>{% endif %}
                     {{ sloth.title }}
                 </span>
-                {% if sloth.role and sloth.role.id != -1 %}
+                {% if sloth.role %}
                 {% set rolePath = 'assets/img/roles/' ~ sloth.role.title|replace({' ':'-'})|lower ~ '.svg' %}
                 <span class="rmate-role"><img src="{{ rolePath|theme }}" alt="" title="{{ sloth.role.title }}">{{ sloth.role.title }}</span>
                 {% endif %}

@@ -5,7 +5,7 @@
     STANDINGS (score mode): {% component 'divisionTable' id=div.id %} fires the
     nested DivisionTable's onRender with showScore=true (the property set in
     PlayoffOverview::init()'s addComponent) and renders the theme override
-    partials/DivisionTable/default.htm, whose showScore branch emits the score
+    partials/divisiontable/default.htm, whose showScore branch emits the score
     table (# | Team | P | Score | Map ±) with the score cells wrapped in
     .hl-score.is-masked — so the page's EXISTING spoiler callback masks/reveals
     them (it toggles is-masked on every .hl-score). No new callback needed.

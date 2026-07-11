@@ -466,7 +466,7 @@
   display: inline-flex; align-items: center; justify-content: center;
   background: rgba(136,156,215,0.1); color: var(--gold); }
 .team-stats-empty-ic svg { width: 24px; height: 24px; }
-.team-stats-empty h3 { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px; color: var(--ink); }
+.team-stats-empty h2 { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px; color: var(--ink); }
 .team-stats-empty p { color: var(--mute); font-size: 14.5px; margin-top: 4px; }
 
 /* disbanded notice */
@@ -475,12 +475,12 @@
   display: inline-flex; align-items: center; justify-content: center;
   background: rgba(136,156,215,0.1); color: var(--mute); }
 .team-disbanded-ic svg { width: 24px; height: 24px; }
-.team-disbanded h3 { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px; color: var(--ink); }
+.team-disbanded h2 { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px; color: var(--ink); }
 .team-disbanded p { color: var(--mute); font-size: 14.5px; margin-top: 4px; }
 
 /* sidebar panels: reuse the .p / .p-head rhythm. divisionTable standings drop in
-   as .tr rows; recent/upcoming reuse .divside-panel (match cards + .mrow rows). */
-.team-side-panel a.who:hover { color: var(--storm); }
+   as .tr rows; recent/upcoming reuse .divside-panel (match cards + .mrow rows);
+   their a.who:hover is already handled by the .divside-panel a.who:hover rule. */
 .team-standings { display: flex; flex-direction: column; }
 /* The divisionTable override emits the full 7-col .tr (built for the wide main
    column); inside the 360px sidebar the fixed numeric tracks collapse the 1fr
@@ -491,6 +491,9 @@
 .team-standings .tr { grid-template-columns: 26px minmax(0, 1fr) 26px 26px 34px 40px 0;
   padding: 0 16px; font-size: 13.5px; min-height: 48px; }
 .team-standings .tr .l10 { display: none; }
+/* the header row's L10 cell is a classless <span> (not .l10), so hide it too, or
+   its label overflows the collapsed 0-width 7th track. */
+.team-standings .tr.th span:last-child { display: none; }
 .team-standings .tteam { min-width: 0; gap: 7px; }
 .team-standings .tteam a { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .team-desc { padding: 16px 20px; color: var(--mute); font-size: 14px; line-height: 1.55; }

@@ -1,5 +1,5 @@
 {#- FULL division standings table (every active team — NOT the 5-row-capped
-    partials/DivisionTable/default.htm used by the homepage widget).
+    partials/divisiontable/default.htm used by the homepage widget).
 
     onRender pattern: set the runtime division id, invoke onRender(), then read
     the public `teams` property. DivisionTable.teams is
@@ -11,7 +11,7 @@
       map_score          signed game diff (Map ±)
     Property names verified against plugins/rikki/heroeslounge/models/Division.php.
 
-    Row markup mirrors the Phase-1 override (partials/DivisionTable/default.htm)
+    Row markup mirrors the Phase-1 override (partials/divisiontable/default.htm)
     but iterates ALL teams (no [start:length] slice). rank = loop.index; the
     electric effect (eff + s1/s2/s3, layers from division/electric) fires on rows
     whose L10 wins reach 6/8/10, except disbanded rows; .you highlight only when

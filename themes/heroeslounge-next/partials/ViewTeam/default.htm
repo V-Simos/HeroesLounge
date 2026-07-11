@@ -6,8 +6,11 @@
     recentResults / divisionTable / upcomingMatches / roundMatches / timeLine /
     teamStatistics — which we render via {% component 'alias' %}; each fires its
     own onRender at render time (no {% do %} needed), and each has a theme
-    override at partials/<alias>/default.htm (divisionTable delegates to the
-    existing DivisionTable override — same alias the PlayoffOverview pane uses).
+    override at partials/<alias>/default.htm. NOTE the divisionTable (lowercase
+    runtime alias): October's ComponentPartial::loadOverrideCached probes
+    strtolower(alias) BEFORE the exact alias, so this alias AND the DivisionTable
+    page alias both resolve to the ONE all-lowercase partials/divisiontable/
+    override on a case-sensitive (production) FS.
 
     Layout: a full-bleed banner (breaks out of .wrap via .team-banner-bleed), then
     a .wrap holding a two-column grid — a tabbed main column (Roster / Timeline /

@@ -27,10 +27,10 @@
 {% for group, groupMatches in __SELF__.matches %}
 {% do groupMatches.load('teams.smallLogo', 'channels') %}
 <div class="team-match-grid" id="mgroup-{{ loop.index }}" role="tabpanel"{% if not loop.first %} hidden{% endif %}>
+    {#- A grouped collection never yields an empty group (groupBy only creates a
+        key when a match maps to it), so no per-group empty branch is needed. -#}
     {% for m in groupMatches %}
     {% partial 'match/card' match=m variant=(m.is_played ? 'result' : 'fixture') revealScore=false withDivision=false %}
-    {% else %}
-    <p class="round-empty">No matches in this group.</p>
     {% endfor %}
 </div>
 {% endfor %}

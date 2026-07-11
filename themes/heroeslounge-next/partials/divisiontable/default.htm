@@ -1,5 +1,13 @@
-{#- Theme override for Rikki\LoungeViews\Components\DivisionTable (alias
-    "DivisionTable" in plugins/rikki/loungeviews/Plugin.php) — replaces the
+{#- Theme override for Rikki\LoungeViews\Components\DivisionTable. This dir is
+    ALL-LOWERCASE ("divisiontable") ON PURPOSE: October's ComponentPartial::
+    loadOverrideCached (modules/cms) probes strtolower(alias) BEFORE the exact
+    alias, so ONE lowercase dir serves EVERY consumer on a case-sensitive
+    (production Linux) FS — the page alias "DivisionTable" (home / dashboard /
+    season pages, [DivisionTable] front-matter) AND the lowercase runtime alias
+    "divisionTable" that ViewTeam and PlayoffOverview addComponent() at render.
+    Do NOT rename this back to CamelCase: the runtime-alias consumers would then
+    fall back to the plugin's un-skinned Bootstrap partial on Linux (dev's
+    case-insensitive FS masks the break). — replaces the
     plugin's Bootstrap partial. Data logic copied from
     plugins/rikki/loungeviews/components/divisiontable/default.htm:
     __SELF__.teams (getDivisionTableStandings(): pivot.match_count plus the
