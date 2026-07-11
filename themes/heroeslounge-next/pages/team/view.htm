@@ -1,0 +1,64 @@
+title = "View Team"
+url = "/team/view/:slug"
+layout = "default"
+is_hidden = 0
+
+[ViewTeam]
+maxItems = 5
+daysInFuture = 50
+
+[SpoilersToggle]
+==
+<?php
+// Dynamic <title> from the resolved team + a 404 for a bad slug.
+//
+// ViewTeam::init() runs EVERY request and populates its public `.team` (by the
+// :slug param) BEFORE onEnd, so — unlike ViewMatch (onRender-only, Task 5) — we
+// can read the component instance's `.team` straight from PHP here. This mirrors
+// the blog/post.htm onEnd idiom (which reads its component's page var), reaching
+// the attached ViewTeam via $this->page->components.
+//
+// The OLD team page (themes/HeroesLounge-Theme/pages/team/view.htm) declared NO
+// PHP and carried NO [session] block — security is inherited from the layout
+// (default.htm's [session] security="all" = public). We keep it that way: no
+// [session] here, and the auth-gated roster split stays a {% if user %} gate in
+// the component override.
+function onEnd()
+{
+    $team = $this->page->components['ViewTeam']->team ?? null;
+    if ($team) {
+        $this->page->title = $team->title;
+    } else {
+        $this->page->title = 'Team not found';
+        $this->setStatusCode(404);
+    }
+}
+?>
+==
+{#- Team page — public read-only team profile (frozen URL /team/view/:slug).
+
+    URL + [ViewTeam] (maxItems/daysInFuture) + [SpoilersToggle] copied VERBATIM
+    from the frozen old page. layout "plain-fluid" -> "default" (the new theme's
+    chrome); the banner breaks out of .wrap for the full-bleed the old fluid
+    layout gave it (see .teamsec / .team-banner in pages.css).
+
+    ViewTeam is the RESOLVER + composer: init() sets its public .team and
+    addComponent()s SIX camelCase children (recentResults / divisionTable /
+    upcomingMatches / roundMatches / timeLine / teamStatistics). Everything is
+    rendered by our component override partials/ViewTeam/default.htm — this page
+    just wires the spoiler toggle + the component.
+
+    Spoilers: the shared match card (recent/round scores) masks scores in
+    .score-masked (blur), revealed by body.reveal-spoilers. SpoilersToggle's
+    frozen script calls hlToggleSpoilers() on ready with the cookie value
+    (correct initial state) and on each toggle (persisted via its onSetShowSpoilers
+    AJAX cookie) — same wiring as pages/season/division.htm. -#}
+{% component 'SpoilersToggle' callback='hlToggleSpoilers' %}
+{% component 'ViewTeam' %}
+{% put scripts %}
+<script type="text/javascript">
+    function hlToggleSpoilers(show) {
+        document.body.classList.toggle('reveal-spoilers', show > 0);
+    }
+</script>
+{% endput %}

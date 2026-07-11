@@ -1,0 +1,19 @@
+{#- Theme override for Rikki\LoungeViews\Components\RecentResults, resolved as
+    ViewTeam's `recentResults` child (type='team', id=team.id, maxItems). __SELF__
+    IS the RecentResults instance; the component fires its own onRender at render
+    (it's a {% component %} call from ViewTeam/default.htm), so __SELF__.matches is
+    populated here — an Eloquent Collection of the team's played matches
+    (is_played=1, updated_at DESC, take maxItems), eager-loaded teams + teams.logo.
+
+    Rendered with the shared match/card partial (variant='result' — every match
+    here is played; revealScore=false wires the score into the page spoiler toggle
+    via .score-masked; withDivision=false drops the redundant DIV tag). The card
+    also draws a shield per side + a VOD link, which the component does NOT load,
+    so we eager-load teams.smallLogo + channels here (mirrors division/recent.htm)
+    to avoid an N+1. Empty state: a muted .mrow. -#}
+{% if __SELF__.matches %}{% do __SELF__.matches.load('teams.smallLogo', 'channels') %}{% endif %}
+{% for match in __SELF__.matches %}
+{% partial 'match/card' match=match variant='result' revealScore=false withDivision=false %}
+{% else %}
+<div class="mrow"><span class="who"><i>No results yet.</i></span></div>
+{% endfor %}

@@ -1,0 +1,22 @@
+{#- Social links row for a team OR a sloth. Params:
+      obj    (optional) the entity carrying *_url fields; when omitted falls back
+             to `team` (banner use) — both the Team and Sloth models expose the
+             same twitter_url / facebook_url / twitch_url / youtube_url /
+             website_url columns, so this one partial serves the banner and the
+             (auth-gated) roster player cards.
+      light  (optional bool) light-on-dark variant for the banner scrim.
+
+    Icons are the shared lucide social glyphs (twitter/facebook/twitch/youtube)
+    plus `globe` for website (added to site/icon.htm). No row emitted when the
+    entity has no links (the {% if %} chain guards each; the wrapper always
+    renders but stays empty — harmless). Frozen: external hrefs, target _blank
+    rel noopener (matches the old theme's share-btn anchors). -#}
+{% set obj = obj is defined ? obj : team %}
+{% set cls = (light is defined and light) ? 'socials light' : 'socials' %}
+<div class="{{ cls }}">
+    {% if obj.twitter_url %}<a href="{{ obj.twitter_url }}" target="_blank" rel="noopener" title="Twitter" aria-label="Twitter">{% partial 'site/icon' name='twitter' %}</a>{% endif %}
+    {% if obj.facebook_url %}<a href="{{ obj.facebook_url }}" target="_blank" rel="noopener" title="Facebook" aria-label="Facebook">{% partial 'site/icon' name='facebook' %}</a>{% endif %}
+    {% if obj.twitch_url %}<a href="{{ obj.twitch_url }}" target="_blank" rel="noopener" title="Twitch" aria-label="Twitch">{% partial 'site/icon' name='twitch' %}</a>{% endif %}
+    {% if obj.youtube_url %}<a href="{{ obj.youtube_url }}" target="_blank" rel="noopener" title="YouTube" aria-label="YouTube">{% partial 'site/icon' name='youtube' %}</a>{% endif %}
+    {% if obj.website_url %}<a href="{{ obj.website_url }}" target="_blank" rel="noopener" title="Website" aria-label="Website">{% partial 'site/icon' name='globe' %}</a>{% endif %}
+</div>

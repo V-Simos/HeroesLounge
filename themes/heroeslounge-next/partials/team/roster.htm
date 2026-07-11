@@ -1,0 +1,78 @@
+{#- Team roster — the #general tab of the old page, re-skinned. Param: team.
+
+    AUTH-GATED SPLIT (preserved from the frozen old page — this page is PUBLIC,
+    no [session] block, security inherited as security="all"):
+      - GUESTS see names + captain star + role only.
+      - the {% if user %} block adds each player's socials + battle_tag (with the
+        HeroesProfile deep link when heroesprofile_id is set) + discord_tag.
+    NEVER deref `user.*` outside that gate.
+
+    Disbanded team -> a themed notice (the old page showed assets/img/icons/
+    disbanded.png; we render a design-system panel instead — cleaner, no PNG).
+
+    Role icon: the old page built assets/img/roles/<title-lower-hyphen>.svg; the
+    same SVGs are ported into THIS theme's assets/img/roles/, so we |theme them.
+    Captain star: sloth.pivot.is_captain (the SlothTeamPivot pivot). Player link:
+    frozen /user/view/:id (a Phase-3 page — 404s under the new theme for now, the
+    literal is still emitted). HeroesProfile URL uses the model's
+    getHeroesProfileBattletagReformatted + getHeroesProfileRegionId helpers, same
+    as the old page. -#}
+{% if team.disbanded %}
+<div class="p chamfer team-disbanded">
+    <div class="team-disbanded-ic">{% partial 'site/icon' name='users' %}</div>
+    <div>
+        <h3>Team disbanded</h3>
+        <p>This team is no longer active. Its roster has disbanded and it is not competing in any current season.</p>
+    </div>
+</div>
+{% else %}
+<div class="roster-grid">
+    {% for sloth in team.sloths %}
+    <article class="rmate chamfer">
+        <a class="rmate-main" href="/user/view/{{ sloth.id }}">
+            <span class="rmate-av">
+                {% if sloth.user.avatar %}<img src="{{ sloth.user.avatar.path|resize(160,160) }}" alt="" loading="lazy">{% else %}{% partial 'site/icon' name='users' %}{% endif %}
+            </span>
+            <span class="rmate-id">
+                <span class="rmate-name">
+                    {% if sloth.pivot.is_captain %}<span class="cap-star" title="Captain">{% partial 'site/icon' name='star' %}</span>{% endif %}
+                    {{ sloth.title }}
+                </span>
+                {% if sloth.role and sloth.role.id != -1 %}
+                {% set rolePath = 'assets/img/roles/' ~ sloth.role.title|replace({' ':'-'})|lower ~ '.svg' %}
+                <span class="rmate-role"><img src="{{ rolePath|theme }}" alt="" title="{{ sloth.role.title }}">{{ sloth.role.title }}</span>
+                {% endif %}
+            </span>
+        </a>
+        {% if user %}
+        {#- AUTH-ONLY: socials + battle tag + discord. -#}
+        {% if sloth.twitter_url or sloth.facebook_url or sloth.twitch_url or sloth.youtube_url or sloth.website_url %}
+        {% partial 'team/social' obj=sloth %}
+        {% endif %}
+        <dl class="rmate-tags">
+            {% if sloth.battle_tag %}
+            <div class="rmate-tag">
+                <dt><img src="{{ 'assets/img/battlenet.svg'|theme }}" alt="Battle.net" title="Battle Tag"></dt>
+                <dd>
+                    {% if sloth.heroesprofile_id %}
+                    <a href="https://www.heroesprofile.com/Player/{{ sloth.getHeroesProfileBattletagReformatted }}/{{ sloth.heroesprofile_id }}/{{ sloth.getHeroesProfileRegionId }}" target="_blank" rel="noopener" title="View HeroesProfile page">{{ sloth.battle_tag }}</a>
+                    {% else %}
+                    {{ sloth.battle_tag }}
+                    {% endif %}
+                </dd>
+            </div>
+            {% endif %}
+            {% if sloth.discord_tag %}
+            <div class="rmate-tag">
+                <dt><img src="{{ 'assets/img/discord.svg'|theme }}" alt="Discord" title="Discord Tag"></dt>
+                <dd>{{ sloth.discord_tag }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+        {% endif %}
+    </article>
+    {% else %}
+    <p class="team-empty">No players on this roster yet.</p>
+    {% endfor %}
+</div>
+{% endif %}

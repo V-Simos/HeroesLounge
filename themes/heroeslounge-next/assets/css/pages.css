@@ -348,3 +348,117 @@
 @media (prefers-reduced-motion: reduce) {
   .cal-row { transition: none; }
 }
+
+/* ---------- team page (pages/team/view.htm + partials/ViewTeam + team/*) ----------
+   No mockup — composed from the established design language. The old page used
+   layout "plain-fluid" (full width) for a Bootstrap jumbotron banner + nav-tabs;
+   re-skinned here as a full-bleed banner (breaks out of .wrap) + a lounge.js
+   tabbed main column + a sidebar. Fresh `team-*`/`rmate-*` class names — the
+   legacy `.jumbotron`/`.blogPostWrapper`/`.f100`/`.result` selectors are NOT
+   reused (the auto-injected plugin heroeslounge.css loads last and would clobber
+   them). Scores in the recent/matches cards use the shared .score-masked spoiler
+   (via match/card revealScore=false). */
+
+/* full-bleed banner: break out of the centered .wrap to span the viewport, then
+   re-center content in an inner .wrap. The 100vw + negative-margin trick used by
+   nothing else in the theme yet, so it lives here scoped to .team-banner-bleed. */
+.team-banner-bleed { margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+  width: 100vw; }
+.team-banner { position: relative; background: var(--panel2); background-size: cover;
+  background-position: center; border-bottom: 1px solid var(--line); }
+.team-banner.has-img { background-color: var(--deep); }
+/* scrim: a dark wash so the name/shield read over any banner image (or the flat
+   fallback). Radial storm glow echoes the home hero without importing it. */
+.team-banner-scrim { background:
+  radial-gradient(1200px 300px at 20% -40%, rgba(79,179,242,0.18), transparent 60%),
+  linear-gradient(180deg, rgba(6,16,30,0.55), rgba(6,16,30,0.82)); }
+.team-banner-inner { display: flex; align-items: center; gap: 24px; padding: 46px 24px 40px; }
+.team-banner-id { min-width: 0; }
+.team-banner-id h1 { font-size: clamp(1.9rem, 4.2vw, 3rem); font-weight: 700; letter-spacing: .01em;
+  line-height: 1.05; color: var(--ink); overflow-wrap: anywhere; }
+.team-banner-id .socials { margin-top: 14px; }
+/* light variant: lift the social chips over the scrim. */
+.socials.light a { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); }
+.socials.light a:hover { background: rgba(79,179,242,0.28); color: #fff; }
+/* the lg shield gets a subtle ring so a logoless monogram reads over the scrim. */
+.team-banner-inner .badge-lg { flex-shrink: 0; box-shadow: 0 0 0 1px var(--line); }
+
+.teamsec { padding: 36px 0 64px; }
+.teamwrap { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+.teammain { min-width: 0; }
+.teamside { display: flex; flex-direction: column; gap: 20px; }
+.team-tabs { flex-wrap: wrap; margin-bottom: 22px; }
+/* panels toggle via [hidden] (lounge.js). A team-panel has no special display,
+   so [hidden] already hides it, but the explicit rule documents the contract. */
+.team-panel[hidden] { display: none; }
+
+/* roster grid: auto-fill cards; each card is a chamfered panel. */
+.roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.rmate { background: var(--panel); padding: 0; overflow: hidden; }
+.rmate-main { display: flex; align-items: center; gap: 12px; padding: 16px 18px; min-width: 0; }
+.rmate-av { width: 52px; height: 52px; flex-shrink: 0; border-radius: 50%; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(136,156,215,0.1); color: var(--storm); }
+.rmate-av img { width: 100%; height: 100%; object-fit: cover; }
+.rmate-av svg { width: 22px; height: 22px; }
+.rmate-id { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.rmate-name { display: flex; align-items: center; gap: 6px; font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700; font-size: 15.5px; color: var(--ink); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rmate-main:hover .rmate-name { color: var(--storm); }
+.rmate-role { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--mute); }
+.rmate-role img { width: 18px; height: 18px; border-radius: 3px; background: rgba(0,0,0,0.35); flex-shrink: 0; }
+/* auth-only rows: socials + battle/discord tags under the card head. */
+.rmate .socials { padding: 0 18px 8px; }
+.rmate-tags { margin: 0; padding: 4px 18px 16px; display: flex; flex-direction: column; gap: 8px;
+  border-top: 1px solid var(--line); padding-top: 12px; }
+.rmate-tag { display: flex; align-items: center; gap: 10px; min-width: 0; margin: 0; }
+.rmate-tag dt { flex-shrink: 0; margin: 0; display: inline-flex; }
+.rmate-tag dt img { width: 20px; height: 20px; object-fit: contain; }
+.rmate-tag dd { margin: 0; font-size: 13.5px; color: var(--ink); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rmate-tag dd a { color: var(--storm); }
+.rmate-tag dd a:hover { color: var(--ink); text-decoration: underline; }
+
+/* disbanded notice */
+.team-disbanded { flex-direction: row; align-items: center; gap: 18px; padding: 28px 26px; }
+.team-disbanded-ic { width: 52px; height: 52px; flex-shrink: 0; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(136,156,215,0.1); color: var(--mute); }
+.team-disbanded-ic svg { width: 24px; height: 24px; }
+.team-disbanded h3 { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px; color: var(--ink); }
+.team-disbanded p { color: var(--mute); font-size: 14.5px; margin-top: 4px; }
+
+/* sidebar panels: reuse the .p / .p-head rhythm. divisionTable standings drop in
+   as .tr rows; recent/upcoming reuse .divside-panel (match cards + .mrow rows). */
+.team-side-panel a.who:hover { color: var(--storm); }
+.team-standings { display: flex; flex-direction: column; }
+/* The divisionTable override emits the full 7-col .tr (built for the wide main
+   column); inside the 360px sidebar the fixed numeric tracks collapse the 1fr
+   name track to 0 and shatter the name. Retighten every track here so the name
+   keeps a real 1fr share, hide the L10 placeholder column (last child), and
+   single-line + ellipsize the name. Fixed tracks + 32px padding fit under 360px,
+   leaving the name a usable width. */
+.team-standings .tr { grid-template-columns: 26px minmax(0, 1fr) 26px 26px 34px 40px 0;
+  padding: 0 16px; font-size: 13.5px; min-height: 48px; }
+.team-standings .tr .l10 { display: none; }
+.team-standings .tteam { min-width: 0; gap: 7px; }
+.team-standings .tteam a { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.team-desc { padding: 16px 20px; color: var(--mute); font-size: 14px; line-height: 1.55; }
+.team-desc a { color: var(--storm); }
+
+/* not-found + empty states */
+.team-notfound-head { margin-bottom: 16px; }
+.team-notfound-head h1 { font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; letter-spacing: .01em; }
+.team-empty { color: var(--mute); font-size: 14.5px; }
+.team-empty a { color: var(--storm); }
+
+/* clipped focusable roster card link (see components.css focus-affordance list) */
+.rmate-main:focus-visible { outline-offset: -4px; }
+
+@media (max-width: 980px) {
+  .teamwrap { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .team-banner-inner { flex-direction: column; align-items: flex-start; text-align: left; padding: 32px 24px 28px; }
+}
