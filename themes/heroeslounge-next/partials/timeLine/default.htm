@@ -1,1 +1,102 @@
-<!--OVERRIDE timeLine OK-->
+{#- Theme override for Rikki\LoungeViews\Components\TimelineEntries, resolved as
+    ViewTeam's `timeLine` child (NOTE the capital L — the registered alias casing;
+    a wrong-case dir would silently fall back to the plugin's #cd-timeline/
+    timeline.css Bootstrap partial). __SELF__ IS the TimelineEntries instance; it
+    fires its own onRender at render, so __SELF__.timeline is populated here.
+
+    type='team' (no `subsequent`) takes the team branch of onRender()
+    (Team::find(id)->timeline ordered created_at DESC, take maxItems) — the
+    re-skin is data-independent, so the per-type sentence/icon switch below is
+    IDENTICAL to partials/division/timeline.htm (which reads TimelineEntries.*
+    via the attach pattern); here we just read __SELF__.timeline and drop the
+    {% do setProperty/onRender %} header. Legacy #cd-timeline markup is dropped
+    entirely: a shield/avatar (or a lucide fallback) + sentence + created_at.
+
+    Frozen literal links: /team/view/:slug (team), /user/view/:id (a Phase-3 page
+    — 404s for now, expected; the literal is still emitted). Match.Played renders
+    the final score inline (mirrors the frozen partial + division/timeline.htm —
+    the timeline is not spoiler-masked). Empty: muted "No activity yet". -#}
+<div class="tl">
+    {% for e in __SELF__.timeline %}
+    {% if e.type != 'Invalid.Type' %}
+
+    {% if e.type == 'Sloth.Created' or e.type == 'Sloth.Deleted' or e.type == 'Sloth.Logo' %}
+    {% set sloth = e.sloths[0] %}
+    <div class="tl-row">
+        <div class="tl-ic">{% if sloth.user.avatar %}<img src="{{ sloth.user.avatar.path | resize(64,64) }}" alt="">{% else %}{% partial 'site/icon' name='users' %}{% endif %}</div>
+        <div class="tl-bd">
+            <p class="tl-txt">
+                {%- if e.type == 'Sloth.Created' -%}
+                <a href="/user/view/{{ sloth.id }}">{{ sloth.title }}</a> just created an account. Welcome to Heroes Lounge!
+                {%- elseif e.type == 'Sloth.Logo' -%}
+                <a href="/user/view/{{ sloth.id }}">{{ sloth.title }}</a> has a new avatar. Nice!
+                {%- elseif e.type == 'Sloth.Deleted' -%}
+                Sadly, {{ sloth.title }} left Heroes Lounge.
+                {%- endif -%}
+            </p>
+            <span class="tl-when mono">{{ e.created_at | date('M d H:i') }}</span>
+        </div>
+    </div>
+
+    {% elseif e.type == 'Admin.Message' %}
+    <div class="tl-row">
+        <div class="tl-ic">{% partial 'site/icon' name='message-square' %}</div>
+        <div class="tl-bd">
+            <p class="tl-txt">{{ e.message | nl2br }}</p>
+            <span class="tl-when mono">{{ e.created_at | date('M d H:i') }}</span>
+        </div>
+    </div>
+
+    {% elseif e.type == 'Match.Scheduled' or e.type == 'Match.Played' %}
+    {% set m = e.matches[0] %}
+    {% set t0 = m.teams[0] %}
+    {% set t1 = m.teams[1] %}
+    <div class="tl-row">
+        <div class="tl-ic">{% if t0.logo %}<img src="{{ t0.logo.path | resize(64,64) }}" alt="">{% elseif t1.logo %}<img src="{{ t1.logo.path | resize(64,64) }}" alt="">{% else %}{% partial 'site/icon' name='swords' %}{% endif %}</div>
+        <div class="tl-bd">
+            <p class="tl-txt">
+                {%- if e.type == 'Match.Scheduled' -%}
+                The match between <a href="/team/view/{{ t0.slug }}">{{ t0.title }}</a> and <a href="/team/view/{{ t1.slug }}">{{ t1.title }}</a> was scheduled for {{ m.wbp | date('M d H:i') }}.
+                {%- else -%}
+                The match between <a href="/team/view/{{ t0.slug }}">{{ t0.title }}</a> and <a href="/team/view/{{ t1.slug }}">{{ t1.title }}</a> ended {{ t0.pivot.team_score }}:{{ t1.pivot.team_score }}.
+                {%- endif -%}
+            </p>
+            <span class="tl-when mono">{{ e.created_at | date('M d H:i') }}</span>
+        </div>
+    </div>
+
+    {% else %}
+    {% set team = e.teams[0] %}
+    {% set sloth = e.sloths[0] %}
+    <div class="tl-row">
+        <div class="tl-ic">{% if team.logo %}<img src="{{ team.logo.path | resize(64,64) }}" alt="">{% else %}{% partial 'site/icon' name='users' %}{% endif %}</div>
+        <div class="tl-bd">
+            <p class="tl-txt">
+                {%- if e.type == 'Team.Active' -%}
+                <a href="/team/view/{{ team.slug }}">{{ team.title }}</a> became active and is now ready for adventure!
+                {%- elseif e.type == 'Team.InActive' -%}
+                <a href="/team/view/{{ team.slug }}">{{ team.title }}</a> could no longer continue, and is now inactive.
+                {%- elseif e.type == 'Team.Created' -%}
+                A new challenger approaches. <a href="/user/view/{{ sloth.id }}">{{ sloth.title }}</a> created the new team <a href="/team/view/{{ team.slug }}">{{ team.title }}</a>!
+                {%- elseif e.type == 'Team.Deleted' -%}
+                <a href="/team/view/{{ team.slug }}">{{ team.title }}</a> was deleted. Sorry to see you go!
+                {%- elseif e.type == 'Team.Logo' -%}
+                <a href="/team/view/{{ team.slug }}">{{ team.title }}</a> just changed their logo. Fancy!
+                {%- elseif e.type == 'Team.Message' -%}
+                A message from <a href="/team/view/{{ team.slug }}">{{ team.title }}</a>: {{ e.message | nl2br }}
+                {%- elseif e.type == 'Sloth.Joins.Team' -%}
+                <a href="/user/view/{{ sloth.id }}">{{ sloth.title }}</a> found a new home and joined <a href="/team/view/{{ team.slug }}">{{ team.title }}</a>.
+                {%- elseif e.type == 'Sloth.Left.Team' -%}
+                <a href="/user/view/{{ sloth.id }}">{{ sloth.title }}</a> left <a href="/team/view/{{ team.slug }}">{{ team.title }}</a>, and is wandering free.
+                {%- endif -%}
+            </p>
+            <span class="tl-when mono">{{ e.created_at | date('M d H:i') }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
+    {% else %}
+    <div class="tl-row"><div class="tl-bd"><p class="tl-txt"><i>No activity yet.</i></p></div></div>
+    {% endfor %}
+</div>

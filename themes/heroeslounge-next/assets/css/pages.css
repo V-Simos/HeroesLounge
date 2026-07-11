@@ -420,6 +420,20 @@
 .rmate-tag dd a { color: var(--storm); }
 .rmate-tag dd a:hover { color: var(--ink); text-decoration: underline; }
 
+/* Matches tab (roundMatches grouped tabs) — one lounge.js tab per division/
+   playoff group; each panel is a grid of match cards. Panels toggle via
+   [hidden] (the grid display would beat the UA [hidden] rule, so restore
+   display:none explicitly — mirrors .round-grid). */
+.team-match-tabs { flex-wrap: wrap; margin-bottom: 20px; }
+.team-match-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.team-match-grid[hidden] { display: none; }
+.team-match-empty { padding: 28px 26px; }
+.team-match-empty p { color: var(--mute); font-size: 14.5px; }
+
+/* Timeline tab (timeLine) — reuses the .tl/.tl-row/.tl-ic classes (shared with
+   the division timeline); in the main column the rows sit in a chamfered panel. */
+.team-panel .tl { background: var(--panel); clip-path: var(--ch); }
+
 /* disbanded notice */
 .team-disbanded { flex-direction: row; align-items: center; gap: 18px; padding: 28px 26px; }
 .team-disbanded-ic { width: 52px; height: 52px; flex-shrink: 0; border-radius: 50%;

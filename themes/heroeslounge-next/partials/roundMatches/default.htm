@@ -1,1 +1,41 @@
-<!--OVERRIDE roundMatches OK-->
+{#- Theme override for Rikki\Heroeslounge\Components\RoundMatches, resolved as
+    ViewTeam's `roundMatches` child (type='team', id=team.id, round=NULL,
+    showLogo=true, showName=true). __SELF__ IS the RoundMatches instance; it fires
+    its own onRender at render. For type='team' + round=null, __SELF__.matches is
+    an Eloquent Collection GROUPED by division.longTitle (or playoff.longTitle, or
+    null for a groupless match) — NOT per-round (that differs from
+    division/rounds.htm; this replicates the frozen roundmatches/default.htm's
+    round===null branch, which builds one tab per GROUP).
+
+    Re-authored as lounge.js .tabs: one .tab per group key, each panel rendering
+    that group's matches via the shared match/card. The frozen partial's group
+    tabs (a Bootstrap nav-tabs + @showMatchGroup) are replaced wholesale — same
+    grouping, themed markup. variant per match: is_played -> 'result' (masked
+    score via revealScore=false), else 'fixture' (VS + date). withDivision=false:
+    the group tab label already names the division, so the per-card DIV tag is
+    redundant. The component only eager-loads teams+logo+division, so we load the
+    shields' smallLogo + channels here to avoid the card's N+1.
+
+    Frozen match URL /match/view/:id lives in the card. Null group key (a match
+    with neither division nor playoff) labels as "Other". Empty -> muted note. -#}
+{% if __SELF__.matches and __SELF__.matches|length > 0 %}
+<div class="team-match-tabs tabs" data-tabs role="tablist" aria-label="Match group">
+    {% for group, groupMatches in __SELF__.matches %}
+    <button class="tab{% if loop.first %} on{% endif %}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="mgroup-{{ loop.index }}" data-tab-target="mgroup-{{ loop.index }}">{{ group ?: 'Other' }}</button>
+    {% endfor %}
+</div>
+{% for group, groupMatches in __SELF__.matches %}
+{% do groupMatches.load('teams.smallLogo', 'channels') %}
+<div class="team-match-grid" id="mgroup-{{ loop.index }}" role="tabpanel"{% if not loop.first %} hidden{% endif %}>
+    {% for m in groupMatches %}
+    {% partial 'match/card' match=m variant=(m.is_played ? 'result' : 'fixture') revealScore=false withDivision=false %}
+    {% else %}
+    <p class="round-empty">No matches in this group.</p>
+    {% endfor %}
+</div>
+{% endfor %}
+{% else %}
+<div class="p chamfer team-match-empty">
+    <p>No matches yet. When this team plays, results and fixtures will appear here.</p>
+</div>
+{% endif %}
