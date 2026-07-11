@@ -2,7 +2,7 @@
 
 **How to resume:** `@docs/superpowers/NEXT-SESSION.md Continue`
 
-_Last updated: 2026-07-11, mid-execution of Phase 2 Wave 1 (Tasks 0–7 done; Task 8 next)._
+_Last updated: 2026-07-11, mid-execution of Phase 2 Wave 1 (Tasks 0–8 done; Task 9 — Wave 1 finishing pass — next)._
 
 ---
 
@@ -14,18 +14,24 @@ _Last updated: 2026-07-11, mid-execution of Phase 2 Wave 1 (Tasks 0–7 done; Ta
 - **Mode: subagent-driven** (fresh implementer per task → spec + code-quality/adversarial-multi-lens review → fixes → next task). **Branch: `ui-rework-phase-2`** (off `ui-rework`).
 - **Source of truth = `docs/superpowers/PROGRESS.md`** (Phase-2 Wave-1 task table + per-task notes). Read it first.
 - Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`.
-- **Done + fully reviewed: Tasks 0–7.** 0 (bracket spike), 1 (shared match card), 2 (season overview, closed state), 3 (division page + rework), 4 (playoff brackets), 5 (match detail), 6 (calendar), **7 (team page — just landed: `dca6be1`/`fba5068`/`92b9510` build + `1421a61` review fixes, incl. the critical `divisionTable` override-casing fix)**.
-- **NEXT: Task 8 (season archive `/season/archive`).** Then 9 (Wave 1 finishing pass). Wave 2 (static content) = a separate later plan.
+- **Done + fully reviewed: Tasks 0–8.** 0 (bracket spike), 1 (shared match card), 2 (season overview, closed state), 3 (division page + rework), 4 (playoff brackets), 5 (match detail), 6 (calendar), 7 (team page — incl. the critical `divisionTable` override-casing fix), **8 (season archive — just landed: `b8906e0`; adversarial multi-lens review 0 findings; native `<details>/<summary>` re-skin reusing the Task-2 shared `season/overview.htm`)**.
+- **NEXT: Task 9 (Wave 1 finishing pass).** Then Wave 1 is complete. Wave 2 (static content) = a separate later plan.
 
-## The immediate next action — TASK 8 (season archive `/season/archive`)
+## The immediate next action — TASK 9 (Wave 1 finishing pass)
 
-The **lowest-complexity remaining Wave-1 task** ("free-rider"). Plan §"Task 8". First read PROGRESS.md "Notes from Task 2" — Task 8 REUSES the shared `partials/season/overview.htm` (divisions/playoffs link lists, param-driven on `season` only) built there. Key points from the plan:
-1. **NO components — pure page `onStart()` data binding.** Front-matter query VERBATIM from the old page: `Season::where('type',1)->with('divisions','playoffs')->where('is_active',0)->orderBy('created_at','desc')->get()->groupBy('region_id')` (use the correct namespace `\Rikki\Heroeslounge\Models\Season`).
-2. **Replace the Bootstrap accordion with semantic `<details>/<summary>` + minimal CSS — NO new JS.** Per region `<h2>{{ season.region.title }}</h2>`; per season `<details><summary>{{ season.title }}</summary>` + `{% partial 'season/overview' season=season %}`.
-3. **region_id `groupBy` is insertion-order (non-deterministic)** — sort regions explicitly if order matters.
-4. If a `summary` gets a `clip-path`/`.chamfer`, add it to the focus-affordance list. Empty DB → muted "No archived seasons." (fixture DB may have few/none — note it). Empty division/playoff sections are already hidden by the `season/overview` guards.
+The **last Wave-1 task** — a cross-cutting sweep (mirrors Phase-1 Task 11) across **all** Wave-1 pages (season overview, division, playoff brackets, match detail, calendar, team, season archive). Plan §"Task 9". This is NOT new page-building; it's a QA/polish + regression pass, then a PROGRESS.md wrap-up. The plan's 8 steps:
+1. **Responsive sweep** at 360 / 768 / 1200px: division 2-col→1-col, bracket scroll wrapper, calendar rows, team banner, match-detail game tabs, standings `.tr` name column at 360px.
+2. **Keyboard / focus:** tab through nav, all `.tabs`, `<details>` (archive), bracket node links, spoiler switch, caster buttons; confirm every new focusable `.chamfer`/`clip-path` element is in the focus-affordance list with a visible inset ring.
+3. **prefers-reduced-motion:** spoiler-reveal + bracket + any new animation static; confirm the reduced-motion block stayed LAST in components.css.
+4. **Timezone correctness:** calendar / division-upcoming / match-detail times reflect viewer TZ (change browser TZ, confirm a time AND a calendar date-group boundary shift); `SetTimezone` still on the layout.
+5. **Console + log hygiene** across every Wave-1 page (browser console + `storage/logs` clean of theme Twig errors; the known logo-404 + Division.php INFO noise are pre-existing dev-data artifacts, not defects).
+6. **Cross-link resolution:** every new nav/cross-link emits a non-empty `href`; Wave-1 targets 200; deferred/dropped targets (`/user/view/:id`, `/team/create`, `/team/match/:slug`) are literal frozen URLs that 404 under the new theme (expected until Phase 3) — no `href=""` anywhere.
+7. **Update PROGRESS.md + report Wave 1 done** — record all fixture-blind items pending a complete DB dump (bracket types not in the dump, per-game statistics + pre-game rosters [`gameparticipation`=0 rows], team hero-pick/winrate stats, real replay files, latin-ext roster glyphs, team logos) and deferred sub-items (match-detail sortable tables, team Statistics AJAX season-change, calendar caster-request AJAX-fragment skin, season reg-open participation override, the theme-wide `[data-tabs]` a11y sweep). Note Wave 2 is its own later plan; the ARAM item stays parked.
+8. **Commit** — `feat(theme-next): wave 1 finishing pass`.
 
-Then Task 9 (Wave 1 finishing pass — responsive/keyboard/reduced-motion/tz/console sweep across all Wave-1 pages). Wave 2 (static content) = a separate later plan.
+**Note on the DB clock caveat:** the real dump's matches are all past-dated vs the container clock, so time-windowed views (calendar / division-upcoming) render naturally empty — for TZ + populated-render checks, temporarily force a few matches forward as done in Task 6 (see PROGRESS "Notes from Task 6"), and RESTORE the DB values afterward (data-only, no code).
+
+Wave 2 (static content) = a separate later plan.
 
 ## Session gotchas carried forward (trust these)
 - **Component-override dirs must be ALL-LOWERCASE (Task-7 learning).** October's `ComponentPartial::loadOverrideCached` probes `partials/strtolower(alias)/default.htm` BEFORE `partials/<exact-alias>/default.htm`. A CamelCase override dir only resolves when the invoking alias is byte-identical; any lowercase RUNTIME alias added via `addComponent()` (e.g. `divisionTable` from ViewTeam + PlayoffOverview) then silently falls back to the plugin's Bootstrap partial on case-sensitive prod Linux. **Dev's Docker-Desktop bind mount is case-INSENSITIVE even inside the Linux container, so this is INVISIBLE in dev** — prove casing with `git ls-files`, NEVER a live render. Fixed in Task 7 (`1421a61`) by renaming `partials/DivisionTable/` → `partials/divisiontable/` (one lowercase dir serves every alias casing). Name all new override dirs lowercase.

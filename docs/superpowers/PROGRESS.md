@@ -48,7 +48,7 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 | 5 — Match detail `/match/view/:id` (5a + 5b) | ✅ | ✅ | ✅ (5a+5b review nits fixed + verified) | ae96c3c, 8b8023c, 4486577, 15cea60, c680934 |
 | 6 — Calendar `/calendar` | ✅ | ✅ | ✅ (multi-lens review; nits fixed + verified) | 3a5800f, f7ebaf0 |
 | 7 — Team page `/team/view/:slug` | ✅ | ✅ | ✅ (adversarial multi-lens; 8 confirmed → fixed + verified) | dca6be1, fba5068, 92b9510, 1421a61 |
-| 8 — Season archive `/season/archive` | — | — | — | |
+| 8 — Season archive `/season/archive` | ✅ | ✅ | ✅ (adversarial multi-lens; 0 findings) | b8906e0 |
 | 9 — Wave 1 finishing pass | — | — | — | |
 
 **Wave 2 (static content) = a separate later plan, not yet written.**
@@ -561,6 +561,63 @@ refuted (sanctioned deviations). All fixed + verified live. Commits: `dca6be1`
   group-stage page (many tables) writes multi-hundred-KB INFO lines to
   `system.log`. Already tracked under "pre-production hardening" above; `system.log`
   is clean of ERROR/exception/Twig lines.
+
+### Notes from Task 8 (season archive `/season/archive` — DONE)
+
+**Task 8 DONE (1 build commit).** The lowest-complexity Wave-1 task ("free-rider").
+Adversarial multi-lens review (spec + fidelity + quality + a11y, each finding
+refutation-tested via a background review workflow): **0 findings raised** — clean
+first pass. Commit: `b8906e0` (Fable implementer).
+
+- **Shipped:** `pages/season/archive.htm` (pure page `onStart()` data binding — NO
+  components, NO new JS) + a `.arch-*` block in `assets/css/pages.css`. The old
+  Bootstrap `#accordion`/`.card`/`.collapse` is re-skinned as native
+  `<details>/<summary>` (keyboard-operable with zero JS). Each `<details>` body
+  reuses the FROZEN shared `partials/season/overview.htm` (built in Task 2 —
+  untouched) via `{% partial 'season/overview' season=season %}`, so all
+  division/playoff link + label-by-`season.type` logic is inherited, not
+  re-authored.
+- **Query byte-VERBATIM** from the frozen old page:
+  `Season::where('type',1)->with('divisions','playoffs')->where('is_active',0)
+  ->orderBy('created_at','desc')->get()->groupBy('region_id')` (FQCN
+  `\Rikki\Heroeslounge\Models\Season`). Group KEY is the int `region_id`, so the
+  region `<h2>` reads `season.region.title` off the group's first season
+  (`loop.first` trick, same as the old page). `region` is NOT eager-loaded → lazy
+  per season (~27, bounded — faithful, not "fixed").
+- **⚠ SOFT-DELETE SUBTLETY (spec vs live).** The plan's Task-8 notes anticipated
+  **28** archived seasons incl. season id 30 `[on Battlefield of Eternity]` (slug
+  `BoE`) as the "0-divisions/0-playoffs → empty-branch" edge case. Live render is
+  **27**: season 30 has `deleted_at` set and the Season model uses the `SoftDelete`
+  trait, so Eloquent's global scope excludes it — **the OLD page renders 27 too
+  (faithful, not a bug).** Consequence: the shared partial's "Nothing scheduled
+  yet." empty branch is NOT exercised by live data (no surviving season has neither
+  divisions nor playoffs); its guard lives in the frozen/already-approved shared
+  partial, and the archive adds `.arch-body > .season-empty { padding: 0 20px }`
+  so it aligns to the summary gutter IF it ever renders. (Season 62 similarly shows
+  7 divisions not 8 — one division soft-deleted; render matches live relations
+  exactly, 7+7=14 links.)
+- **CSS:** `.arch-summary` is a 52px panel row on the existing `.season-link`
+  rhythm (Chakra Petch, chevron) and deliberately carries **NO `clip-path`/
+  `.chamfer`**, so the global `:focus-visible` storm ring applies as-is — no
+  focus-affordance-list entry needed (same call as `.season-link`). Native marker
+  suppressed (`list-style:none` + `::-webkit-details-marker`), the shared
+  `chevron-right` icon (emitted `aria-hidden="true"`) rotates 90° on `[open]`.
+  Follows the pages.css per-section convention: a LOCAL `@media
+  (prefers-reduced-motion: reduce)` neutralizes the two transitions right after the
+  block (pages.css has no single trailing reduced-motion block).
+- **Region order faithful:** `created_at desc` + `groupBy('region_id')` yields
+  deterministic **EU → NA** on this data (matches the old page's insertion-order
+  loop); no explicit region sort added (would deviate from the frozen query/loop).
+- **Verified LIVE** (real May-2024 dump; independently re-checked by the
+  controller, not just the implementer's report): `/season/archive` HTTP 200; exactly
+  one `<h1>`; region `<h2>`s `EU`,`NA`; **27** `<details>/<summary>`; **0** matches
+  for `data-toggle`/`class="card"`/`class="collapse"`/`id="accordion"`;
+  `url_encode` intact on playoff titles (`/eu-offseason-23-24/playoff/Offseason%2023-24`);
+  `storage/logs` clean of ERROR/Twig lines (only the known Division.php INFO noise).
+- **NOT fixture-blind** (unlike most Wave-1 pages): the real dump has 27 archived
+  seasons across EU+NA, so this page rendered fully populated live. Only the
+  all-empty-sections `<details>` body (empty-branch) is unexercised, per the
+  soft-delete note above.
 
 ## Phase 1 status (archived)
 
