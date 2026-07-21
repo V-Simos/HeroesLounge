@@ -35,8 +35,11 @@ maintained — this table is.)
 
 ## Task status (Phase 2 — Wave 1: public competitive viewing)
 
-Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
-(subagent-driven, on branch `ui-rework-phase-2` off `ui-rework`).
+Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. **✅ COMPLETE**
+(subagent-driven, on branch `ui-rework-phase-2` off `ui-rework`). All 9 tasks
+through spec + quality/adversarial review; Task 9 finishing pass found **0 re-skin
+defects**. Ready for `finishing-a-development-branch`. **Wave 2 (static content) =
+a separate later plan, not yet written.**
 
 | Task | Implemented | Spec review | Quality review | Commits |
 |---|---|---|---|---|
@@ -49,7 +52,7 @@ Plan: `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`. IN PROGRESS
 | 6 — Calendar `/calendar` | ✅ | ✅ | ✅ (multi-lens review; nits fixed + verified) | 3a5800f, f7ebaf0 |
 | 7 — Team page `/team/view/:slug` | ✅ | ✅ | ✅ (adversarial multi-lens; 8 confirmed → fixed + verified) | dca6be1, fba5068, 92b9510, 1421a61 |
 | 8 — Season archive `/season/archive` | ✅ | ✅ | ✅ (adversarial multi-lens; 0 findings) | b8906e0 |
-| 9 — Wave 1 finishing pass | — | — | — | |
+| 9 — Wave 1 finishing pass | ✅ | ✅ | ✅ (frozen-source verify; 0 re-skin defects — every finding faithful-to-frozen/dev-artifact/expected-deferred) | _docs-only (this commit)_ |
 
 **Wave 2 (static content) = a separate later plan, not yet written.**
 
@@ -618,6 +621,142 @@ first pass. Commit: `b8906e0` (Fable implementer).
   seasons across EU+NA, so this page rendered fully populated live. Only the
   all-empty-sections `<details>` body (empty-branch) is unexercised, per the
   soft-delete note above.
+
+### Notes from Task 9 (Wave 1 finishing pass — DONE)
+
+**Task 9 DONE.** Cross-cutting QA/regression sweep across every Wave-1 page
+(season overview, division, playoff brackets [knockout / in-season-by-title /
+group-stage+knockout / reg_open participants], match detail, calendar, team,
+season archive) at 360/768/1200px — **zero re-skin defects**. Every candidate
+finding was adjudicated against the frozen source + old theme as
+faithful-to-frozen, a dev-data artifact, or expected deferred-state behavior
+(the load-bearing `longTitle` claim was re-verified directly, which corrected an
+initial mechanism error — see below). **No code changes — this is a docs-only
+commit.**
+
+- **Method:** controller-driven Playwright sweep. Two background static audits
+  (CSS focus-affordance completeness + reduced-motion ordering; cross-link
+  empty-href + literal-vs-old-theme) — both **0 findings**. Per-page live checks:
+  an objective JS diagnostic (page-level horizontal overflow + offender elements,
+  excluding intentional scroll containers; `<h1>` count; empty/`#` hrefs) at each
+  viewport, console(error) capture, targeted 360px screenshots. A final
+  adversarial-verification agent re-challenged all adjudications.
+
+- **⚠ URL LIST REFRESHED (fixture-era → real dump):** the earlier Task-2/3
+  verification URLs (`/season-30`, `/season-30/division-1`) are **STALE** —
+  season-30 does NOT exist in the real May-2024 dump, so those now exercise the
+  themed not-found states (division → "Unknown division" 200; season → not-found,
+  both clean). Active **eu-season-23 is CLOSED (is_active=0)** with
+  `division-1..5`. Canonical real-dump Wave-1 URLs: season `/eu-season-23`;
+  division `/eu-season-23/division-1`; brackets `/tournament/nut-cup` (de16, wide
+  → horizontal scroll) + `/eu-season-23/playoff/Division%201%20Cup` (se16
+  in-season) + `/tournament/group-stage-eu-aram-2` (group+knockout, 9 tabs) +
+  `/tournament/nexus-rumble-v` (reg_open, 18 participants); match `/match/view/1061`
+  (18 games) + `/match/view/21642` (playoff, 5 games); `/calendar`; team
+  `/team/view/DOF` (heavy, 218 matches) or `/team/view/AO` (light, 25); `/season/archive`.
+
+- **Step 1 responsive (360/768/1200): PASS, all pages.** No page-level horizontal
+  overflow at any viewport (bracket width correctly contained in
+  `.hl-bracket-scroll{overflow:auto}` — scrollWidth 1892 vs clientWidth 297 at
+  360px, page overflow −15px). Division 2-col → 1-col; standings `.tr` name column
+  ellipsis-truncates at 360px (no hard-wrap breakage); team banner + roster stack;
+  match game-tab grid wraps; exactly one `<h1>` per page.
+
+- **Step 2 keyboard/focus: PASS.** Static audit: every focusable `.chamfer`/
+  clip-path Wave-1 element (`.hl-node-card`, `.tab`, `.gstat-toggle`,
+  `.gstat-replay`, `.btn`, `.select`, `.socials a`, `.rmate-main`) is in the
+  inset-ring affordance list (**0 missing**); non-clipped links (`.season-link`,
+  `.arch-summary`, standings `.tteam a`, `.cal-*`) correctly rely on the global
+  outset ring. Live: keyboard-Tab to a non-clipped standings link → 2px solid
+  storm ring at **+3px OUTSET** (`:focus-visible` true); to a chamfered `.tab` →
+  2px solid at **−4px INSET** (not clipped). Both render.
+
+- **Step 3 prefers-reduced-motion: PASS.** Static: the
+  `@media (prefers-reduced-motion: reduce)` block is **LAST** in components.css
+  (starts ~L800, nothing after) and neutralizes ticker/dot/spoiler/bracket/
+  electric-row motion. Live (`emulateMedia` reduce): `.score-masked` transition
+  0.2s→**0s**, spoiler-switch 0.18s→**0s** (no-preference keeps them active).
+  pages.css keeps its per-section reduced-motion convention (separate, expected).
+
+- **Step 4 timezone correctness: PASS.** Viewer tz lives in the October SESSION
+  (`Session::get('timezone')`; set via `SetTimezone::onTimezoneDetection` AJAX →
+  `Session::put`). Match `/match/view/1061` (Dec 2017): Athens **"22:56"** → New
+  York **"3:56 pm"** — DST-aware (22:56 EET = 20:56 UTC = 15:56 EST) and the
+  12/24-hour format switches per `TimezoneHelper::getTimeFormatString()`
+  (America/* → 'g:i a'). Calendar date-group boundary: forced 2 matches
+  (21691/21692) to boundary-crossing UTC times **and nulled `winner_id`** (the
+  `type=all` filter is `winner_id IS NULL`, NOT is_played — UpcomingMatches.php:87)
+  → under NY they grouped **Fri 24 / Sat 25 Jul**, under Athens **Sat 25 / Sun 26
+  Jul**: both the **time AND the date-group boundary shifted** (grouping applies
+  session tz via `Carbon::parse(wbp)->setTimezone($tz)->format('d-M-y')`,
+  UpcomingMatches.php:103). The calendar also prints an "All times in <tz>
+  <offset>" header. **All DB values restored** (wbp/is_played/winner_id;
+  data-only, no code).
+
+- **Step 5 console + log hygiene: PASS.** `storage/logs/system.log` after the full
+  sweep: 7 lines, all `.INFO` (the known Division.php standings-serialization
+  noise) — **0 ERROR/exception/Twig/Fatal**. Console per page: only the documented
+  dev-data artifacts (team-logo `storage/app/uploads/*.png` 404s; the ssbuttons
+  CSS 404 below).
+
+- **Step 6 cross-link resolution: PASS.** Static: no empty/`#` hrefs; every
+  optional-relation href guarded; all deferred literals match old-theme `url=`.
+  Live: all 8 Wave-1 targets **200**; `/user/view/1` **404**, `/team/match/AO`
+  **404** (3-segment, expected until Phase 3). **`/team/create` returns 200**
+  rendering the themed division "Unknown division" page — the 2-segment URL is
+  caught by the division route `/:slug/:divslug` because the new theme has no
+  `pages/team/create.htm` yet (a graceful themed 200, not a broken link; Phase 3
+  reclaims it when team/create is ported). It is the ONLY 2-segment deferred
+  literal; all other deferred/cross-links are Wave-1 (200) or 3+ segments (404).
+
+**Adjudicated NON-defects (faithful-to-frozen / dev-artifact — do NOT "fix";
+verified against frozen source + old theme):**
+- **Playoff `<title>` reads doubled on `nexus-rumble-v`** (`Nexus Rumble V -
+  Nexus Rumble V`): frozen `PlayoffOverview::init()` (PlayoffOverview.php:53) sets
+  `$this->page->title = $this->playoff->longTitle`. The `Playoff::longTitle`
+  accessor (Playoff.php:41-47) is `season ? season.title.' - '.title : title` — it
+  does NOT double for a truly seasonless playoff. This tournament just HAS a season
+  (id 45) whose title `"Nexus Rumble  V"` ≈ the playoff title `"Nexus Rumble V"`, so
+  the season-present branch yields the near-identical pair. So it's a DATA artifact
+  rendered by the frozen accessor, NOT a re-skin quirk; the old theme's
+  `[PlayoffOverview]` page shows the identical title, and the new
+  `pages/playoff/view.htm` adds no title logic of its own. In-season titles are
+  correct (`[EU] Season 23 - Division 1 Cup`).
+- **Match scheduled-time offset LABEL uses the "now" offset** (`+03:00` on a Dec
+  date): frozen `TimezoneHelper::getTimezoneOffset()` =
+  `(new DateTime('now', tz))->format('P')`; the frozen `viewmatch/default.htm:83-84`
+  renders the identical `({{ timezone }} {{ timezoneOffset }})`. The displayed TIME
+  is DST-correct (`|date(datetimeFormat, timezone)`) and shifts with viewer TZ —
+  only the appended label is "now"-offset. Faithful; `partials/match/header.htm`
+  mirrors the frozen partial.
+- **ssbuttons CSS 404 on the team page** (`/plugins/martin/ssbuttons/.../
+  social-sharing-nb.css`): frozen `ViewTeam.php:30` unconditionally `addCss(...)`s
+  it; the real `martin.ssbuttons` marketplace plugin is absent (only the
+  `plugins/dev/fixtures` shim). The new theme references ssbuttons nowhere;
+  ViewTeam drives it for BOTH themes → the old team page 404s it identically. Same
+  class as the Indikator shim / logo-404s.
+- **Page `<title>` "season"/"Division" on not-found URLs:** the dynamic title works
+  on real pages (`[EU] Season 23`, `Division 1`); the static front-matter title
+  only surfaces on the not-found path (no real record). Not a bug.
+
+**Fixture-blind / deferred (unchanged from Tasks 1–8; for a COMPLETE dump / later
+phase):** per-game statistics + populated pre-game rosters (gameparticipation = 0
+rows); real replay files; team hero-pick/winrate stats; latin-ext roster glyphs;
+team-logo uploads (→ shield 404s + ResizeSensor loop); bracket types with no rows
+in this dump (de4/de6, share the verified frozen geometry). Deferred sub-items:
+match-detail sortable stat tables; team Statistics AJAX season-change + sorting;
+calendar caster-request AJAX-fragment skin (only initial render themed); season
+reg_open ParticipationOverview override; theme-wide `[data-tabs]` ARIA/
+roving-tabindex a11y sweep + caster apply/retract keyboard operability; reg_open
+captain **signup form** (no eligible-captain fixture — anon Participants path only).
+
+**PERF (frozen N+1, pre-production hardening — NOT a re-skin defect):** the **team
+page is the worst offender** — `/team/view/DOF` (218 matches via `roundMatches`
+type='team', unbounded by count) server-renders in **~72s** (HTTP 200, correct
+markup). Same frozen-N+1 class as the calendar type=all note; add to the
+plugin-side hardening list. The re-skin adds no overhead; a lighter team
+(`/team/view/AO`, 25 matches) was used for the visual/responsive check (72s
+exceeds Playwright's 60s nav cap).
 
 ## Phase 1 status (archived)
 
