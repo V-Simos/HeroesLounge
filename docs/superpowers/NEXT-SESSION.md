@@ -19,9 +19,9 @@ _Last updated: 2026-07-21. **Phase 2 Wave 1 COMPLETE** (Tasks 0–9 done; Task 9
 
 ## The immediate next action — Wave 1 sign-off + what's next
 
-Wave 1 is **done**. Two things remain, both the user's call:
-1. **`finishing-a-development-branch`** — merge `ui-rework-phase-2` into `ui-rework` (and/or fold into PR #1), or keep the branch open for review. No code is pending; the tree is clean.
-2. **Wave 2 (static content)** — a separate later plan, not yet written (rules/FAQ/guides/staff/ARAM etc.). Blocked on the **ARAM league decision** (see "Open decisions" below) and on writing the plan.
+Wave 1 is **done and merged**. State + what remains:
+1. **Branch integration — ✅ Wave 1 MERGED into `ui-rework`** (fast-forward, LOCAL only; both `ui-rework` and `ui-rework-phase-2` are at the same tip, **NOT pushed**). Remaining user call: push and open/refresh a PR (PR #1) when ready.
+2. **Wave 2 (static content)** — a separate later plan, not yet written (rules/FAQ/guides/staff/ARAM etc.). Blocked on the **ARAM league decision** (see "Open decisions" below) and on writing the plan. Continue Wave-2 work on `ui-rework-phase-2` (or a fresh branch off `ui-rework`).
 
 **Carry-forward from the Task 9 sweep (all documented in PROGRESS "Notes from Task 9" — not blockers):**
 - **Real-dump URLs (fixture-era `/season-30` is GONE):** use `/eu-season-23` (season, closed), `/eu-season-23/division-1`, `/tournament/nut-cup` (de16), `/eu-season-23/playoff/Division%201%20Cup` (se16 in-season), `/tournament/group-stage-eu-aram-2` (group+knockout), `/tournament/nexus-rumble-v` (reg_open), `/match/view/1061` + `/match/view/21642`, `/calendar`, `/team/view/AO` (light) or `/team/view/DOF` (heavy ~72s), `/season/archive`.
