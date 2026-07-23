@@ -31,6 +31,7 @@ class Plugin extends PluginBase
     public function register()
     {
         $this->registerConsoleCommand('fixtures.seed', 'Dev\Fixtures\Console\SeedFixtures');
+        $this->registerConsoleCommand('fixtures.livedata', 'Dev\Fixtures\Console\SeedLiveData');
         $this->loadAuthCodeStubs();
     }
 
