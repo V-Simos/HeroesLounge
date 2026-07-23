@@ -758,6 +758,44 @@ plugin-side hardening list. The re-skin adds no overhead; a lighter team
 (`/team/view/AO`, 25 matches) was used for the visual/responsive check (72s
 exceeds Playwright's 60s nav cap).
 
+## Live-data seed (2026-07-23/24) — fixtures:live-data
+
+Dev-only artisan command (`plugins/dev/fixtures/console/SeedLiveData.php`) that
+generates live-looking data **on top of the imported prod dump** — additive and
+scoped to the active seasons (eu-season-30 divisions 757–761 rounds 1–3, NMMR3
+division 762 round 1) plus `dev-` slug blog content (events category + posts).
+Result: 117 matches (96 played — 72 decided / 24 draws — 11 future-scheduled,
+10 unscheduled, 6 BYEs), populated standings/rounds/calendar/match/team pages,
+homepage widgets, and a working `/blog/category/events`. Verified by a 13-URL
+HTTP sweep (all 200, all content signals present, 0 ERROR/exception/Fatal log
+lines); per-game stats remain blind (gameparticipation = 0 rows, dump
+limitation). Runbook: `dev/README.md` § "Live-data seed"; audit deltas:
+`docs/superpowers/KNOWN-ISSUES.md` 2026-07-24 update.
+
+**Commits:** 29f23d7 (skeleton), 169b8f1 (generation), 220896d (orphan purge),
+1b96190 (quality fixes), cc8b60c (blog), + this docs commit.
+
+**Hard-won facts (carry forward):**
+
+- **Match model soft-deletes** — clean() must use `withTrashed()` +
+  `forceDelete()` or "deleted" seed matches linger and re-adopt relations.
+- **DUMP-ORPHAN ID-REUSE trap:** prod-deleted matches above id 22436 left
+  orphaned rows keyed to those ids in timelineables / team_match /
+  match_caster / match_channel / games / substitutes (3891 / 7942 / 817 /
+  667 / 2 / 319 rows). Freshly seeded matches **adopt** them via
+  auto-increment id reuse (ghost casters/games/timeline on brand-new
+  matches). clean() now purges rows referencing nonexistent matches first.
+- Timeline pivot is the **polymorphic `rikki_heroeslounge_timelineables`** —
+  there is no `timeline_match` table.
+- Calendar (`UpcomingMatches type=all`) lists only `winner_id IS NULL` matches
+  with `wbp` in [today, +100d] — `wbp NULL` never shows there.
+- Full run takes **~30 min**: the frozen `DivisionTableFix` recomputes
+  standings on EVERY match save. Expected; don't kill it.
+- RNG is seeded but **wall-clock-coupled**: the played/upcoming split hinges
+  on `now()`, so reruns on different days shift which matches are future.
+- Frozen `free_win_count` clobber: BYE free wins read **0** in standings (the
+  bye pivot row itself survives) — a frozen-plugin artifact, not a seed bug.
+
 ## Phase 1 status (archived)
 
 **✅ PHASE 1 COMPLETE + final whole-theme review passed.**

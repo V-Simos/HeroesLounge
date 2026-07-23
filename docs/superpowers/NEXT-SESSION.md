@@ -2,9 +2,26 @@
 
 **How to resume:** `@docs/superpowers/NEXT-SESSION.md Continue`
 
-_Last updated: 2026-07-21. **Phase 2 Wave 1 COMPLETE** (Tasks 0–9 done; Task 9 finishing pass found 0 re-skin defects). Next: `finishing-a-development-branch` decision (merge/PR) + Wave 2 planning._
+_Last updated: 2026-07-24. **Live-data seed DONE — the dev site now shows live data** (`fixtures:live-data`, verified by HTTP sweep). Phase 2 Wave 1 COMPLETE (Tasks 0–9). Next: `finishing-a-development-branch` decision (merge/PR) + Wave 2 planning._
 
 ---
+
+## Live data (NEW 2026-07-24)
+
+The dev site now renders **populated** live pages on top of the imported dump:
+division rounds + standings (`/eu-season-30/division-1`), calendar
+(`/calendar`), NMMR3 (`/NMMR3/3NMMRO`), team pages, homepage widgets
+(next-match hero, results ticker, match grid), and blog/events
+(`/blog/category/events`). Re-seed anytime with:
+
+```
+docker compose -f dev/docker-compose.yml exec -T web php artisan fixtures:live-data --force
+```
+
+(~30 min, **additive, safe** — cleans only its own output; see `dev/README.md`
+§ "Live-data seed" and PROGRESS.md § "Live-data seed" for the gotchas.)
+Per-game/player **stats remain blind** (`gameparticipation` = 0 rows, dump
+limitation).
 
 ## Where things stand
 
@@ -33,7 +50,7 @@ Wave 1 is **done and merged**. State + what remains:
 - **Component-override dirs must be ALL-LOWERCASE (Task-7 learning).** October's `ComponentPartial::loadOverrideCached` probes `partials/strtolower(alias)/default.htm` BEFORE `partials/<exact-alias>/default.htm`. A CamelCase override dir only resolves when the invoking alias is byte-identical; any lowercase RUNTIME alias added via `addComponent()` (e.g. `divisionTable` from ViewTeam + PlayoffOverview) then silently falls back to the plugin's Bootstrap partial on case-sensitive prod Linux. **Dev's Docker-Desktop bind mount is case-INSENSITIVE even inside the Linux container, so this is INVISIBLE in dev** — prove casing with `git ls-files`, NEVER a live render. Fixed in Task 7 (`1421a61`) by renaming `partials/DivisionTable/` → `partials/divisiontable/` (one lowercase dir serves every alias casing). Name all new override dirs lowercase.
 - **Git index.lock race:** an IDE/`git fsmonitor--daemon` intermittently grabs `.git/index.lock`, failing commits with "index.lock: File exists". Commit with **`git -c core.fsmonitor=false`** (and `rm -f .git/index.lock` only if no real git op is running). Do NOT kill the fsmonitor daemon — it's legitimate.
 - **DB column names:** matches use **`div_id`** (not `division_id`), table `rikki_heroeslounge_match`; team↔division pivot `rikki_heroeslounge_team_division` also uses `div_id`; timeline table is singular `rikki_heroeslounge_timeline`.
-- **Real May-2024 DB dump LANDED (2026-07-08)** — site runs on real data (active season `eu-season-23`), rich in playoffs/matches. `fixtures:seed` is **SUPERSEDED** (and incompatible with the uncommitted indikator-shim edits) — do NOT reseed. Import record, gaps, and the **Task-5 `gameparticipation` schema fix that MUST be re-applied after any re-import/`down -v`**: `docs/superpowers/DB-DUMP-IMPORT.md`. Caveat: dump matches are **past-dated** vs the container clock, so time-windowed views (calendar/upcoming) render empty unless matches are temporarily forced forward (see PROGRESS "Notes from Task 6").
+- **Real May-2024 DB dump LANDED (2026-07-08)** — site runs on real data (active season `eu-season-23`), rich in playoffs/matches. `fixtures:seed` is **SUPERSEDED** (and incompatible with the uncommitted indikator-shim edits) — do NOT reseed. Import record, gaps, and the **Task-5 `gameparticipation` schema fix that MUST be re-applied after any re-import/`down -v`**: `docs/superpowers/DB-DUMP-IMPORT.md`. Caveat: dump matches are **past-dated** vs the container clock, so time-windowed views (calendar/upcoming) rendered empty — **superseded 2026-07-24**: `fixtures:live-data` now seeds future-dated matches, so calendar/upcoming are populated (see "Live data" above).
 - Every commit uses the `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>` trailer (implementer work) / `Claude Opus 4.8 (1M context)` (my PROGRESS commits) per repo convention.
 
 ## Binding constraints (do NOT re-litigate)

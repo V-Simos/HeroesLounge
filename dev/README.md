@@ -34,6 +34,32 @@ played and upcoming matches.
 re-running is always safe. For the same reason, never run it against a database
 whose contents you care about.
 
+### Live-data seed (`fixtures:live-data`)
+
+For a database running the **imported production dump** (where `fixtures:seed`
+must never run — see the warning below), use the dev-only live-data seeder
+instead:
+
+```powershell
+docker compose -f dev/docker-compose.yml exec -T web php artisan fixtures:live-data --force
+```
+
+- **Additive and narrowly scoped**: it only creates matches under the two
+  active seasons (`eu-season-30` divisions, `NMMR3`) plus blog content with
+  `dev-` slugs (an `events` category + posts). Everything else in the dump is
+  left untouched.
+- **Re-runnable**: each run first cleans **only its own previous output**, and
+  also purges dump-orphaned match-keyed rows (rows in timeline/pivot/game
+  tables referencing matches that no longer exist — see PROGRESS.md for the
+  id-reuse trap these caused).
+- Flags: `--force` (skip confirmation, needed with `exec -T`), `--skip-blog`
+  (matches only).
+- **Takes ~30 minutes**: the frozen plugin recomputes division standings on
+  every match save; this is expected, let it finish.
+
+> ⚠️ Do **not** confuse this with `fixtures:seed`, which **truncates ~20
+> tables** and must never be run against the imported dump.
+
 ## Logins
 
 - **Backend**: http://localhost:8090/backend — login `admin`, password
