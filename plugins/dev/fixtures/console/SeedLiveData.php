@@ -21,6 +21,9 @@ use Indikator\Content\Models\Category;
  *  - Only creates/deletes matches under the divisions of the two active
  *    seasons (eu-season-30, NMMR3). Those have 0 matches in the pristine
  *    dump, so everything under them is seeder-owned by definition.
+ *  - Additionally purges rows in match-keyed tables that reference matches
+ *    deleted in prod (global, any season) - unreachable garbage that seeded
+ *    matches would otherwise adopt via auto-increment id reuse.
  *  - Never mutates season rows (current_round/mm_active stay as imported).
  *  - Re-runnable: each run cleans its own previous output first.
  *  - Blog phase upserts posts by seeder-owned slugs (prefix "dev-") and
@@ -38,7 +41,7 @@ class SeedLiveData extends Command
 
     protected $description = 'DEV ONLY - additive, re-runnable live-data seed for the active seasons (+ blog/events).';
 
-    const RNG_SEED = 30;
+    const RNG_SEED = 30; // reproducible only at the same wall-clock instant: the played/upcoming split depends on now()
     const AMS_TZ = 'Europe/Amsterdam';
     const SEASON_SLUGS = ['eu-season-30', 'NMMR3'];
     const BLOG_SLUG_PREFIX = 'dev-';
@@ -187,7 +190,8 @@ class SeedLiveData extends Command
         $orphanPivots = DB::delete(
             'DELETE ta FROM rikki_heroeslounge_timelineables ta'
             . ' LEFT JOIN rikki_heroeslounge_match m ON m.id = ta.timelineable_id'
-            . " WHERE ta.timelineable_type LIKE '%Models%Match' AND m.id IS NULL"
+            . ' WHERE ta.timelineable_type = ? AND m.id IS NULL',
+            [HlMatch::class]
         );
         $orphanEntries = DB::delete(
             'DELETE t FROM rikki_heroeslounge_timeline t'
@@ -199,7 +203,8 @@ class SeedLiveData extends Command
         // games), adopted caster/channel/team pivots render phantom data.
         $orphanRows = 0;
         foreach (['rikki_heroeslounge_games', 'rikki_heroeslounge_team_match',
-                  'rikki_heroeslounge_match_caster', 'rikki_heroeslounge_match_channel'] as $table) {
+                  'rikki_heroeslounge_match_caster', 'rikki_heroeslounge_match_channel',
+                  'rikki_heroeslounge_substitutes'] as $table) {
             $orphanRows += DB::delete(
                 'DELETE x FROM ' . $table . ' x'
                 . ' LEFT JOIN rikki_heroeslounge_match m ON m.id = x.match_id'
@@ -272,7 +277,7 @@ class SeedLiveData extends Command
 
         // BYE first (odd roster): lowest standing without a previous BYE.
         if (count($pool) % 2 === 1) {
-            $byeReceiver = $this->pickByeReceiver($div, $pool, $round);
+            $byeReceiver = $this->pickByeReceiver($div, $pool);
             $pool = array_values(array_filter($pool, function ($t) use ($byeReceiver) {
                 return $t->id !== $byeReceiver->id;
             }));
@@ -285,21 +290,21 @@ class SeedLiveData extends Command
 
         // Current round: random evening slots across the whole week decide
         // played vs upcoming; then null out the last 1-2 upcoming wbps.
-        $upcomingIdx = [];
-        foreach ($pairings as $i => $pair) {
+        $upcomingIds = [];
+        foreach ($pairings as $pair) {
             $slot = $monday->copy()->addDays(mt_rand(1, 6))->setTime(mt_rand(19, 21), mt_rand(0, 1) * 30);
             if (!$isCurrent || $slot->lt($amsNow)) {
                 $this->createPlayedMatch($div, $round, $pair[0], $pair[1], $slot, $createdAt, $scheduleDate, $tbp);
             } else {
                 $match = $this->createMatchRow($div, $round, $pair[0], $pair[1], $slot, $createdAt, $scheduleDate, $tbp);
-                $upcomingIdx[] = $match->id;
+                $upcomingIds[] = $match->id;
                 $this->counts['upcoming']++;
             }
         }
 
-        $nullCount = count($upcomingIdx) >= 3 ? 2 : (count($upcomingIdx) >= 1 ? 1 : 0);
+        $nullCount = count($upcomingIds) >= 3 ? 2 : (count($upcomingIds) >= 1 ? 1 : 0);
         if ($nullCount > 0) {
-            $nullIds = array_slice($upcomingIdx, -$nullCount);
+            $nullIds = array_slice($upcomingIds, -$nullCount);
             DB::table('rikki_heroeslounge_match')->whereIn('id', $nullIds)->update(['wbp' => null]);
             $this->counts['upcoming'] -= $nullCount;
             $this->counts['unscheduled'] += $nullCount;
@@ -348,9 +353,9 @@ class SeedLiveData extends Command
         return $pairings;
     }
 
-    protected function pickByeReceiver($div, array $pool, $round)
+    protected function pickByeReceiver($div, array $pool)
     {
-        // Lowest standing first = reverse of pairByStandings order.
+        // Lowest standing first (wins/mapScore ascending; id ascending as the canonical tiebreak, same as pairByStandings).
         $ordered = $pool;
         usort($ordered, function ($a, $b) use ($div) {
             $wa = $this->wins[$div->id][$a->id]; $wb = $this->wins[$div->id][$b->id];
@@ -450,11 +455,12 @@ class SeedLiveData extends Command
 
     /**
      * BYE: instant free win for the receiver (mirrors the frozen Swiss BYE
-     * branch: played Monday noon, 2 games, free_win_count + bye pivots).
+     * branch: played Sunday noon (day before the round week, mirroring the
+     * frozen 'yesterday 12:00'), 2 games, free_win_count + bye pivots).
      */
     protected function createByeMatch($div, $round, $receiver, $monday, $createdAt, $scheduleDate, $tbp)
     {
-        $wbp = $monday->copy()->setTime(12, 0);
+        $wbp = $monday->copy()->subDay()->setTime(12, 0);
         $match = $this->createMatchRow($div, $round, $receiver, $this->byeTeam, $wbp, $createdAt, $scheduleDate, $tbp);
 
         list($mapOne, $mapTwo) = $this->twoDistinctMaps();
