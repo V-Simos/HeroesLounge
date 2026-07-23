@@ -27,7 +27,7 @@
 - **Swiss conventions mirrored** (Swiss.php): `schedule_date` = the round-week's Sunday 23:55 Europe/Amsterdam; `tbp` = one week later; MM runs Mondays 01:00 (so `created_at` = round-week Monday ~01:05); BYE receiver = lowest-standing team without a previous BYE; BYE match = instant win for the real team with 2 games + `free_win_count`/`bye` pivot bookkeeping.
 - **Legacy reference:** `plugins/dev/fixtures/console/SeedFixtures.php` — `createMatch()` (line ~470) is the proven Eloquent creation pattern; `seedBlog()` (line ~684) the blog pattern. Do NOT run `fixtures:seed` — it truncates the real dump.
 - **Git gotcha:** commit with `git -c core.fsmonitor=false commit ...`; if `index.lock` exists and no git op is running, delete it and retry. Commit trailer: `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`.
-- **Expected runtime:** every played-match save triggers the frozen full-season `DivisionTableFix` recompute → the full seed takes a few minutes. That is accepted (frozen behavior, dev-only, one-shot).
+- **Expected runtime:** EVERY match save (including bare unplayed `createMatchRow` saves — the recompute is the unconditional tail of `Match::afterSave`) triggers the frozen full-season `DivisionTableFix` recompute → the full seed takes a few minutes. That is accepted (frozen behavior, dev-only, one-shot).
 
 ---
 
@@ -577,20 +577,24 @@ Expected: per-division "rounds 1-N generated" lines and a final summary with `cr
 
 - [ ] **Step 3: SQL invariants**
 
-Run (**via the Bash tool, not PowerShell** — the `\\\\` escaping in the timelineable_type literal assumes bash double-quote semantics; under PowerShell it stays literal and `tl` falsely returns 0):
+Run (the queries are deliberately backslash-free — a `timelineable_type='Rikki\\Heroeslounge\\...'` literal gets mangled by the MSYS/argv layers on this Windows host and falsely returns 0, so the type is matched with LIKE and the count is scoped to the seeded divisions via a JOIN on the match table):
 ```
 docker exec heroeslounge-dev-db-1 mysql -uroot -proot heroeslounge -e "
 SELECT div_id, round, COUNT(*) c, SUM(is_played=1) played, SUM(wbp IS NULL) unsched, SUM(winner_id IS NULL AND is_played=1) draws
 FROM rikki_heroeslounge_match WHERE div_id IN (757,758,759,760,761,762) GROUP BY div_id, round ORDER BY div_id, round;
 SELECT COUNT(*) cal FROM rikki_heroeslounge_match WHERE div_id IN (757,758,759,760,761,762) AND winner_id IS NULL AND wbp >= CURDATE() AND wbp <= DATE_ADD(CURDATE(), INTERVAL 100 DAY);
 SELECT td.div_id, SUM(td.win_count) wins, SUM(td.match_count) mc FROM rikki_heroeslounge_team_division td WHERE td.div_id IN (757,758,759,760,761,762) GROUP BY td.div_id;
-SELECT COUNT(*) tl FROM rikki_heroeslounge_timeline t JOIN rikki_heroeslounge_timelineables ta ON ta.timeline_id=t.id AND ta.timelineable_type='Rikki\\\\Heroeslounge\\\\Models\\\\Match' WHERE t.type='Match.Played';"
+SELECT COUNT(*) tl FROM rikki_heroeslounge_timeline t
+JOIN rikki_heroeslounge_timelineables ta ON ta.timeline_id=t.id AND ta.timelineable_type LIKE '%Models%Match'
+JOIN rikki_heroeslounge_match m ON m.id=ta.timelineable_id AND m.div_id IN (757,758,759,760,761,762)
+WHERE t.type='Match.Played';"
 ```
+(The dump already contains ~25k historic `Match.Played` entries for OLD matches — the JOIN scoping is what makes `tl` measure only the seeded ones. Pre-seed this query returns 0.)
 Expected invariants:
 - Divisions 757/760: 6 matches per round; 758: 8; 759: 10; 761: 8; 762: 3 (round 1 only). Rounds 1..2 for S30 divisions: `played = c` (all), `unsched = 0`. Round 3 (and NMMR3 round 1): `played + upcoming + unsched = c`, `unsched` 1–2.
 - `cal` ≥ 10 (upcoming matches inside the calendar window).
 - Pivot sums: `wins` per division = number of decided (non-draw) played matches in that division (DivisionTableFix recomputed); `mc` = 2 × played matches with a winner… **actually** `match_count` = per-team count of `is_played=1` matches in that division (fixTables), so `mc` = 2 × played (draws included; BYE matches count for the receiver + the BYE team row only if BYE! is pivoted — it is not, so BYE matches contribute 1). Sanity-check plausibility rather than exact equality.
-- `tl` = number of decided played matches (draws get no timeline entry), and their `created_at` ≈ match wbp values (backdated — spot check one).
+- `tl` = number of SEEDED decided played matches (= `played` − `draws` from the first query; draws get no timeline entry), and their `created_at` ≈ match wbp values (backdated — spot check one).
 
 - [ ] **Step 4: Idempotency**
 
@@ -748,7 +752,7 @@ Expected: 0 (INFO noise from Division.php:190 is known/allowed).
 
 - [ ] **Step 3: Docs.**
   - `dev/README.md`: add a "Live-data seed (`fixtures:live-data`)" subsection near the `fixtures:seed` docs: additive/scoped/re-runnable, `--force`, `--skip-blog`, do NOT confuse with the destructive `fixtures:seed`.
-  - `docs/superpowers/KNOWN-ISSUES.md`: add a dated addendum at top: severity-table rows 2/4/5/7 (sections §3.2 events-404, §4.1 calendar, §4.2 no fixtures, §4.4 blog) resolved-by-data via `fixtures:live-data`; row 6 / §4.3 (gameparticipation) still blind. The addendum must ALSO correct §4.4's stale claim: the dump actually has **439 posts (425 published, newest 2026-05-10)** and **27 categories** — the audit's "1 post / only Uncategorized" was wrong; the real gaps were the missing `events` category and no recent content.
+  - `docs/superpowers/KNOWN-ISSUES.md`: add a dated addendum at top: severity-table rows 2/4/5/7 (sections §3.2 events-404, §4.1 calendar, §4.2 no fixtures, §4.4 blog) resolved-by-data via `fixtures:live-data`; row 6 / §4.3 (gameparticipation) still blind. The addendum must ALSO correct the stale blog claim wherever it appears — §4.4 AND the §1 facts table row "Published blog posts | 1": the dump actually has **439 posts (425 published, newest 2026-05-10)** and **27 categories** — the audit's "1 post / only Uncategorized" was wrong; the real gaps were the missing `events` category and no recent content.
   - `docs/superpowers/PROGRESS.md`: task entry + notes (facts worth carrying: Match soft-deletes → clean uses forceDelete; timeline pivot polymorphic; calendar wbp-window rule; expected runtime).
   - `docs/superpowers/NEXT-SESSION.md`: refresh launch pad (live data now available; canonical demo URLs `/eu-season-30/division-1`, `/calendar`, `/NMMR3/3NMMRO`).
 
