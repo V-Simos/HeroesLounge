@@ -69,7 +69,8 @@ class SeedLiveData extends Command
         if (!$this->option('force')) {
             $ok = $this->confirm(
                 'This deletes ALL matches under the active seasons (eu-season-30, NMMR3) - '
-                . 'seeder-owned by definition - and regenerates them, plus dev blog posts. Continue?'
+                . 'seeder-owned by definition - and regenerates them, plus dev blog posts. It also '
+                . 'globally purges rows referencing matches already deleted in prod (unreachable garbage). Continue?'
             );
             if (!$ok) {
                 $this->output->writeln('<comment>Aborted - nothing was changed. Use --force to skip this prompt.</comment>');
@@ -313,6 +314,8 @@ class SeedLiveData extends Command
 
     protected function pairRandom(array $pool)
     {
+        // Precondition: even-sized pool (the BYE extraction guarantees it);
+        // an odd pool would silently drop its last team.
         shuffle($pool); // PHP >= 7.1: MT-based, deterministic under mt_srand
         $pairings = [];
         for ($i = 0; $i + 1 < count($pool); $i += 2) {

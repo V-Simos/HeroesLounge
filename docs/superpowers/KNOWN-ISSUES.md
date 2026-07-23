@@ -168,12 +168,12 @@ scope, per `PROGRESS.md` — not regressions.
 
 ## 4. Empty-but-correct (data-driven, not bugs)
 
-### 4.1 Calendar (`/calendar`) — renders, list empty
+### 4.1 Calendar (`/calendar`) — renders, list empty *(resolved-by-data — see 2026-07-24 update)*
 `UpcomingMatches type=all` lists **future, unplayed** matches. The dump has 0
 matches after 2024-04-28 and the 2026 active seasons have no matches at all →
 nothing to show. Page/markup is fine; there is simply no upcoming-match data.
 
-### 4.2 Active-season division pages — teams but no matches
+### 4.2 Active-season division pages — teams but no matches *(resolved-by-data — see 2026-07-24 update)*
 `/eu-season-30` lists its 5 divisions correctly; `/eu-season-30/division-1`
 renders standings with **12 team rows** but every round says **"No matches this
 round."** and the sidebar says **"Nothing scheduled."** — because the season has
