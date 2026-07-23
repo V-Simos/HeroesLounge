@@ -10,8 +10,11 @@ frozen: the newest match row is 2024-04-28, the two active 2026 seasons
 (`eu-season-30` "[EU] Season 30", `NMMR3` "Nexus MM Rumble 3") have divisions and
 teams but **zero generated match fixtures**, and `gameparticipation` is empty.
 Consequently the calendar, division rounds/standings sidebars, and upcoming-match
-widgets all render their (correct) empty states, and the blog has 1 post with no
-`events` category so the Events nav link 404s.
+widgets all render their (correct) empty states. The blog has no `events`
+category (the nav's `/blog/category/events` link 404s) and no recent content —
+plan-review correction: the KNOWN-ISSUES audit's "1 post / only Uncategorized"
+claim is WRONG; the dump actually has 439 posts (425 published, newest
+2026-05-10) and 27 categories (incl. singular `event`, but not `events`).
 
 Goal: make the dev site *look live* — populated division rounds, standings,
 calendar, timeline, team match history, homepage widgets, blog/events — **without
@@ -148,11 +151,15 @@ Via the Indikator shim models (`Indikator\Content\Models\Blog`, `Category` —
 reference: legacy `seedBlog()`):
 
 - Ensure category **`events`** exists (fixes the Events nav → 404, item §3.2 of
-  KNOWN-ISSUES: nav points at `/blog/category/events`).
+  KNOWN-ISSUES: nav points at `/blog/category/events`; the dump has only the
+  singular `event`).
 - Upsert ~6–8 published posts **by seeder-owned slug** (delete+recreate only
-  slugs the seeder owns; the dump's 1 real post is untouched): league-news posts
-  + 2–3 events posts, `published_at` staggered over recent weeks, clearly
-  dev-flavored content.
+  slugs the seeder owns; the dump's ~439 real posts are untouched): league-news
+  posts + 2–3 events posts, `published_at` staggered over recent weeks (fresher
+  than the dump's newest 2026-05-10 post), clearly dev-flavored content. NOTE
+  the real Indikator schema: `status` varchar '1'=published (no `published`
+  column), jsonable `images`/`files` + `related_*` text columns are NOT NULL
+  with no default and must be set explicitly.
 
 ### Out of scope
 

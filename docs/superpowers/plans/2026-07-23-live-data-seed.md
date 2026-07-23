@@ -256,10 +256,11 @@ Expected output (order may vary slightly):
 Done. cleaned=0 created=0 (played=0 incl. draws=0, byes=0; upcoming=0, unscheduled=0)
 ```
 
-- [ ] **Step 4: Verify nothing real was touched**
+- [ ] **Step 4: Verify no match data was touched**
 
 Run: `docker exec heroeslounge-dev-db-1 mysql -uroot -proot heroeslounge -e "SELECT COUNT(*) AS all_matches FROM rikki_heroeslounge_match; SELECT COUNT(*) AS s30_matches FROM rikki_heroeslounge_match WHERE div_id IN (757,758,759,760,761,762,763);"`
 Expected: `all_matches` unchanged from before the run (baseline it first), `s30_matches` = 0.
+**Known + sanctioned:** the pristine dump's `team_division` counters for these divisions are non-zero (stale prod values despite 0 matches — e.g. div 757 wins=12/mc=24); `clean()` zeroes them even on this skeleton run. That is spec-intended (the frozen `fixTables` would overwrite them on the first played save anyway) — do not treat it as damage.
 
 - [ ] **Step 5: Commit**
 
@@ -569,14 +570,14 @@ git -c core.fsmonitor=false commit -m "feat(dev-fixtures): fixtures:live-data sk
     }
 ```
 
-- [ ] **Step 2: Run the full generation** (takes a few minutes — DivisionTableFix recompute per played save):
+- [ ] **Step 2: Run the full generation** (takes a few minutes — DivisionTableFix recompute per played save). Time-of-run caveat: current-round slots span Mon–Sun of the current week, so a run late on a Sunday leaves ~0 upcoming matches (and the calendar checks would under-fill). Mid-week runs are ideal; if it is Sunday evening, note it and expect thinner "upcoming" numbers:
 
 Run: `docker exec heroeslounge-dev-web-1 php artisan fixtures:live-data --force --skip-blog`
 Expected: per-division "rounds 1-N generated" lines and a final summary with `created=117` (S30: 3 rounds × (6+8+10+6+8) = 114; NMMR3: 3), `byes=6` (only divisions 759 & 761 have odd rosters → 2 BYE matches per round × 3 rounds; NMMR3's roster is even), `played` ≈ 76 (rounds 1–2 incl. their BYEs) + the slot-dependent share of the current week, `unscheduled` = 5–12.
 
 - [ ] **Step 3: SQL invariants**
 
-Run:
+Run (**via the Bash tool, not PowerShell** — the `\\\\` escaping in the timelineable_type literal assumes bash double-quote semantics; under PowerShell it stays literal and `tl` falsely returns 0):
 ```
 docker exec heroeslounge-dev-db-1 mysql -uroot -proot heroeslounge -e "
 SELECT div_id, round, COUNT(*) c, SUM(is_played=1) played, SUM(wbp IS NULL) unsched, SUM(winner_id IS NULL AND is_played=1) draws
@@ -615,8 +616,16 @@ git -c core.fsmonitor=false commit -m "feat(dev-fixtures): live-data round gener
 ```php
     /**
      * Blog phase: ensure the "events" category exists (the nav links to
-     * /blog/category/events) and upsert seeder-owned posts (slug prefix
-     * "dev-"). The dump's real post/categories are untouched.
+     * /blog/category/events; the dump only has the singular "event") and
+     * upsert seeder-owned posts (slug prefix "dev-") so the blog has fresh
+     * this-week content (the dump's newest real post is 2026-05-10). The
+     * dump's ~439 real posts and 27 categories are untouched.
+     *
+     * REAL Indikator dump schema (NOT the legacy fixture-shim template):
+     * `status` varchar(1) '1'=published (there is NO `published` column);
+     * `featured` varchar(1) '1'/'2'; `images`/`files` jsonable text NOT NULL;
+     * `related_blog`/`related_news`/`related_portfolio` text NOT NULL with no
+     * default - the connection runs strict, so ALL of these must be set.
      */
     protected function seedBlog()
     {
@@ -627,14 +636,11 @@ git -c core.fsmonitor=false commit -m "feat(dev-fixtures): live-data round gener
             $events->slug = 'events';
             $events->save();
         }
-        $uncategorized = Category::where('slug', '<>', 'events')->orderBy('id')->first(); // the dump's "Uncategorized"
+        // First real dump category (id 1 "Inside Lounge") hosts the news posts.
+        $newsCategory = Category::where('slug', '<>', 'events')->orderBy('id')->first();
 
         $existingPost = Blog::orderBy('id')->first();
-        $author = $existingPost ? $existingPost->author_id : null;
-        if (!$author) {
-            $backendUser = \Backend\Models\User::orderBy('id')->first();
-            $author = $backendUser ? $backendUser->id : 1;
-        }
+        $author = $existingPost ? $existingPost->author_id : 1;
 
         $posts = [
             ['slug' => 'season-30-round-3-preview',  'cat' => 'news',   'days' => 1,  'featured' => true,
@@ -675,12 +681,17 @@ git -c core.fsmonitor=false commit -m "feat(dev-fixtures): live-data round gener
             $post->content = '<p>' . $spec['summary'] . '</p>'
                 . '<p>This is seeded development content (fixtures:live-data) so the site has a living blog to render. '
                 . 'It references the seeded Season 30 / Nexus MM Rumble 3 fixtures.</p>';
-            $post->featured = $spec['featured'];
-            $post->published = true;
+            $post->images = [];            // jsonable, NOT NULL
+            $post->files = [];             // jsonable, NOT NULL
+            $post->related_blog = '';      // text NOT NULL, no default
+            $post->related_news = '';
+            $post->related_portfolio = '';
+            $post->featured = $spec['featured'] ? '1' : '2'; // Indikator convention
+            $post->status = '1';           // '1' = published (no `published` column)
             $post->published_at = Carbon::now()->subDays($spec['days']);
             $post->author_id = $author;
             $post->save();
-            $cat = ($spec['cat'] === 'events') ? $events : $uncategorized;
+            $cat = ($spec['cat'] === 'events') ? $events : $newsCategory;
             if ($cat) {
                 $post->categories()->attach($cat->id);
             }
@@ -695,8 +706,8 @@ Expected: `blog: events category ensured, 7 dev post(s) upserted`.
 
 - [ ] **Step 3: SQL check + idempotency**
 
-Run: `docker exec heroeslounge-dev-db-1 mysql -uroot -proot heroeslounge -e "SELECT slug, published FROM indikator_content_blog ORDER BY id; SELECT id, name, slug FROM indikator_content_blog_categories;"`
-Expected: the original dump post + exactly 7 `dev-*` slugs, all `published=1`; categories = the dump's originals + one `events` row. Run the command again → same counts (no duplicate posts/categories).
+Run: `docker exec heroeslounge-dev-db-1 mysql -uroot -proot heroeslounge -e "SELECT COUNT(*) total, SUM(status='1') published, SUM(slug LIKE 'dev-%') dev FROM indikator_content_blog; SELECT COUNT(*) cats FROM indikator_content_blog_categories; SELECT id, name, slug FROM indikator_content_blog_categories WHERE slug IN ('event','events');"`
+Expected: `total=446` (439 dump posts + 7 dev), `dev=7`, `published=432` (the dump's 425 + 7); `cats=28` (27 dump + `events`); both the dump's `event` (id 20) and the new `events` rows present. Run the command again → identical counts (no duplicate posts/categories).
 
 - [ ] **Step 4: Commit**
 
@@ -717,26 +728,27 @@ git -c core.fsmonitor=false commit -m "feat(dev-fixtures): live-data blog phase 
 | URL | Expect |
 |---|---|
 | `/eu-season-30/division-1` | standings rows with non-zero W; round tabs 1–3 with match cards; sidebar upcoming + timeline entries |
-| `/eu-season-30/division-3` | 19-team standings; BYE free wins present; no errors |
+| `/eu-season-30/division-3` | 19-team standings; BYE matches visible in the rounds; `bye` pivot set. **`free_win_count` will read 0** — the frozen `DivisionTableFix` recompute's free-win detection is unsatisfiable and clobbers the manual increments on every later save; spec-sanctioned, do NOT chase it |
 | `/calendar` | ≥ 2 future date groups with fixture rows |
 | `/NMMR3` → `/NMMR3/3NMMRO` | round 1 with 3 matches |
 | `/match/view/<played id>` | winner shown, per-game tabs render empty-stats state (expected) |
 | `/match/view/<future id>` | scheduled time in viewer TZ |
 | `/match/view/<null-wbp id>` | red "not scheduled yet" state |
 | `/team/view/<seeded team slug>` | match history group for Season 30 |
-| `/` (homepage) | upcoming-matches + recent-results widgets populated; blog strip with dev posts |
+| `/` (homepage) | upcoming-matches + recent-results widgets populated; blog strip leads with the dev posts (the dump's newest real post is 2026-05-10, so the seeded ones sort first) |
 | `/blog` + `/blog/category/events` | 200; posts render; Events nav link no longer 404s |
 
 Get sample ids: `SELECT id, wbp, winner_id FROM rikki_heroeslounge_match WHERE div_id=757 AND round=3;`
 
 - [ ] **Step 2: Log hygiene**
 
-Run: `docker exec heroeslounge-dev-web-1 sh -c "grep -cE 'ERROR|exception|Fatal' storage/logs/system.log || true"` after the sweep.
+Baseline first (repo-conventional truncate, done in prior tasks too): `docker exec heroeslounge-dev-web-1 sh -c "> storage/logs/system.log"`, run the HTTP sweep, then:
+Run: `docker exec heroeslounge-dev-web-1 sh -c "grep -cE 'ERROR|exception|Fatal' storage/logs/system.log || true"`
 Expected: 0 (INFO noise from Division.php:190 is known/allowed).
 
 - [ ] **Step 3: Docs.**
   - `dev/README.md`: add a "Live-data seed (`fixtures:live-data`)" subsection near the `fixtures:seed` docs: additive/scoped/re-runnable, `--force`, `--skip-blog`, do NOT confuse with the destructive `fixtures:seed`.
-  - `docs/superpowers/KNOWN-ISSUES.md`: add a dated addendum at top: items 2 (events 404), 4 (calendar empty), 5 (no fixtures), 7 (blog sparse) resolved-by-data via `fixtures:live-data`; item 6 (gameparticipation) still blind.
+  - `docs/superpowers/KNOWN-ISSUES.md`: add a dated addendum at top: severity-table rows 2/4/5/7 (sections §3.2 events-404, §4.1 calendar, §4.2 no fixtures, §4.4 blog) resolved-by-data via `fixtures:live-data`; row 6 / §4.3 (gameparticipation) still blind. The addendum must ALSO correct §4.4's stale claim: the dump actually has **439 posts (425 published, newest 2026-05-10)** and **27 categories** — the audit's "1 post / only Uncategorized" was wrong; the real gaps were the missing `events` category and no recent content.
   - `docs/superpowers/PROGRESS.md`: task entry + notes (facts worth carrying: Match soft-deletes → clean uses forceDelete; timeline pivot polymorphic; calendar wbp-window rule; expected runtime).
   - `docs/superpowers/NEXT-SESSION.md`: refresh launch pad (live data now available; canonical demo URLs `/eu-season-30/division-1`, `/calendar`, `/NMMR3/3NMMRO`).
 
