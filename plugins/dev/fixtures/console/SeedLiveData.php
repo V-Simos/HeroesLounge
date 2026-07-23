@@ -178,6 +178,40 @@ class SeedLiveData extends Command
             $this->counts['cleaned']++;
         }
 
+        // The prod dump ships orphaned timelineable pivot rows pointing at
+        // matches deleted in prod. Freshly seeded matches reuse those
+        // auto-increment ids and would "adopt" old Match.Played entries
+        // (verified: 2024-era entries appearing on unplayed 2026 fixtures).
+        // Purge pivot rows whose match no longer exists, then drop
+        // Match.Played entries left with no pivot rows at all.
+        $orphanPivots = DB::delete(
+            'DELETE ta FROM rikki_heroeslounge_timelineables ta'
+            . ' LEFT JOIN rikki_heroeslounge_match m ON m.id = ta.timelineable_id'
+            . " WHERE ta.timelineable_type LIKE '%Models%Match' AND m.id IS NULL"
+        );
+        $orphanEntries = DB::delete(
+            'DELETE t FROM rikki_heroeslounge_timeline t'
+            . ' LEFT JOIN rikki_heroeslounge_timelineables ta ON ta.timeline_id = t.id'
+            . " WHERE t.type = 'Match.Played' AND ta.timeline_id IS NULL"
+        );
+        // Same id-reuse hazard for every other match-keyed table: adopted
+        // game rows would corrupt Bo2 scores (determineWinnerAndSave counts
+        // games), adopted caster/channel/team pivots render phantom data.
+        $orphanRows = 0;
+        foreach (['rikki_heroeslounge_games', 'rikki_heroeslounge_team_match',
+                  'rikki_heroeslounge_match_caster', 'rikki_heroeslounge_match_channel'] as $table) {
+            $orphanRows += DB::delete(
+                'DELETE x FROM ' . $table . ' x'
+                . ' LEFT JOIN rikki_heroeslounge_match m ON m.id = x.match_id'
+                . ' WHERE m.id IS NULL'
+            );
+        }
+        if ($orphanPivots || $orphanEntries || $orphanRows) {
+            $this->output->writeln('  purged: ' . $orphanPivots . ' orphaned timeline pivot(s), '
+                . $orphanEntries . ' orphaned Match.Played entr(y/ies), '
+                . $orphanRows . ' orphaned match-keyed row(s)');
+        }
+
         DB::table('rikki_heroeslounge_team_division')
             ->whereIn('div_id', $divIds)
             ->update(['win_count' => 0, 'match_count' => 0, 'free_win_count' => 0, 'bye' => 0]);
