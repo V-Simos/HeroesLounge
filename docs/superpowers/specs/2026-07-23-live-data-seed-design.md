@@ -56,16 +56,17 @@ touching frozen code or destroying the real dump data**.
   + division 763 `3000nmmr3` (**0 teams** — skip). `BYE!` team exists, id 204
   (matches the Swiss default). 19 rows in `rikki_heroeslounge_maps`.
   **0 matches** exist under divisions of either season.
-- **Strict-mode gotcha:** `rikki_heroeslounge_match.is_played` is NOT NULL with
-  no default; prod MySQL runs non-strict, dev MySQL 5.7 is strict. The frozen
-  raw-insert paths (`Swiss::createMatch`, `Playoff::createMatches`) omit it and
-  would error in dev. The seeder avoids the issue by creating matches via
-  Eloquent with an explicit `is_played = 0` (proven pattern from the legacy
-  seeder's `createMatch`), so no `sql_mode` juggling is needed.
+- **Creation is Eloquent, not the frozen raw inserts.** In THIS dump
+  `rikki_heroeslounge_match.is_played` has `DEFAULT '0'` (spec-review verified —
+  the legacy seeder's strict-`sql_mode` hazard note is stale for this schema),
+  so raw inserts would not error; Eloquent creation with explicit `is_played=0`
+  is chosen anyway because saving through the model is what triggers the frozen
+  `afterSave` bookkeeping (proven pattern from the legacy seeder's `createMatch`).
 - Matches table/columns: `rikki_heroeslounge_match`, FK **`div_id`** (not
   division_id); team↔match pivot `rikki_heroeslounge_team_match`; timeline table
-  singular `rikki_heroeslounge_timeline` (+ `_timeline_match` pivot via
-  `$match->timeline()`).
+  singular `rikki_heroeslounge_timeline`, linked to matches via the
+  **polymorphic** pivot `rikki_heroeslounge_timelineables` (`morphToMany`
+  `timelineable` — there is no `timeline_match` join table).
 
 ## Design
 
@@ -82,12 +83,16 @@ Run shape:
    `is_active=1`; resolve their divisions and team rosters; abort with a clear
    error if anything is missing (wrong-DB protection). Fixed RNG seed
    (`mt_srand`) → deterministic output.
-2. **Clean (idempotency).** Delete all matches whose `div_id` belongs to those
-   divisions (Eloquent `delete()` → `afterDelete` detaches teams/casters and
-   deletes games), delete the now-orphaned `Match.Played` timeline entries that
-   pointed at them, and reset those divisions' `team_division` pivot counters
-   (`win_count`, `match_count`, `free_win_count`, `bye`) to 0. Those divisions
-   have 0 matches in the pristine dump, so everything deleted is seeder-owned.
+2. **Clean (idempotency).** Collect the `Match.Played` timeline ids via
+   `$match->timeline()` **before** deleting (the polymorphic pivot has no
+   simple join to walk afterwards; `afterDelete` does NOT delete timeline
+   entries), then delete all matches whose `div_id` belongs to those divisions
+   (Eloquent `delete()` → `afterDelete` detaches teams/casters and deletes
+   games), delete the collected timeline entries, and reset those divisions'
+   `team_division` pivot counters (`win_count`, `match_count`,
+   `free_win_count`, `bye`) to 0. **All matches under the target divisions are
+   seeder-owned by definition** (0 exist in the pristine dump) — re-runs must
+   NOT abort on finding them.
 3. **Generate rounds** (per division; algorithm below).
 4. **Timeline backdate polish.** Set each generated `Match.Played` timeline
    entry's `created_at` to its match's `wbp` so the division/team sidebars read
@@ -158,10 +163,11 @@ reference: legacy `seedBlog()`):
 
 ## Error handling
 
-- Wrong-DB guard: abort before any write if seasons/divisions/BYE team are
-  missing or a targeted division already has non-seeder matches… concretely: the
-  clean step only deletes matches under the two target seasons' divisions, which
-  is exactly the seeder-owned set (0 in the pristine dump).
+- Wrong-DB guard: abort before any write if the seasons (by slug, `is_active=1`),
+  their divisions, or the BYE team are missing. That is the WHOLE guard — there
+  is no marker distinguishing seeder-created matches, so matches found under the
+  target divisions are treated as seeder-owned and cleaned; do NOT implement an
+  abort-if-matches-exist check (it would break idempotent re-runs).
 - Confirmation prompt unless `--force` (consistent with `fixtures:seed`).
 - Deterministic RNG so re-runs give identical data (bar `created_at` "now"
   moments that are backdated anyway).
