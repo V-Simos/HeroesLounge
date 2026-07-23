@@ -517,8 +517,89 @@ class SeedLiveData extends Command
         return $c->copy()->setTimezone($this->appTz)->format('Y-m-d H:i:s');
     }
 
+    /**
+     * Blog phase: ensure the "events" category exists (the nav links to
+     * /blog/category/events; the dump only has the singular "event") and
+     * upsert seeder-owned posts (slug prefix "dev-") so the blog has fresh
+     * this-week content (the dump's newest real post is 2026-05-10). The
+     * dump's ~439 real posts and 27 categories are untouched.
+     *
+     * REAL Indikator dump schema (NOT the legacy fixture-shim template):
+     * `status` varchar(1) '1'=published (there is NO `published` column);
+     * `featured` varchar(1) '1'/'2'; `images`/`files` jsonable text NOT NULL;
+     * `related_blog`/`related_news`/`related_portfolio` text NOT NULL with no
+     * default - the connection runs strict, so ALL of these must be set.
+     */
     protected function seedBlog()
     {
-        // Task 3
+        $events = Category::where('slug', 'events')->first();
+        if (!$events) {
+            $events = new Category();
+            $events->name = 'Events';
+            $events->slug = 'events';
+            $events->save();
+        }
+        // First real dump category (id 1 "Inside Lounge") hosts the news posts.
+        $newsCategory = Category::where('slug', '<>', 'events')->orderBy('id')->first();
+
+        $existingPost = Blog::orderBy('id')->first();
+        $author = $existingPost ? $existingPost->author_id : 1;
+
+        $posts = [
+            ['slug' => 'season-30-round-3-preview',  'cat' => 'news',   'days' => 1,  'featured' => true,
+             'title' => 'Season 30: Round 3 preview',
+             'summary' => 'The middle of the ladder is a bloodbath - our picks for the matches to watch this week.'],
+            ['slug' => 'nmmr3-kickoff',              'cat' => 'news',   'days' => 2,  'featured' => false,
+             'title' => 'Nexus MM Rumble 3 kicks off',
+             'summary' => 'The third edition of our matchmaking rumble is underway with a fresh six-team open bracket.'],
+            ['slug' => 'community-cup-august',       'cat' => 'events', 'days' => 4,  'featured' => false,
+             'title' => 'Community Cup - August Edition',
+             'summary' => 'Our monthly one-day tournament returns. Bring your five and fight for glory.'],
+            ['slug' => 'caster-signups-open',        'cat' => 'events', 'days' => 6,  'featured' => false,
+             'title' => 'Caster sign-ups open',
+             'summary' => 'Want to cast Heroes Lounge matches on our Twitch channel? Applications are open now.'],
+            ['slug' => 'division-3-spotlight',       'cat' => 'news',   'days' => 9,  'featured' => false,
+             'title' => 'Meet the teams: Division 3 spotlight',
+             'summary' => 'Nineteen teams, one BYE, zero mercy - a closer look at our biggest division.'],
+            ['slug' => 'balance-patch-roundup',      'cat' => 'news',   'days' => 12, 'featured' => false,
+             'title' => 'Mid-season balance patch roundup',
+             'summary' => 'Everything that changed in the Nexus and what it means for your drafts.'],
+            ['slug' => 'summer-showdown-announced',  'cat' => 'events', 'days' => 16, 'featured' => false,
+             'title' => 'Summer Showdown announced',
+             'summary' => 'A cross-division showmatch weekend with casters, giveaways and questionable drafts.'],
+        ];
+
+        // Upsert by seeder-owned slug: delete + recreate.
+        $ownSlugs = array_map(function ($p) { return self::BLOG_SLUG_PREFIX . $p['slug']; }, $posts);
+        foreach (Blog::whereIn('slug', $ownSlugs)->get() as $old) {
+            $old->categories()->detach();
+            $old->delete();
+        }
+
+        foreach ($posts as $spec) {
+            $post = new Blog();
+            $post->title = $spec['title'];
+            $post->slug = self::BLOG_SLUG_PREFIX . $spec['slug'];
+            $post->summary = $spec['summary'];
+            $post->content = '<p>' . $spec['summary'] . '</p>'
+                . '<p>This is seeded development content (fixtures:live-data) so the site has a living blog to render. '
+                . 'It references the seeded Season 30 / Nexus MM Rumble 3 fixtures.</p>';
+            $post->images = [];            // jsonable, NOT NULL
+            $post->files = [];             // jsonable, NOT NULL
+            $post->related_blog = '';      // text NOT NULL, no default
+            $post->related_news = '';
+            $post->related_portfolio = '';
+            $post->featured = $spec['featured'] ? '1' : '2'; // Indikator convention
+            $post->status = '1';           // '1' = published (no `published` column)
+            $post->published_at = Carbon::now()->subDays($spec['days']);
+            $post->author_id = $author;
+            $post->save();
+            $cat = ($spec['cat'] === 'events') ? $events : $newsCategory;
+            if ($cat) {
+                $post->categories()->attach($cat->id);
+            }
+        }
+
+        $this->output->writeln('  blog: events category ensured, ' . count($posts) . ' dev post(s) upserted');
     }
 }
