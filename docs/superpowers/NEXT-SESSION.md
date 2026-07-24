@@ -37,7 +37,7 @@ limitation).
 ## The immediate next action — Wave 1 sign-off + what's next
 
 Wave 1 is **done and merged**. State + what remains:
-1. **Branch integration — ✅ Wave 1 AND the live-data seed (2026-07-24) MERGED into `ui-rework`** (fast-forward, LOCAL only; both `ui-rework` and `ui-rework-phase-2` are at the same tip `8dfdb00`, **NOT pushed**). Remaining user call: push and open/refresh a PR (PR #1) when ready.
+1. **Branch integration — ✅ Wave 1 AND the live-data seed (2026-07-24) MERGED into `ui-rework` and PUSHED to the fork** (fast-forward; both `ui-rework` and `ui-rework-phase-2` are at the same tip; PR #1 refreshed automatically by the push). Remaining user call: merge PR #1 into fork `main` when ready.
 2. **Wave 2 (static content)** — a separate later plan, not yet written (rules/FAQ/guides/staff/ARAM etc.). Blocked on the **ARAM league decision** (see "Open decisions" below) and on writing the plan. Continue Wave-2 work on `ui-rework-phase-2` (or a fresh branch off `ui-rework`).
 
 **Carry-forward from the Task 9 sweep (all documented in PROGRESS "Notes from Task 9" — not blockers):**
