@@ -56,6 +56,36 @@ a separate later plan, not yet written.**
 
 **Wave 2 (static content) = a separate later plan, not yet written.**
 
+## Task status (Phase 3 — /user auth/account/profile + Events/Guides nav fixes)
+
+**Spec:** `docs/superpowers/specs/2026-07-24-phase-3-user-auth-design.md`
+(committed `1d28fc9`; spec-review subagent **Approved first pass** — ~20 claims
+spot-checked against the repo, all held; advisory notes folded into the plan:
+Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
+`docs/superpowers/plans/2026-07-24-phase-3-user-auth.md`. Branch:
+`ui-rework-phase-2` (continues at the merged Wave-1 tip).
+
+| Task | Implemented | Spec review | Quality review | Commits |
+|---|---|---|---|---|
+| 1 — Forgot password `/user/forgotpassword` | | | | |
+| 2 — Account: guest half (signin/register) | | | | |
+| 3 — Account: authed half (tabs/update forms) | | | | |
+| 4 — Profile `/user/view/:id` | | | | |
+| 5 — Caster schedule `/user/casterschedule` | | | | |
+| 6 — Events archive port + Events link | | | | |
+| 7 — Guides static-pages port | | | | |
+| 8 — Phase-3 finishing pass | | | | |
+
+Design facts that drove the spec (verified live 2026-07-24, this session): the
+blog is **Indikator.Content** (NOT RainLab.Blog — query the `indikator_content_*`
+tables; 446 posts, 28 categories incl. the seeded `events`), so the Events nav
+link WORKS in dev; `deactivate_link.htm` is dead code (referenced nowhere, not
+ported); RainLab `Account::redirectForceSecure()` 302s plain-http non-AJAX GETs
+→ `/user` cannot render in dev with `forceSecure=1` (AJAX exempt; dev
+verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
+`.fileselect` wrapper + sibling `:text` + `#{fieldName}UploadError` ids +
+`avatar`/`banner` input names.
+
 ### Notes from Task 0 (bracket spike — proven, de-risked)
 
 - **Fixtures had ZERO playoffs** (blocked live bracket verification). The dev
