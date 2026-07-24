@@ -1,0 +1,31 @@
+{#- Reset-password partial (SlothResetPassword::reset)
+    Re-skin of plugins/rikki/heroeslounge/components/slothresetpassword/reset.htm.
+    All data-* attributes, field names, ids, value="{{ __SELF__.code }}" prefill,
+    and the AJAX update map are preserved VERBATIM. -#}
+<section class="sec authsec">
+    <div class="wrap auth-wrap">
+        <h1 class="auth-title">Reset Password</h1>
+
+        <div class="p auth-card">
+            <div class="p-head">Enter Activation Code</div>
+            <div class="auth-body">
+                <p class="auth-lede">Please check your email for the activation code.</p>
+
+                <form
+                    data-request="{{ __SELF__ }}::onResetPassword"
+                    data-request-update="'{{ __SELF__ }}::complete': '#partialUserResetForm'"
+                    data-request-flash>
+                    <div class="field">
+                        <label for="resetCode">Activation Code</label>
+                        <input name="code" type="text" class="input" id="resetCode" placeholder="Enter the activation code" value="{{ __SELF__.code }}">
+                    </div>
+                    <div class="field">
+                        <label for="resetPassword">New Password</label>
+                        <input name="password" type="password" class="input" id="resetPassword" placeholder="Enter a new password">
+                    </div>
+                    <button type="submit" class="btn btn-solid auth-submit">Reset password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

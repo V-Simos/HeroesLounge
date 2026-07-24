@@ -547,6 +547,34 @@
    summary's 20px text gutter (the .season-grid panels self-align full-width). */
 .arch-body > .season-empty { padding: 0 20px; }
 .arch-empty { color: var(--mute); }
+/* ---------- forgot-password / reset-password pages
+   (/user/forgotpassword — SlothResetPassword component override)
+   No mockup — derived from the established system: a narrow centered .p panel
+   matching the auth/account family. The <section>.authsec owns the vertical
+   rhythm; .auth-wrap constrains width to 480px so the form doesn't stretch
+   full-page on large viewports; .auth-card is a plain .p (no clip-path, no
+   chamfer) so the global :focus-visible ring applies as-is — no focus-affordance
+   entry needed. .auth-note-warn is a subtle warning-tinted notice (off --gold)
+   replacing the frozen partial's invalid <div> nested inside a <p> (block-in-
+   inline, browsers auto-close the <p>; the sanctioned fix is a sibling element).
+   No transform/animation introduced — reduced-motion block needs no new entry. */
+.authsec { padding: 48px 0 72px; }
+.auth-wrap { max-width: 480px; }
+.auth-title { font-size: clamp(1.6rem, 3vw, 2rem); font-weight: 700;
+  letter-spacing: .01em; margin-bottom: 24px; }
+.auth-card { overflow: hidden; }
+.auth-body { display: flex; flex-direction: column; gap: 20px; padding: 28px 24px 30px; }
+.auth-lede { color: var(--mute); font-size: 15px; line-height: 1.55; }
+.auth-note { padding: 13px 16px; font-size: 14px; line-height: 1.5; }
+.auth-note-warn { background: rgba(242,190,85,0.1); border-left: 3px solid var(--gold);
+  color: var(--mute); }
+.auth-note-warn strong { color: var(--gold); }
+.auth-body form { display: flex; flex-direction: column; gap: 18px; }
+.auth-submit { align-self: flex-start; }
+/* complete state: the sign-in button is the only action — no need for flex-start;
+   keep it left-aligned (the .auth-submit rule above handles this). */
+.auth-card-complete .auth-body { padding-bottom: 28px; }
+
 @media (prefers-reduced-motion: reduce) {
   .arch-summary, .arch-summary svg { transition: none; }
 }
