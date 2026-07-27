@@ -745,6 +745,67 @@
   .account-app-actions .btn { justify-content: center; }
 }
 
+/* ---------- player profile (/user/view/:id — Profile + slothStatistics) -----
+   The page reuses the team banner, two-column teamwrap, team match/timeline
+   panels, and team-stats tables. These selectors only describe profile-only
+   data: an avatar monogram overlay, compact facts, team links, and the vertical
+   section rhythm. There is no new motion to add to the reduced-motion guard. */
+.profile-avatar { position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 112px; height: 112px; flex: 0 0 112px; overflow: hidden; border-radius: 16px;
+  background: rgba(79,179,242,0.16); box-shadow: 0 0 0 1px var(--line);
+  color: var(--storm); font: 700 32px 'Chakra Petch', sans-serif; letter-spacing: .04em; }
+.profile-avatar img { position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; background: var(--panel2); }
+.profile-stack { display: flex; flex-direction: column; gap: 36px; }
+.profile-section { min-width: 0; }
+.profile-section-title { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px;
+  padding-bottom: 11px; border-bottom: 1px solid var(--line); }
+.profile-section-title .eyebrow { margin: 0; }
+.profile-section-title h2 { font-size: 21px; font-weight: 700; letter-spacing: .01em; }
+.profile-timeline { overflow: hidden; }
+
+.profile-info, .profile-teams { overflow: hidden; }
+.profile-info-body { padding: 20px; }
+.profile-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px; margin: 0; }
+.profile-fact { min-width: 0; padding-bottom: 13px; border-bottom: 1px solid var(--line); }
+.profile-fact dt { margin-bottom: 6px; color: var(--mute);
+  font: 600 10px 'JetBrains Mono', monospace; letter-spacing: .12em; text-transform: uppercase; }
+.profile-fact dd { margin: 0; color: var(--ink); font-size: 14px; overflow-wrap: anywhere; }
+.profile-fact dd a { color: var(--storm); }
+.profile-fact dd a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.profile-fact-icon { display: flex; align-items: center; gap: 8px; }
+.profile-role-icon, .profile-brand-icon { width: 22px; height: 22px; flex: 0 0 22px;
+  border-radius: 4px; object-fit: contain; background: rgba(79,179,242,0.12); }
+.profile-brand-icon { padding: 2px; filter: grayscale(1) brightness(1.65); }
+.profile-description { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.profile-description h2 { margin-bottom: 8px; font-size: 16px; font-weight: 700; }
+.profile-description p { color: var(--mute); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+
+.profile-team-list { display: flex; flex-direction: column; }
+.profile-team-row { display: flex; align-items: center; gap: 11px; min-width: 0;
+  padding: 13px 16px; border-bottom: 1px solid var(--line); color: var(--ink);
+  font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 14.5px; }
+.profile-team-row:last-child { border-bottom: 0; }
+.profile-team-row:hover { background: var(--panel2); color: var(--storm); }
+.profile-team-row > span:not(.badge) { min-width: 0; flex: 1; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+.profile-team-row > svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--mute); }
+.profile-team-row:hover > svg { color: var(--storm); }
+.profile-team-empty { padding: 20px; color: var(--mute); font-size: 14px; }
+.profile-gate { display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; max-width: 680px; padding: 22px 24px; }
+.profile-gate p { color: var(--mute); }
+.profile-gate .btn { flex-shrink: 0; }
+
+@media (max-width: 640px) {
+  .profile-avatar { width: 88px; height: 88px; flex-basis: 88px; border-radius: 13px; font-size: 26px; }
+  .profile-facts { grid-template-columns: 1fr; }
+  .profile-section-title { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .profile-gate { align-items: stretch; flex-direction: column; }
+  .profile-gate .btn { justify-content: center; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .arch-summary, .arch-summary svg { transition: none; }
 }

@@ -17,7 +17,11 @@
     shields' smallLogo + channels here to avoid the card's N+1.
 
     Frozen match URL /match/view/:id lives in the card. Null group key (a match
-    with neither division nor playoff) labels as "Other". Empty -> muted note. -#}
+    with neither division nor playoff) labels as "Other". Profile's type=sloth
+    branch intentionally passes revealScore=true (the frozen profile unmasked
+    every score after render); the existing team branch remains false. Empty
+    copy names the current entity without changing team-page output. -#}
+{%- set isSloth = __SELF__.property('type') == 'sloth' -%}
 {% if __SELF__.matches and __SELF__.matches|length > 0 %}
 <div class="team-match-tabs tabs" data-tabs role="tablist" aria-label="Match group">
     {% for group, groupMatches in __SELF__.matches %}
@@ -30,12 +34,12 @@
     {#- A grouped collection never yields an empty group (groupBy only creates a
         key when a match maps to it), so no per-group empty branch is needed. -#}
     {% for m in groupMatches %}
-    {% partial 'match/card' match=m variant=(m.is_played ? 'result' : 'fixture') revealScore=false withDivision=false %}
+    {% partial 'match/card' match=m variant=(m.is_played ? 'result' : 'fixture') revealScore=isSloth withDivision=false %}
     {% endfor %}
 </div>
 {% endfor %}
 {% else %}
 <div class="p chamfer team-match-empty">
-    <p>No matches yet. When this team plays, results and fixtures will appear here.</p>
+    <p>No matches yet. When this {{ isSloth ? 'player competes' : 'team plays' }}, results and fixtures will appear here.</p>
 </div>
 {% endif %}

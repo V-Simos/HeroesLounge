@@ -1,0 +1,25 @@
+title = "Profile"
+url = "/user/view/:id"
+layout = "default"
+is_hidden = 0
+
+[Profile]
+maxTimelineEntries = 5
+==
+<?php
+function onEnd()
+{
+    // SANCTIONED DEVIATION: the frozen page returns HTTP 200 with an empty
+    // profile shell for an unknown id. Match Task 5's established detail-page
+    // behavior by resolving the model here for a useful title and real 404.
+    $sloth = \Rikki\Heroeslounge\Models\Sloth::find($this->param('id'));
+    if ($sloth) {
+        $this->page->title = $sloth->title;
+    } else {
+        $this->page->title = 'Profile not found';
+        $this->setStatusCode(404);
+    }
+}
+?>
+==
+{% component 'Profile' %}
