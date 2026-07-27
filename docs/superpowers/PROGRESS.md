@@ -70,7 +70,7 @@ Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
 | 1 — Forgot password `/user/forgotpassword` | ✅ | ✅ | ✅ (1 fix round; approved) | 2625539, 4deb149, e38d06b |
 | 2 — Account: guest half (signin/register) | ✅ | ✅ | ✅ (approved; 1 minor deferred) | 140f2a8 |
 | 3 — Account: authed half (tabs/update forms) | ✅ | ✅ | ✅ (1 fix round; approved) | d1ff863, 8787dff |
-| 4 — Profile `/user/view/:id` | | | | |
+| 4 — Profile `/user/view/:id` | ✅ | ✅ | ✅ (approved; verifier minors deferred) | c6176ed |
 | 5 — Caster schedule `/user/casterschedule` | | | | |
 | 6 — Events archive port + Events link | | | | |
 | 7 — Guides static-pages port | | | | |
@@ -133,6 +133,21 @@ verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
 - Browser interaction/visual/console coverage and the project-wide complete
   ARIA tabs pattern remain for Task 8. External Discord, MailChimp, mail, and
   dead-session notification paths remain wiring-only.
+
+### Notes from Phase 3 Task 4 (profile)
+
+- Ported `/user/view/:id` with lowercase `profile` and `slothstatistics`
+  overrides, the frozen guest gate, and the established sanctioned 404 for an
+  unknown sloth (replacing the frozen 200 empty shell).
+- Verified user 41 and a timeline-rich profile, guest and bad-ID states,
+  data-blind match/stat empty states, and a temporary revealed-score sloth
+  participation. The temporary row and auto-increment were restored exactly.
+- The shared `roundMatches` partial now reveals scores only for `type='sloth'`.
+  `/team/view/AO` remained byte-identical before/after (same response hash,
+  length, grouping tabs, and masked-score count).
+- Review approved the complete profile/stat data contract. Task 8 carries two
+  verifier-only minors: structurally assert the executable guest gate after
+  stripping Twig comments, and cover popularity/map output fields.
 
 ### Notes from Task 0 (bracket spike — proven, de-risked)
 
