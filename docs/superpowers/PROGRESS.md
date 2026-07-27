@@ -75,7 +75,7 @@ Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
 | 5 — Caster schedule `/user/casterschedule` | ✅ | ✅ | ✅ (1 fix round; approved) | 864a3c7, acbf89d |
 | 6 — Events archive port + Events link | ✅ | ✅ | ✅ (3 fix rounds; approved) | 6ffa2ad, 83b745b, 60004cd, 69191e6 |
 | 7 — Guides static-pages port | ✅ | ✅ | ✅ (approved) | 1c09098 |
-| 8 — Phase-3 finishing pass | ✅ | ✅ (phase-wide contract pass) | ✅ (whole-phase review approved after 2 fix rounds) | c2216f0, ffbe6f3, 172f5ff, 61a5035, 239b294, 58c48f1, a5b5724 |
+| 8 — Phase-3 finishing pass | ✅ | ✅ (phase-wide contract pass) | ✅ (whole-phase review approved after 2 fix rounds) | c2216f0, ffbe6f3, 172f5ff, 61a5035, 239b294, 58c48f1, a5b5724, fb3b2d1 |
 
 Design facts that drove the spec (verified live 2026-07-24, this session): the
 blog is **Indikator.Content** (NOT RainLab.Blog — query the `indikator_content_*`

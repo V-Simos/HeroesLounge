@@ -26,8 +26,6 @@ Phase 3 sources:
 
 - Spec: `docs/superpowers/specs/2026-07-24-phase-3-user-auth-design.md`
 - Plan: `docs/superpowers/plans/2026-07-24-phase-3-user-auth.md`
-- Finishing report:
-  `.superpowers/sdd/2026-07-24-phase-3-user-auth/task-8-report.md`
 
 ## Verified Phase-3 routes
 
