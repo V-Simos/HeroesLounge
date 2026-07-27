@@ -73,7 +73,7 @@ Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
 | 4 — Profile `/user/view/:id` | ✅ | ✅ | ✅ (approved; verifier minors deferred) | c6176ed |
 | 5 — Caster schedule `/user/casterschedule` | ✅ | ✅ | ✅ (1 fix round; approved) | 864a3c7, acbf89d |
 | 6 — Events archive port + Events link | ✅ | ✅ | ✅ (3 fix rounds; approved) | 6ffa2ad, 83b745b, 60004cd, 69191e6 |
-| 7 — Guides static-pages port | | | | |
+| 7 — Guides static-pages port | ✅ | ✅ | ✅ (approved) | 1c09098 |
 | 8 — Phase-3 finishing pass | | | | |
 
 Design facts that drove the spec (verified live 2026-07-24, this session): the
@@ -176,6 +176,22 @@ verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
 - Review added a visible underline affordance for archive entries, then scoped
   it beneath the Events-only page class so Season Archive `.season-link`
   colors, decoration, and hover behavior remain unchanged.
+
+### Notes from Phase 3 Task 7 (guides)
+
+- Added the Guides-only RainLab.Pages manifest, seven frozen content files, and
+  a static layout mirroring default chrome/components around the existing
+  blog-prose typography. Every body matches its frozen source after normalizing
+  only the `viewBag.layout` value.
+- All seven source-governed URLs and the nav/footer guide targets returned 200
+  after cache clear; unrelated static pages remain outside the manifest.
+- Frozen source front matter governs the First Game URL
+  `/guides/scheduling-and-playing-your-first-game`; the plan's verification
+  list contains a contradictory `guide/.../frist` typo and no alias was added.
+- The frozen First Game body contains six `<h1>` section headings. Task 7
+  preserves them byte-verbatim and the layout adds none. Semantic demotion
+  requires an explicit future content-migration decision; Task 8 should record,
+  not silently rewrite, this known source artifact.
 
 ### Notes from Task 0 (bracket spike — proven, de-risked)
 
