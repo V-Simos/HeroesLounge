@@ -129,6 +129,18 @@
 .post-foot .post-tags a:hover span { color: var(--ink); }
 .post-siblings { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 56px; }
 .post-siblings .eyebrow { margin-bottom: 12px; }
+
+/* ---------- frozen static guides (layouts/static.htm) ----------
+   The body HTML is intentionally copied verbatim from the legacy theme and
+   rendered through the same .post-content prose treatment as blog posts. The
+   static-only rules cover legacy heading levels and the layout-owned title. */
+.static-head { max-width: 72ch; margin-bottom: 30px; }
+.static-head h1, .static-content > h1 { font-size: clamp(1.9rem, 4.2vw, 2.9rem); font-weight: 700;
+  line-height: 1.1; text-wrap: balance; }
+.static-content h4 { font-family: 'Chakra Petch', sans-serif; line-height: 1.25; margin-top: 26px; }
+.static-content figure { max-width: 100%; }
+.static-content figcaption { margin-top: 8px; color: var(--mute); font-size: .9em; }
+.static-content .alert { border-left: 3px solid var(--storm); background: var(--panel); padding: 12px 16px; color: var(--mute); }
 @media (max-width: 720px) {
   .post-siblings { grid-template-columns: 1fr; }
 }
