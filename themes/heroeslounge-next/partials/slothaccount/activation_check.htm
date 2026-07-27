@@ -1,0 +1,11 @@
+{#- SlothAccount::activation_check keeps the frozen conditional, copy, and
+    onSendActivationEmail request handler. -#}
+{% if not user.is_activated %}
+    <div class="auth-activation">
+        <h2>Your email address has not yet been verified.</h2>
+        <p>
+            You should verify your account otherwise it may be deleted. Please check your email to verify.
+            <a class="auth-link" href="javascript:;" data-request="onSendActivationEmail">Send the verification email again</a>.
+        </p>
+    </div>
+{% endif %}

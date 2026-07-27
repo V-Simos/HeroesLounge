@@ -1,0 +1,16 @@
+{#- SlothAccount::signin keeps the frozen onSignin/login/password request
+    contract while using the shared auth form primitives. -#}
+<form data-request="onSignin" data-request-flash>
+    <div class="field">
+        <label for="userSigninLogin">{{ loginAttributeLabel }}</label>
+        <input name="login" type="text" class="input" id="userSigninLogin" placeholder="Enter your {{ loginAttributeLabel|lower }}" autocomplete="email">
+    </div>
+
+    <div class="field">
+        <label for="userSigninPassword">Password</label>
+        <input name="password" type="password" class="input" id="userSigninPassword" placeholder="Enter your password" autocomplete="current-password">
+    </div>
+
+    <button type="submit" class="btn btn-solid auth-submit">Sign in</button>
+    <a class="auth-link" href="{{ 'user/forgotpassword'|page }}">Forgot Password?</a>
+</form>

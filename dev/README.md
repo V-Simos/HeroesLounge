@@ -79,6 +79,9 @@ docker compose -f dev/docker-compose.yml exec -T web php artisan fixtures:live-d
 
 ## Useful URLs
 
+- `http://localhost:8090/user` — account sign-in and registration. Its new-theme page intentionally keeps
+  `forceSecure = 1`; for local HTTP-only account verification, temporarily change that one page property to
+  `0`, clear October's cache, and restore `1` before committing. Never commit the local-only flip.
 - `http://localhost:8090/` — home (blog posts from fixtures)
 - `http://localhost:8090/season-30` — season overview
 - `http://localhost:8090/season-30/division-1` — division page (standings,
