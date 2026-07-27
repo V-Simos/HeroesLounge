@@ -1,0 +1,14 @@
+{#- Theme-wide RainLab.Location country control. Keep the markup-helper
+    contract intact; only the wrapper and visible label are themed. -#}
+{% set countryId = countryId|default(form_value('country_id')) %}
+
+<div class="field">
+    <label for="accountCountry">Country</label>
+    {{ form_select_country('country_id', countryId, {
+        id: 'accountCountry',
+        class: 'select',
+        style: 'height:auto ',
+        emptyOption: '',
+        'data-request': 'onInit'
+    }) }}
+</div>

@@ -1,0 +1,304 @@
+{#- Authenticated SlothAccount update override. Handler names, form fields, and
+    conditional branches mirror the frozen component; presentation is theme-only. -#}
+<div class="account-update" data-tabs>
+    <div class="account-tabs tabs" role="tablist" aria-label="Account settings">
+        <button class="tab on" type="button" role="tab" aria-selected="true" aria-controls="account-general" data-tab-target="account-general">General</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="account-media" data-tab-target="account-media">Media</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="account-social" data-tab-target="account-social">Social</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="account-game" data-tab-target="account-game">Game</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="account-apps" data-tab-target="account-apps">Applications [{{ __SELF__.appsCount }}]</button>
+        {% if this.session.get('notifications') %}
+            <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="account-notifications" data-tab-target="account-notifications">Notifications [{{ this.session.get('notifications') | length }}]</button>
+        {% endif %}
+    </div>
+
+    <section class="p account-panel" id="account-general" role="tabpanel">
+        <h2 class="p-head">General</h2>
+        <div class="account-panel-body account-general-grid">
+            <section class="account-form-section" aria-labelledby="account-credentials-title">
+                <div>
+                    <p class="eyebrow">Identity</p>
+                    <h3 id="account-credentials-title">Credentials</h3>
+                </div>
+
+                {{ form_open({request: 'onUpdateGeneral', model: user }) }}
+                    {# Visible labels replace the frozen sr-only idiom so every account
+                       field remains identifiable without relying on placeholder text. #}
+                    <div class="account-form-grid">
+                        <div class="field">
+                            <label for="accountUsername">Username</label>
+                            <input class="input" id="accountUsername" placeholder="Username" type="text" name="username" value="{{ form_value('username') }}" autocomplete="username">
+                        </div>
+
+                        <div class="field">
+                            <label for="accountPassword">Password</label>
+                            <input class="input" id="accountPassword" placeholder="Enter your new password" type="password" name="password" autocomplete="new-password">
+                        </div>
+
+                        <div class="field">
+                            <label for="accountPasswordConfirmation">Password confirmation</label>
+                            <input class="input" id="accountPasswordConfirmation" placeholder="Enter your new password again" type="password" name="password_confirmation" autocomplete="new-password">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-solid account-submit">Save credentials</button>
+                {{ form_close() }}
+            </section>
+
+            <aside class="account-newsletter" aria-labelledby="account-newsletter-title">
+                <p class="eyebrow">Inbox</p>
+                <h3 id="account-newsletter-title">Newsletter</h3>
+                {% if user.sloth.newsletter_subscription %}
+                    {{ form_open({request: 'onUnsubscribeNewsletter', model: user }) }}
+                        <p>You are currently subscribed to our newsletter.</p>
+                        <button type="submit" class="btn btn-ghost btn-sm">Unsubscribe</button>
+                    {{ form_close() }}
+                {% else %}
+                    {{ form_open({request: 'onSubscribeNewsletter', model: user }) }}
+                        <p>You are currently not subscribed to our newsletter.</p>
+                        <button type="submit" class="btn btn-ghost btn-sm">Subscribe</button>
+                    {{ form_close() }}
+                {% endif %}
+            </aside>
+        </div>
+    </section>
+
+    <section class="p account-panel" id="account-media" role="tabpanel" hidden>
+        <h2 class="p-head">Media</h2>
+        {% set accountMediaPlaceholder = 'assets/img/game-stat-placeholder.svg'|theme %}
+        {#- Dynamic attachment paths can be empty or stale. As on the Task-5 image
+            surfaces, null the handler before swapping to the neutral tile so a
+            missing fallback cannot create an error loop. -#}
+        <div class="account-panel-body account-media-list">
+            <section class="account-media-row" aria-labelledby="account-avatar-title">
+                <div class="account-media-form">
+                    <div>
+                        <p class="eyebrow">Square identity</p>
+                        <h3 id="account-avatar-title">Avatar</h3>
+                    </div>
+
+                    {{ form_open({request: 'onUpdateAvatar', model: user, files: true }) }}
+                        <div class="fileselect">
+                            <label class="account-file-button">
+                                <span class="btn btn-ghost">Browse..</span>
+                                <input type="file" accept="image/png" name="avatar" style="display:none">
+                            </label>
+                            <input type="text" class="input account-filename" readonly aria-label="Selected avatar file" aria-describedby="shortLogoBlock">
+                            <small id="avatarUploadError" class="account-upload-error" role="alert"></small>
+                            <small class="account-help">Uploading a new avatar will replace your current avatar.<br />
+                                Image must be a PNG, under 100MB, and under 1280x1280 pixels.</small>
+                        </div>
+                        <button type="submit" class="btn btn-solid account-submit">Submit avatar</button>
+                    {{ form_close() }}
+                </div>
+
+                <figure class="account-media-preview account-avatar-preview">
+                    <img src="{{ __SELF__.sloth.user.avatar.path }}" alt="Avatar" title="Avatar" loading="lazy" onerror="this.onerror=null;this.src='{{ accountMediaPlaceholder }}'">
+                    <figcaption class="account-help" id="shortLogoBlock">
+                        The Avatar will be used to recognize you even if no username is shown.<br />
+                        We suggest to take a square image e.g. 128x128 Pixel.
+                    </figcaption>
+                </figure>
+            </section>
+
+            <section class="account-media-row" aria-labelledby="account-banner-title">
+                <div class="account-media-form">
+                    <div>
+                        <p class="eyebrow">Profile backdrop</p>
+                        <h3 id="account-banner-title">Banner</h3>
+                    </div>
+
+                    {{ form_open({request: 'onUpdateBanner', model: user, files: true }) }}
+                        <div class="fileselect">
+                            <label class="account-file-button">
+                                <span class="btn btn-ghost">Browse..</span>
+                                <input type="file" accept="image/png" name="banner" style="display:none">
+                            </label>
+                            <input type="text" class="input account-filename" readonly aria-label="Selected banner file" aria-describedby="shortBannerBlock">
+                            <small id="bannerUploadError" class="account-upload-error" role="alert"></small>
+                            <small class="account-help">Uploading a new banner will replace your current banner.<br />
+                                Image must be a PNG and under 100MB in size.</small>
+                        </div>
+                        <button type="submit" class="btn btn-solid account-submit">Submit banner</button>
+                    {{ form_close() }}
+                </div>
+
+                <figure class="account-media-preview account-banner-preview">
+                    <img src="{{ __SELF__.sloth.banner.path }}" alt="Banner" title="Banner" loading="lazy" onerror="this.onerror=null;this.src='{{ accountMediaPlaceholder }}'">
+                    <figcaption class="account-help" id="shortBannerBlock">
+                        The Banner will be used to spice up your Profile Page.<br />
+                        We suggest to take a rectangular image e.g. 1000x250 Pixel.
+                    </figcaption>
+                </figure>
+            </section>
+        </div>
+    </section>
+
+    <section class="p account-panel" id="account-social" role="tabpanel" hidden>
+        <h2 class="p-head">Social</h2>
+        <div class="account-panel-body account-social-body">
+            <section class="account-form-section" aria-labelledby="account-description-title">
+                <div>
+                    <p class="eyebrow">Profile</p>
+                    <h3 id="account-description-title">Description</h3>
+                </div>
+
+                {{ form_open({request: 'onUpdateDescription', model: user }) }}
+                    <div class="field">
+                        <label for="accountDescription">Short description</label>
+                        <textarea class="textarea" id="accountDescription" placeholder="Tell us something about yourself!" name="short_description" maxlength="255" rows="4" aria-describedby="shortDescBlock">{{ __SELF__.sloth.short_description | striptags }}</textarea>
+                        <small class="account-help" id="shortDescBlock">Can be 255 characters long.</small>
+                    </div>
+                    <button type="submit" class="btn btn-solid account-submit">Update description</button>
+                {{ form_close() }}
+            </section>
+
+            <section class="account-form-section" aria-labelledby="account-links-title">
+                <div>
+                    <p class="eyebrow">Connections</p>
+                    <h3 id="account-links-title">Links and accounts</h3>
+                </div>
+
+                <form class="account-links-form">
+                    <div class="account-links-grid">
+                        <div class="field account-icon-field">
+                            <label for="accountFacebook">Facebook URL</label>
+                            <span class="account-input-icon">{% partial 'site/icon' name='facebook' %}</span>
+                            <input class="input" id="accountFacebook" placeholder="Facebook URL" type="text" name="facebook_url" value="{{ __SELF__.sloth.facebook_url }}">
+                        </div>
+
+                        <div class="field account-icon-field">
+                            <label for="accountTwitter">Twitter URL</label>
+                            <span class="account-input-icon">{% partial 'site/icon' name='twitter' %}</span>
+                            <input class="input" id="accountTwitter" placeholder="Twitter URL" type="text" name="twitter_url" value="{{ __SELF__.sloth.twitter_url }}">
+                        </div>
+
+                        <div class="field account-icon-field">
+                            <label for="accountTwitch">Twitch URL</label>
+                            <span class="account-input-icon">{% partial 'site/icon' name='twitch' %}</span>
+                            <input class="input" id="accountTwitch" placeholder="Twitch URL" type="text" name="twitch_url" value="{{ __SELF__.sloth.twitch_url }}">
+                        </div>
+
+                        <div class="field account-icon-field">
+                            <label for="accountYoutube">YouTube URL</label>
+                            <span class="account-input-icon">{% partial 'site/icon' name='youtube' %}</span>
+                            <input class="input" id="accountYoutube" placeholder="YouTube URL" type="text" name="youtube_url" value="{{ __SELF__.sloth.youtube_url }}">
+                        </div>
+
+                        <div class="field account-icon-field">
+                            <label for="accountWebsite">Website URL</label>
+                            <span class="account-input-icon">{% partial 'site/icon' name='globe' %}</span>
+                            <input class="input" id="accountWebsite" placeholder="Website URL" type="url" name="website_url" value="{{ __SELF__.sloth.website_url }}">
+                        </div>
+
+                        <div class="field account-icon-field">
+                            <label for="accountDiscord">Discord tag</label>
+                            <span class="account-input-icon account-brand-icon"><img src="{{ 'assets/img/discord.svg'|theme }}" alt="" aria-hidden="true"></span>
+                            {% if __SELF__.sloth.discord_id %}
+                                <div class="account-input-action">
+                                    <input class="input" id="accountDiscord" placeholder="DiscordTag" type="text" name="discord_tag" disabled value="{{ __SELF__.sloth.discord_tag }}">
+                                    <button data-request="{{ __SELF__ }}::onSyncDiscord" title="Fetch new Discord tag from Discord" class="account-sync" type="button" aria-label="Fetch new Discord tag from Discord">
+                                        {% partial 'site/icon' name='radio' %}
+                                    </button>
+                                </div>
+                            {% else %}
+                                <input class="input" id="accountDiscord" placeholder="DiscordTag" title="Discord Tag" type="text" name="discord_tag" value="{{ __SELF__.sloth.discord_tag }}">
+                            {% endif %}
+                        </div>
+
+                        <div class="field account-icon-field">
+                            <label for="accountBattleTag">BattleTag</label>
+                            <span class="account-input-icon account-brand-icon"><img src="{{ 'assets/img/battlenet.svg'|theme }}" alt="" aria-hidden="true"></span>
+                            <input class="input" id="accountBattleTag" placeholder="BattleTag" type="text" name="battle_tag" disabled title="Battle Tag - talk to a moderator on Discord if this has changed" value="{{ __SELF__.sloth.battle_tag }}">
+                        </div>
+
+                        {% partial 'user/country-select' countryId=user.country_id %}
+
+                        <div class="field">
+                            <label for="regionSelect">Region</label>
+                            <select class="select" name="region_id" id="regionSelect">
+                                <option value="1" {% if __SELF__.sloth.region_id=="1"%}selected="selected"{%endif%}>EU</option>
+                                <option value="2" {% if __SELF__.sloth.region_id=="2"%}selected="selected"{%endif%}>NA</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-solid account-submit" name="submit" data-request="{{ __SELF__ }}::onUpdateLinks">Update social information</button>
+                </form>
+            </section>
+        </div>
+    </section>
+
+    <section class="p account-panel" id="account-game" role="tabpanel" hidden>
+        <h2 class="p-head">Game</h2>
+        <div class="account-panel-body">
+            <section class="account-form-section" aria-labelledby="account-game-title">
+                <div>
+                    <p class="eyebrow">Heroes of the Storm</p>
+                    <h3 id="account-game-title">Play settings</h3>
+                </div>
+
+                {{ form_open({request: 'onUpdateGame', model: user }) }}
+                    <input type="hidden" name="tab" value="game">
+                    <div class="account-form-grid">
+                        <div class="field">
+                            <label for="accountRole">Role</label>
+                            <select class="select" id="accountRole" name="role_id">
+                                {% for role in __SELF__.roles %}
+                                    <option value="{{ role.id }}" {% if __SELF__.sloth.role_id == role.id %}selected{% endif %}>{{ role.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {% if __SELF__.sloth.region_id == 2 %}
+                            <div class="field">
+                                <label for="registerServer">Server preference</label>
+                                <select class="select" name="server_preference" id="registerServer">
+                                    <option value="NA West" {% if __SELF__.sloth.server_preference=="NA West"%}selected="selected"{%endif%}>NA West</option>
+                                    <option value="NA Central" {% if __SELF__.sloth.server_preference=="NA Central"%}selected="selected"{%endif%}>NA Central</option>
+                                </select>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-solid account-submit">Save</button>
+                {{ form_close() }}
+            </section>
+        </div>
+    </section>
+
+    <section class="p account-panel" id="account-apps" role="tabpanel" hidden>
+        <h2 class="p-head">Applications</h2>
+        <div class="account-panel-body account-apps-body">
+            <aside class="account-application-callout">
+                <div>
+                    <p class="eyebrow">Team finder</p>
+                    <h3>Ready for a roster?</h3>
+                    <p>Create a new application and let captains know how you play.</p>
+                </div>
+                {#- Deferred application pages keep their frozen routes as literals:
+                    the active theme has no matching page yet and |page emits href="". -#}
+                <a class="btn btn-solid" href="/application">Create a new application</a>
+            </aside>
+
+            {% component 'viewApps' %}
+        </div>
+    </section>
+
+    {% if this.session.get('notifications') %}
+        <section class="p account-panel" id="account-notifications" role="tabpanel" hidden>
+            <h2 class="p-head">Notifications</h2>
+            <div class="account-notice-list">
+                {% for notification in this.session.get('notifications') %}
+                    <article class="note{% if notification.type == 'error' %} hot{% endif %}">
+                        {% partial 'site/icon' name='bell' %}
+                        <p>
+                            <strong>{{ notification.type|capitalize }}</strong>
+                            {{ notification.message }}
+                        </p>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+</div>
