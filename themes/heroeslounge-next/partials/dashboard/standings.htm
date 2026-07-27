@@ -32,13 +32,13 @@
         {% if entries|length > 1 %}
         <div class="tabs" data-tabs role="tablist" aria-label="Your teams">
             {% for e in entries %}
-            <button class="tab{% if loop.first %} on{% endif %}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="dash-standings-{{ e.div.id }}-{{ e.team.id }}" data-tab-target="dash-standings-{{ e.div.id }}-{{ e.team.id }}">{% partial 'site/initials' name=e.team.title %} · {{ e.div.title|upper|replace({'DIVISION ': 'DIV '}) }}</button>
+            <button class="tab{% if loop.first %} on{% endif %}" id="dash-standings-tab-{{ e.div.id }}-{{ e.team.id }}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="dash-standings-{{ e.div.id }}-{{ e.team.id }}" tabindex="{{ loop.first ? '0' : '-1' }}" data-tab-target="dash-standings-{{ e.div.id }}-{{ e.team.id }}">{% partial 'site/initials' name=e.team.title %} · {{ e.div.title|upper|replace({'DIVISION ': 'DIV '}) }}</button>
             {% endfor %}
         </div>
         {% endif %}
     </div>
     {% for e in entries %}
-    <div id="dash-standings-{{ e.div.id }}-{{ e.team.id }}" role="tabpanel"{% if not loop.first %} hidden{% endif %}>
+    <div id="dash-standings-{{ e.div.id }}-{{ e.team.id }}" role="tabpanel" aria-labelledby="dash-standings-tab-{{ e.div.id }}-{{ e.team.id }}"{% if not loop.first %} hidden{% endif %}>
         {% component 'DivisionTable' id = e.div.id teamId = e.team.id %}
         {#- Division page URL pattern frozen from the old theme's
             pages/season/division.htm (url = "/:slug/:divslug"); playoff

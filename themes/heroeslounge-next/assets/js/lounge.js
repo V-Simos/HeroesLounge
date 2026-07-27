@@ -5,24 +5,79 @@
     'use strict';
 
     /* ---------- tabs ----------
-       [data-tabs] container delegates clicks from buttons carrying
-       data-tab-target="<panel-id>"; .on marks the active button, panels
-       toggle via the [hidden] attribute (see components.css .tabs/.table). */
-    document.querySelectorAll('[data-tabs]').forEach(function (tabs) {
-        tabs.addEventListener('click', function (e) {
-            var btn = e.target.closest('[data-tab-target]');
-            if (!btn || btn.closest('[data-tabs]') !== tabs) return; // ignore clicks belonging to a nested [data-tabs]
-            var target = document.getElementById(btn.dataset.tabTarget);
-            if (!target) return;
-            tabs.querySelectorAll('[data-tab-target]').forEach(function (b) {
-                b.classList.toggle('on', b === btn);
-                // aria-selected only on role="tab" (bare aria-selected on a plain button fails axe aria-allowed-attr); Task 6+ templates wanting ARIA tab semantics must provide role="tablist"/"tab"/"tabpanel" + aria-controls themselves — plain buttons stay Tab/Enter operable without it.
-                if (b.getAttribute('role') === 'tab') b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
-                var panel = document.getElementById(b.dataset.tabTarget);
-                if (panel) panel.hidden = panel !== target;
-            });
+       [data-tabs] delegates activation for role=tab buttons carrying
+       data-tab-target="<panel-id>". The active tab alone stays in the page Tab
+       sequence; Left/Right/Home/End move focus and activate per the ARIA APG.
+       Nested tab sets are isolated through the nearest [data-tabs] owner. */
+    function tabButtons(tabs) {
+        return Array.prototype.filter.call(
+            tabs.querySelectorAll('[role="tab"][data-tab-target]'),
+            function (button) { return button.closest('[data-tabs]') === tabs; }
+        );
+    }
+
+    function activateTab(tabs, button, moveFocus) {
+        var buttons = tabButtons(tabs);
+        var target = document.getElementById(button.dataset.tabTarget);
+        if (!target) return;
+
+        buttons.forEach(function (candidate) {
+            var selected = candidate === button;
+            candidate.classList.toggle('on', selected);
+            candidate.setAttribute('aria-selected', selected ? 'true' : 'false');
+            candidate.setAttribute('tabindex', selected ? '0' : '-1');
+            var panel = document.getElementById(candidate.dataset.tabTarget);
+            if (panel) panel.hidden = !selected;
         });
-    });
+
+        if (moveFocus) button.focus();
+    }
+
+    function initializeTabs(tabs) {
+        var buttons = tabButtons(tabs);
+        if (!buttons.length) return;
+
+        var selected = buttons.filter(function (button) {
+            return button.getAttribute('aria-selected') === 'true' || button.classList.contains('on');
+        })[0] || buttons[0];
+        activateTab(tabs, selected, false);
+
+        tabs.addEventListener('click', function (event) {
+            var button = event.target.closest('[role="tab"][data-tab-target]');
+            if (!button || button.closest('[data-tabs]') !== tabs) return;
+            activateTab(tabs, button, false);
+        });
+
+        tabs.addEventListener('keydown', function (event) {
+            var button = event.target.closest('[role="tab"][data-tab-target]');
+            if (!button || button.closest('[data-tabs]') !== tabs) return;
+
+            var currentButtons = tabButtons(tabs);
+            var index = currentButtons.indexOf(button);
+            var nextIndex;
+            switch (event.key) {
+                case 'ArrowLeft':
+                    nextIndex = (index - 1 + currentButtons.length) % currentButtons.length;
+                    break;
+                case 'ArrowRight':
+                    nextIndex = (index + 1) % currentButtons.length;
+                    break;
+                case 'Home':
+                    nextIndex = 0;
+                    break;
+                case 'End':
+                    nextIndex = currentButtons.length - 1;
+                    break;
+                default:
+                    return;
+            }
+
+            event.preventDefault();
+            activateTab(tabs, currentButtons[nextIndex], true);
+        });
+    }
+
+    document.querySelectorAll('[data-tabs]').forEach(initializeTabs);
 
     /* ---------- countdowns ----------
        Every [data-countdown="<datetime>"] ticks down as "xD HH:MM:SS"

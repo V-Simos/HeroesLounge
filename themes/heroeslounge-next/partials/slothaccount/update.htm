@@ -2,17 +2,17 @@
     conditional branches mirror the frozen component; presentation is theme-only. -#}
 <div class="account-update" data-tabs>
     <div class="account-tabs tabs" role="tablist" aria-label="Account settings">
-        <button class="tab on" type="button" role="tab" aria-selected="true" aria-controls="account-general" data-tab-target="account-general">General</button>
-        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="account-media" data-tab-target="account-media">Media</button>
-        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="account-social" data-tab-target="account-social">Social</button>
-        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="account-game" data-tab-target="account-game">Game</button>
-        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="account-apps" data-tab-target="account-apps">Applications [{{ __SELF__.appsCount }}]</button>
+        <button class="tab on" id="account-general-tab" type="button" role="tab" aria-selected="true" aria-controls="account-general" tabindex="0" data-tab-target="account-general">General</button>
+        <button class="tab" id="account-media-tab" type="button" role="tab" aria-selected="false" aria-controls="account-media" tabindex="-1" data-tab-target="account-media">Media</button>
+        <button class="tab" id="account-social-tab" type="button" role="tab" aria-selected="false" aria-controls="account-social" tabindex="-1" data-tab-target="account-social">Social</button>
+        <button class="tab" id="account-game-tab" type="button" role="tab" aria-selected="false" aria-controls="account-game" tabindex="-1" data-tab-target="account-game">Game</button>
+        <button class="tab" id="account-apps-tab" type="button" role="tab" aria-selected="false" aria-controls="account-apps" tabindex="-1" data-tab-target="account-apps">Applications [{{ __SELF__.appsCount }}]</button>
         {% if this.session.get('notifications') %}
-            <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="account-notifications" data-tab-target="account-notifications">Notifications [{{ this.session.get('notifications') | length }}]</button>
+            <button class="tab" id="account-notifications-tab" type="button" role="tab" aria-selected="false" aria-controls="account-notifications" tabindex="-1" data-tab-target="account-notifications">Notifications [{{ this.session.get('notifications') | length }}]</button>
         {% endif %}
     </div>
 
-    <section class="p account-panel" id="account-general" role="tabpanel">
+    <section class="p account-panel" id="account-general" role="tabpanel" aria-labelledby="account-general-tab">
         <h2 class="p-head">General</h2>
         <div class="account-panel-body account-general-grid">
             <section class="account-form-section" aria-labelledby="account-credentials-title">
@@ -63,7 +63,7 @@
         </div>
     </section>
 
-    <section class="p account-panel" id="account-media" role="tabpanel" hidden>
+    <section class="p account-panel" id="account-media" role="tabpanel" aria-labelledby="account-media-tab" hidden>
         <h2 class="p-head">Media</h2>
         {% set accountMediaPlaceholder = 'assets/img/game-stat-placeholder.svg'|theme %}
         {#- Dynamic attachment paths can be empty or stale. As on the Task-5 image
@@ -134,7 +134,7 @@
         </div>
     </section>
 
-    <section class="p account-panel" id="account-social" role="tabpanel" hidden>
+    <section class="p account-panel" id="account-social" role="tabpanel" aria-labelledby="account-social-tab" hidden>
         <h2 class="p-head">Social</h2>
         <div class="account-panel-body account-social-body">
             <section class="account-form-section" aria-labelledby="account-description-title">
@@ -229,7 +229,7 @@
         </div>
     </section>
 
-    <section class="p account-panel" id="account-game" role="tabpanel" hidden>
+    <section class="p account-panel" id="account-game" role="tabpanel" aria-labelledby="account-game-tab" hidden>
         <h2 class="p-head">Game</h2>
         <div class="account-panel-body">
             <section class="account-form-section" aria-labelledby="account-game-title">
@@ -267,7 +267,7 @@
         </div>
     </section>
 
-    <section class="p account-panel" id="account-apps" role="tabpanel" hidden>
+    <section class="p account-panel" id="account-apps" role="tabpanel" aria-labelledby="account-apps-tab" hidden>
         <h2 class="p-head">Applications</h2>
         <div class="account-panel-body account-apps-body">
             <aside class="account-application-callout">
@@ -286,7 +286,7 @@
     </section>
 
     {% if this.session.get('notifications') %}
-        <section class="p account-panel" id="account-notifications" role="tabpanel" hidden>
+        <section class="p account-panel" id="account-notifications" role="tabpanel" aria-labelledby="account-notifications-tab" hidden>
             <h2 class="p-head">Notifications</h2>
             <div class="account-notice-list">
                 {% for notification in this.session.get('notifications') %}

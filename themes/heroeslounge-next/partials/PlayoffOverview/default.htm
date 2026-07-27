@@ -182,21 +182,21 @@
         <div class="tabs stage-tabs" data-tabs role="tablist" aria-label="Stage">
             {% for division in __SELF__.playoff.divisions %}
             {% set active = not knockoutActive and loop.first %}
-            <button class="tab{% if active %} on{% endif %}" role="tab" aria-selected="{{ active ? 'true' : 'false' }}" aria-controls="stage-{{ division.id }}" data-tab-target="stage-{{ division.id }}">{{ division.title }}</button>
+            <button class="tab{% if active %} on{% endif %}" id="stage-tab-{{ division.id }}" role="tab" aria-selected="{{ active ? 'true' : 'false' }}" aria-controls="stage-{{ division.id }}" tabindex="{{ active ? '0' : '-1' }}" data-tab-target="stage-{{ division.id }}">{{ division.title }}</button>
             {% endfor %}
             {% if __SELF__.matches is not empty %}
-            <button class="tab on" role="tab" aria-selected="true" aria-controls="stage-knockout" data-tab-target="stage-knockout">Knockout Stage</button>
+            <button class="tab on" id="stage-tab-knockout" role="tab" aria-selected="true" aria-controls="stage-knockout" tabindex="0" data-tab-target="stage-knockout">Knockout Stage</button>
             {% endif %}
         </div>
 
         {% for division in __SELF__.playoff.divisions %}
-        <div class="stage-panel" id="stage-{{ division.id }}" role="tabpanel"{% if knockoutActive or not loop.first %} hidden{% endif %}>
+        <div class="stage-panel" id="stage-{{ division.id }}" role="tabpanel" aria-labelledby="stage-tab-{{ division.id }}"{% if knockoutActive or not loop.first %} hidden{% endif %}>
             {% partial 'PlayoffOverview::divisionView' div=division %}
         </div>
         {% endfor %}
 
         {% if __SELF__.matches is not empty %}
-        <div class="stage-panel" id="stage-knockout" role="tabpanel">
+        <div class="stage-panel" id="stage-knockout" role="tabpanel" aria-labelledby="stage-tab-knockout">
             {{ br.bracket(__SELF__) }}
         </div>
         {% endif %}

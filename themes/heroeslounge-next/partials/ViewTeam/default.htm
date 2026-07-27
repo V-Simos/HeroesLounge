@@ -42,29 +42,29 @@
                 {#- Tab bar — lounge.js [data-tabs]: .tab buttons carry
                     data-tab-target=<panel id>; panels toggle via [hidden]. -#}
                 <div class="team-tabs tabs" data-tabs role="tablist" aria-label="Team sections">
-                    <button class="tab on" role="tab" aria-selected="true" aria-controls="team-roster" data-tab-target="team-roster">Roster</button>
-                    <button class="tab" role="tab" aria-selected="false" aria-controls="team-timeline" data-tab-target="team-timeline">Timeline</button>
-                    <button class="tab" role="tab" aria-selected="false" aria-controls="team-matches" data-tab-target="team-matches">Matches</button>
-                    <button class="tab" role="tab" aria-selected="false" aria-controls="team-stats" data-tab-target="team-stats">Statistics</button>
+                    <button class="tab on" id="team-roster-tab" role="tab" aria-selected="true" aria-controls="team-roster" tabindex="0" data-tab-target="team-roster">Roster</button>
+                    <button class="tab" id="team-timeline-tab" role="tab" aria-selected="false" aria-controls="team-timeline" tabindex="-1" data-tab-target="team-timeline">Timeline</button>
+                    <button class="tab" id="team-matches-tab" role="tab" aria-selected="false" aria-controls="team-matches" tabindex="-1" data-tab-target="team-matches">Matches</button>
+                    <button class="tab" id="team-stats-tab" role="tab" aria-selected="false" aria-controls="team-stats" tabindex="-1" data-tab-target="team-stats">Statistics</button>
                 </div>
 
                 {#- Roster tab -#}
-                <div class="team-panel" id="team-roster" role="tabpanel">
+                <div class="team-panel" id="team-roster" role="tabpanel" aria-labelledby="team-roster-tab">
                     {% partial 'team/roster' team=team %}
                 </div>
 
                 {#- Timeline tab -#}
-                <div class="team-panel" id="team-timeline" role="tabpanel" hidden>
+                <div class="team-panel" id="team-timeline" role="tabpanel" aria-labelledby="team-timeline-tab" hidden>
                     {% component 'timeLine' %}
                 </div>
 
                 {#- Matches tab -#}
-                <div class="team-panel" id="team-matches" role="tabpanel" hidden>
+                <div class="team-panel" id="team-matches" role="tabpanel" aria-labelledby="team-matches-tab" hidden>
                     {% component 'roundMatches' %}
                 </div>
 
                 {#- Statistics tab -#}
-                <div class="team-panel" id="team-stats" role="tabpanel" hidden>
+                <div class="team-panel" id="team-stats" role="tabpanel" aria-labelledby="team-stats-tab" hidden>
                     {% component 'teamStatistics' %}
                 </div>
             </div>

@@ -71,11 +71,11 @@ function onEnd()
             theme override at partials/gameStatistic/default.htm. -#}
         <div class="game-tabs tabs" data-tabs role="tablist" aria-label="Game">
             {% for game in match.games %}
-            <button class="tab{% if loop.first %} on{% endif %}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="game-{{ game.id }}" data-tab-target="game-{{ game.id }}">Game {{ loop.index }}</button>
+            <button class="tab{% if loop.first %} on{% endif %}" id="game-tab-{{ game.id }}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="game-{{ game.id }}" tabindex="{{ loop.first ? '0' : '-1' }}" data-tab-target="game-{{ game.id }}">Game {{ loop.index }}</button>
             {% endfor %}
         </div>
         {% for game in match.games %}
-        <div class="game-panel" id="game-{{ game.id }}" role="tabpanel"{% if not loop.first %} hidden{% endif %}>
+        <div class="game-panel" id="game-{{ game.id }}" role="tabpanel" aria-labelledby="game-tab-{{ game.id }}"{% if not loop.first %} hidden{% endif %}>
             {% component 'gameStatistic' game_id=game.id lazy=(not loop.first) %}
         </div>
         {% endfor %}

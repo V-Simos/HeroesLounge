@@ -25,12 +25,12 @@
 {% if __SELF__.matches and __SELF__.matches|length > 0 %}
 <div class="team-match-tabs tabs" data-tabs role="tablist" aria-label="Match group">
     {% for group, groupMatches in __SELF__.matches %}
-    <button class="tab{% if loop.first %} on{% endif %}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="mgroup-{{ loop.index }}" data-tab-target="mgroup-{{ loop.index }}">{{ group ?: 'Other' }}</button>
+    <button class="tab{% if loop.first %} on{% endif %}" id="mgroup-tab-{{ loop.index }}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="mgroup-{{ loop.index }}" tabindex="{{ loop.first ? '0' : '-1' }}" data-tab-target="mgroup-{{ loop.index }}">{{ group ?: 'Other' }}</button>
     {% endfor %}
 </div>
 {% for group, groupMatches in __SELF__.matches %}
 {% do groupMatches.load('teams.smallLogo', 'channels') %}
-<div class="team-match-grid" id="mgroup-{{ loop.index }}" role="tabpanel"{% if not loop.first %} hidden{% endif %}>
+<div class="team-match-grid" id="mgroup-{{ loop.index }}" role="tabpanel" aria-labelledby="mgroup-tab-{{ loop.index }}"{% if not loop.first %} hidden{% endif %}>
     {#- A grouped collection never yields an empty group (groupBy only creates a
         key when a match maps to it), so no per-group empty branch is needed. -#}
     {% for m in groupMatches %}

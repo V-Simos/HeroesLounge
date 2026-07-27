@@ -24,7 +24,7 @@
     <div class="blockhead"><h2>Rounds</h2></div>
     <div class="round-tabs tabs" data-tabs role="tablist" aria-label="Round">
         {% for key, i in 1..div.season.current_round %}
-        <button class="tab{% if key == div.season.current_round - 1 %} on{% endif %}" role="tab" aria-selected="{{ key == div.season.current_round - 1 ? 'true' : 'false' }}" aria-controls="round-{{ i }}" data-tab-target="round-{{ i }}">R{{ i }}</button>
+        <button class="tab{% if key == div.season.current_round - 1 %} on{% endif %}" id="round-tab-{{ i }}" role="tab" aria-selected="{{ key == div.season.current_round - 1 ? 'true' : 'false' }}" aria-controls="round-{{ i }}" tabindex="{{ key == div.season.current_round - 1 ? '0' : '-1' }}" data-tab-target="round-{{ i }}">R{{ i }}</button>
         {% endfor %}
     </div>
     {% for key, i in 1..div.season.current_round %}
@@ -32,7 +32,7 @@
     {% do RoundMatches.setProperty('round', i) %}
     {% do RoundMatches.onRender() %}
     {% if RoundMatches.matches %}{% do RoundMatches.matches.load('teams.smallLogo', 'channels') %}{% endif %}
-    <div class="round-grid" id="round-{{ i }}" role="tabpanel"{% if key != div.season.current_round - 1 %} hidden{% endif %}>
+    <div class="round-grid" id="round-{{ i }}" role="tabpanel" aria-labelledby="round-tab-{{ i }}"{% if key != div.season.current_round - 1 %} hidden{% endif %}>
         {% for m in RoundMatches.matches %}
         {% partial 'match/card' match=m variant=(m.is_played ? 'result' : 'fixture') revealScore=false withDivision=false %}
         {% else %}
