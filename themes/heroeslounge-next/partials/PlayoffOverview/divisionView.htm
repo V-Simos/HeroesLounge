@@ -49,7 +49,7 @@
                 contiguous). Do NOT "restore" the frozen `key == maxRound` form.
                 Matches the Task-3 division/rounds.htm intent. -#}
             {% for key, i in minRound..maxRound %}
-            <button class="tab{% if i == maxRound %} on{% endif %}" id="rnd-tab-{{ div.id }}-{{ i }}" role="tab" aria-selected="{{ i == maxRound ? 'true' : 'false' }}" aria-controls="rnd-{{ div.id }}-{{ i }}" tabindex="{{ i == maxRound ? '0' : '-1' }}" data-tab-target="rnd-{{ div.id }}-{{ i }}">R{{ i }}</button>
+            <button class="tab{% if i == maxRound %} on{% endif %}" id="rnd-tab-{{ div.id }}-{{ i }}" type="button" role="tab" aria-selected="{{ i == maxRound ? 'true' : 'false' }}" aria-controls="rnd-{{ div.id }}-{{ i }}" tabindex="{{ i == maxRound ? '0' : '-1' }}" data-tab-target="rnd-{{ div.id }}-{{ i }}">R{{ i }}</button>
             {% endfor %}
         </div>
         {% for key, i in minRound..maxRound %}

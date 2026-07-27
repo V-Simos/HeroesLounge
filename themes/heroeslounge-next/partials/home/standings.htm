@@ -26,7 +26,7 @@
                 {% for div in season.divisions %}
                 {#- "Division N" abbreviates to the mockup's "DN" tab; anything
                     else keeps its real title. -#}
-                <button class="tab{% if loop.first %} on{% endif %}" id="standings-tab-{{ div.id }}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="standings-{{ div.id }}" tabindex="{{ loop.first ? '0' : '-1' }}" data-tab-target="standings-{{ div.id }}">{{ div.title matches '/^Division \\d+$/' ? 'D' ~ (div.title|split(' ')|last) : div.title }}</button>
+                <button class="tab{% if loop.first %} on{% endif %}" id="standings-tab-{{ div.id }}" type="button" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="standings-{{ div.id }}" tabindex="{{ loop.first ? '0' : '-1' }}" data-tab-target="standings-{{ div.id }}">{{ div.title matches '/^Division \\d+$/' ? 'D' ~ (div.title|split(' ')|last) : div.title }}</button>
                 {% endfor %}
             </div>
         </div>

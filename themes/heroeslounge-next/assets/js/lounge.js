@@ -9,19 +9,26 @@
        data-tab-target="<panel-id>". The active tab alone stays in the page Tab
        sequence; Left/Right/Home/End move focus and activate per the ARIA APG.
        Nested tab sets are isolated through the nearest [data-tabs] owner. */
-    function tabButtons(tabs) {
+    function ownedTabButtons(tabs) {
         return Array.prototype.filter.call(
             tabs.querySelectorAll('[role="tab"][data-tab-target]'),
             function (button) { return button.closest('[data-tabs]') === tabs; }
         );
     }
 
+    function tabButtons(tabs) {
+        return ownedTabButtons(tabs).filter(function (button) {
+            return !button.hidden && !button.disabled;
+        });
+    }
+
     function activateTab(tabs, button, moveFocus) {
         var buttons = tabButtons(tabs);
+        if (buttons.indexOf(button) === -1) return;
         var target = document.getElementById(button.dataset.tabTarget);
         if (!target) return;
 
-        buttons.forEach(function (candidate) {
+        ownedTabButtons(tabs).forEach(function (candidate) {
             var selected = candidate === button;
             candidate.classList.toggle('on', selected);
             candidate.setAttribute('aria-selected', selected ? 'true' : 'false');
@@ -45,6 +52,8 @@
         tabs.addEventListener('click', function (event) {
             var button = event.target.closest('[role="tab"][data-tab-target]');
             if (!button || button.closest('[data-tabs]') !== tabs) return;
+            if (tabButtons(tabs).indexOf(button) === -1) return;
+            event.preventDefault();
             activateTab(tabs, button, false);
         });
 
@@ -54,6 +63,7 @@
 
             var currentButtons = tabButtons(tabs);
             var index = currentButtons.indexOf(button);
+            if (index === -1) return;
             var nextIndex;
             switch (event.key) {
                 case 'ArrowLeft':

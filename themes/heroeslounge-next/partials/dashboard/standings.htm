@@ -32,7 +32,7 @@
         {% if entries|length > 1 %}
         <div class="tabs" data-tabs role="tablist" aria-label="Your teams">
             {% for e in entries %}
-            <button class="tab{% if loop.first %} on{% endif %}" id="dash-standings-tab-{{ e.div.id }}-{{ e.team.id }}" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="dash-standings-{{ e.div.id }}-{{ e.team.id }}" tabindex="{{ loop.first ? '0' : '-1' }}" data-tab-target="dash-standings-{{ e.div.id }}-{{ e.team.id }}">{% partial 'site/initials' name=e.team.title %} · {{ e.div.title|upper|replace({'DIVISION ': 'DIV '}) }}</button>
+            <button class="tab{% if loop.first %} on{% endif %}" id="dash-standings-tab-{{ e.div.id }}-{{ e.team.id }}" type="button" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="dash-standings-{{ e.div.id }}-{{ e.team.id }}" tabindex="{{ loop.first ? '0' : '-1' }}" data-tab-target="dash-standings-{{ e.div.id }}-{{ e.team.id }}">{% partial 'site/initials' name=e.team.title %} · {{ e.div.title|upper|replace({'DIVISION ': 'DIV '}) }}</button>
             {% endfor %}
         </div>
         {% endif %}

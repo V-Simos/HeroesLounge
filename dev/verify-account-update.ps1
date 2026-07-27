@@ -96,7 +96,12 @@ foreach ($tab in @('general', 'media', 'social', 'game', 'apps')) {
     Assert-Regex $update ('<button[^>]+data-tab-target="account-' + $tab + '"[^>]*>') "Missing account $tab tab button."
     Assert-Regex $update ('id="account-' + $tab + '"[^>]+role="tabpanel"') "Missing account $tab tab panel."
 }
-Assert-Regex $update '<section class="p account-panel" id="account-general" role="tabpanel"[^>]*>' 'General must be the visible default panel.'
+$generalPanel = [regex]::Match(
+    $update,
+    '<section class="p account-panel" id="account-general" role="tabpanel"[^>]*>'
+)
+Assert-True $generalPanel.Success 'General panel opening tag is missing.'
+Assert-True (-not [regex]::IsMatch($generalPanel.Value, '\shidden(?:\s|>)')) 'General must be the visible default panel.'
 foreach ($hiddenTab in @('media', 'social', 'game', 'apps', 'notifications')) {
     Assert-Regex $update ('<section class="p account-panel" id="account-' + $hiddenTab + '" role="tabpanel"[^>]* hidden>') "Account $hiddenTab panel must start hidden."
 }

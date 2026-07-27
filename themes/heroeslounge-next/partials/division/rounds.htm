@@ -24,7 +24,7 @@
     <div class="blockhead"><h2>Rounds</h2></div>
     <div class="round-tabs tabs" data-tabs role="tablist" aria-label="Round">
         {% for key, i in 1..div.season.current_round %}
-        <button class="tab{% if key == div.season.current_round - 1 %} on{% endif %}" id="round-tab-{{ i }}" role="tab" aria-selected="{{ key == div.season.current_round - 1 ? 'true' : 'false' }}" aria-controls="round-{{ i }}" tabindex="{{ key == div.season.current_round - 1 ? '0' : '-1' }}" data-tab-target="round-{{ i }}">R{{ i }}</button>
+        <button class="tab{% if key == div.season.current_round - 1 %} on{% endif %}" id="round-tab-{{ i }}" type="button" role="tab" aria-selected="{{ key == div.season.current_round - 1 ? 'true' : 'false' }}" aria-controls="round-{{ i }}" tabindex="{{ key == div.season.current_round - 1 ? '0' : '-1' }}" data-tab-target="round-{{ i }}">R{{ i }}</button>
         {% endfor %}
     </div>
     {% for key, i in 1..div.season.current_round %}

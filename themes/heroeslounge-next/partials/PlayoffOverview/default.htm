@@ -182,10 +182,10 @@
         <div class="tabs stage-tabs" data-tabs role="tablist" aria-label="Stage">
             {% for division in __SELF__.playoff.divisions %}
             {% set active = not knockoutActive and loop.first %}
-            <button class="tab{% if active %} on{% endif %}" id="stage-tab-{{ division.id }}" role="tab" aria-selected="{{ active ? 'true' : 'false' }}" aria-controls="stage-{{ division.id }}" tabindex="{{ active ? '0' : '-1' }}" data-tab-target="stage-{{ division.id }}">{{ division.title }}</button>
+            <button class="tab{% if active %} on{% endif %}" id="stage-tab-{{ division.id }}" type="button" role="tab" aria-selected="{{ active ? 'true' : 'false' }}" aria-controls="stage-{{ division.id }}" tabindex="{{ active ? '0' : '-1' }}" data-tab-target="stage-{{ division.id }}">{{ division.title }}</button>
             {% endfor %}
             {% if __SELF__.matches is not empty %}
-            <button class="tab on" id="stage-tab-knockout" role="tab" aria-selected="true" aria-controls="stage-knockout" tabindex="0" data-tab-target="stage-knockout">Knockout Stage</button>
+            <button class="tab on" id="stage-tab-knockout" type="button" role="tab" aria-selected="true" aria-controls="stage-knockout" tabindex="0" data-tab-target="stage-knockout">Knockout Stage</button>
             {% endif %}
         </div>
 
