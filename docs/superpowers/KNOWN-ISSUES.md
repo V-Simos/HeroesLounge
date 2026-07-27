@@ -30,10 +30,11 @@ notes in §3.1–§3.3 supersede its old “not ported” conclusions.
 
 The final review found two pre-existing server-side authorization gaps behind
 newly ported controls. Both handlers live under frozen `plugins/rikki/*`; this
-theme-only phase did not authorize plugin edits, so the controls and handlers
-were left unchanged pending a product/security decision:
+theme-only phase did not authorize plugin edits, so the server handlers remain
+unchanged. Making the theme-owned controls keyboard-operable does not change
+their AJAX wiring or resolve the authorization risk:
 
-- `UpcomingMatches::onCastApply()` / `onCastRetract()` accept client-controlled
+- `UpcomingMatches::onCastRequest()` / `onCastRetract()` accept client-controlled
   `match_id` and `caster_id` values without authenticating the caller, checking
   `cast_matches`, or deriving the caster from the signed-in user. A forged
   request can therefore alter another caster's assignments.

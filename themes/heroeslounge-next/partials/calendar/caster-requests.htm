@@ -27,10 +27,10 @@
 {% set requestAlias = componentAlias|default('UpcomingMatches') %}
 <div class="cal-caster-line" title="{% for caster in match.getAcceptedCasters %}{{ caster.title }}{% if not loop.last %}, {% endif %}{% endfor %}">
     {% if user and can('cast_matches') and (user.sloth.id not in match.getCasterIds or match.casters is empty) %}
-        <a class="cal-caster-btn" role="button" title="Apply to cast this match" aria-label="Apply to cast this match" data-request="{{ requestAlias }}::onCastRequest" data-request-data="match_id: {{ match.id }}, caster_id: {{ user.sloth.id }}">{% partial 'site/icon' name='calendar-plus' %}</a>
+        <button type="button" class="cal-caster-btn" title="Apply to cast this match" aria-label="Apply to cast this match" data-request="{{ requestAlias }}::onCastRequest" data-request-data="match_id: {{ match.id }}, caster_id: {{ user.sloth.id }}">{% partial 'site/icon' name='calendar-plus' %}</button>
     {% endif %}
     {% if user and can('cast_matches') and (user.sloth.id in match.getAppliedCasterIds) %}
-        <a class="cal-caster-btn" role="button" title="I no longer want to cast this match" aria-label="Retract my cast request" data-request="{{ requestAlias }}::onCastRetract" data-request-data="match_id: {{ match.id }}, caster_id: {{ user.sloth.id }}">{% partial 'site/icon' name='calendar-x' %}</a>
+        <button type="button" class="cal-caster-btn" title="I no longer want to cast this match" aria-label="Retract my cast request" data-request="{{ requestAlias }}::onCastRetract" data-request-data="match_id: {{ match.id }}, caster_id: {{ user.sloth.id }}">{% partial 'site/icon' name='calendar-x' %}</button>
     {% endif %}
     {% if user and can('cast_matches') and not (match.getAppliedCasterTitles is empty) %}
         <span class="cal-caster-applied" title="Casters who applied to cast: {% for title in match.getAppliedCasterTitles %}{{ title }}{% if not loop.last %}, {% endif %}{% else %}None{% endfor %}">{% partial 'site/icon' name='users' %}</span>

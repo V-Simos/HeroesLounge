@@ -6,6 +6,8 @@ $updatePath = Join-Path $repoRoot 'themes\heroeslounge-next\partials\slothaccoun
 $viewAppsPath = Join-Path $repoRoot 'themes\heroeslounge-next\partials\viewapps\default.htm'
 $countryPath = Join-Path $repoRoot 'themes\heroeslounge-next\partials\user\country-select.htm'
 $cssPath = Join-Path $repoRoot 'themes\heroeslounge-next\assets\css\pages.css'
+$baseCssPath = Join-Path $repoRoot 'themes\heroeslounge-next\assets\css\base.css'
+$casterRequestsPath = Join-Path $repoRoot 'themes\heroeslounge-next\partials\calendar\caster-requests.htm'
 $accountPagePath = Join-Path $repoRoot 'themes\heroeslounge-next\pages\user\account.htm'
 
 function Assert-True {
@@ -86,6 +88,9 @@ Assert-True (Test-Path -LiteralPath $countryPath) "Missing theme-wide country se
 
 $update = Get-Content -Raw -LiteralPath $updatePath
 $country = Get-Content -Raw -LiteralPath $countryPath
+$css = Get-Content -Raw -LiteralPath $cssPath
+$baseCss = Get-Content -Raw -LiteralPath $baseCssPath
+$casterRequests = Get-Content -Raw -LiteralPath $casterRequestsPath
 $accountPage = Get-Content -Raw -LiteralPath $accountPagePath
 
 # lounge.js tabs shell. These assertions catch a regression back to the frozen
@@ -261,9 +266,40 @@ Assert-Regex $teamAppsLoop '<div data-request-data="id: \{\{ app\.id \}\}">\s*<b
 Assert-True (-not [regex]::IsMatch($viewApps, 'table-striped|btn-primary|btn-warning|btn-danger')) 'Bootstrap presentation remnants remain in viewapps.'
 Assert-True (([regex]::Matches($viewApps, '<h1\b')).Count -eq 0) 'viewapps must not introduce a second h1.'
 
+# Caster mutations: theme-owned controls must use native keyboard-operable
+# buttons without changing the frozen request alias, payload, gates, or icons.
+Assert-True (([regex]::Matches($casterRequests, '<button\b[^>]*class="cal-caster-btn"')).Count -eq 2) 'Caster requests must render exactly two native cal-caster-btn buttons.'
+Assert-True (-not [regex]::IsMatch($casterRequests, '<a\b[^>]*class="cal-caster-btn"')) 'Caster request actions must not use unfocusable anchors.'
+Assert-True (-not $casterRequests.Contains('role="button"')) 'Native caster buttons must not carry redundant anchor-era button roles.'
+Assert-Contains $casterRequests "{% if user and can('cast_matches') and (user.sloth.id not in match.getCasterIds or match.casters is empty) %}" 'Caster apply authorization/display gate changed.'
+Assert-Contains $casterRequests "{% if user and can('cast_matches') and (user.sloth.id in match.getAppliedCasterIds) %}" 'Caster retract authorization/display gate changed.'
+foreach ($action in @(
+    @{
+        Handler = 'onCastRequest'
+        Title = 'Apply to cast this match'
+        Label = 'Apply to cast this match'
+        Icon = 'calendar-plus'
+    },
+    @{
+        Handler = 'onCastRetract'
+        Title = 'I no longer want to cast this match'
+        Label = 'Retract my cast request'
+        Icon = 'calendar-x'
+    }
+)) {
+    $openingTag = '<button type="button" class="cal-caster-btn" title="' +
+        $action.Title + '" aria-label="' + $action.Label +
+        '" data-request="{{ requestAlias }}::' + $action.Handler +
+        '" data-request-data="match_id: {{ match.id }}, caster_id: {{ user.sloth.id }}">'
+    Assert-Contains $casterRequests $openingTag "Caster $($action.Handler) button/request contract changed."
+    Assert-Contains $casterRequests ($openingTag + "{% partial 'site/icon' name='" + $action.Icon + "' %}</button>") "Caster $($action.Handler) icon or closing-button contract changed."
+}
+Assert-Regex $css '\.cal-caster-btn\s*\{[^}]*border:\s*0[^}]*background:\s*none' 'Native caster buttons need a scoped border/background reset.'
+Assert-True (-not [regex]::IsMatch($css, '\.cal-caster-btn(?:\:[^{]+)?\s*\{[^}]*outline\s*:\s*none')) 'Caster button CSS must not suppress keyboard focus.'
+Assert-Regex $baseCss ':focus-visible\s*\{\s*outline:\s*2px\s+solid\s+var\(--storm\)' 'Caster buttons depend on the global visible storm focus ring.'
+
 # Page-level styling: the hidden rule is behavioral (without it, lounge.js
 # updates state but panels remain visible); the grids/queries protect layout.
-$css = Get-Content -Raw -LiteralPath $cssPath
 foreach ($selector in @(
     '.account-tabs',
     '.account-panel[hidden]',
