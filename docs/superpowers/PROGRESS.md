@@ -986,6 +986,9 @@ whole repo is CRLF. VERIFIED FALSE at byte level (`git ls-files --eol` +
 
 **Pre-production hardening (plugin-side, frozen for now — MUST be tracked to
 production cutover; from Task 8 quality review):**
+- Content operation: create/confirm the Indikator.Content category with slug
+  `events` in production before cutover so the nav Events target
+  `/blog/category/events` resolves with content.
 - `Division.php:190` `Log::info(...)` serializes full standings into the log
   on EVERY DivisionTable render (3×/homepage hit) — log bloat + CPU.
 - `DivisionTable::onRender()` runs a dead teams query (overwritten result).
