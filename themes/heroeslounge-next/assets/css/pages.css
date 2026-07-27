@@ -571,8 +571,7 @@
 .auth-note-warn strong { color: var(--gold); }
 .auth-body form { display: flex; flex-direction: column; gap: 18px; }
 .auth-submit { align-self: flex-start; }
-/* complete state: the sign-in button is the only action — no need for flex-start;
-   keep it left-aligned (the .auth-submit rule above handles this). */
+/* complete state: retain compact bottom padding for the focused completion panel. */
 .auth-card-complete .auth-body { padding-bottom: 28px; }
 
 @media (prefers-reduced-motion: reduce) {
