@@ -71,7 +71,7 @@ Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
 | 2 — Account: guest half (signin/register) | ✅ | ✅ | ✅ (approved; 1 minor deferred) | 140f2a8 |
 | 3 — Account: authed half (tabs/update forms) | ✅ | ✅ | ✅ (1 fix round; approved) | d1ff863, 8787dff |
 | 4 — Profile `/user/view/:id` | ✅ | ✅ | ✅ (approved; verifier minors deferred) | c6176ed |
-| 5 — Caster schedule `/user/casterschedule` | | | | |
+| 5 — Caster schedule `/user/casterschedule` | ✅ | ✅ | ✅ (1 fix round; approved) | 864a3c7, acbf89d |
 | 6 — Events archive port + Events link | | | | |
 | 7 — Guides static-pages port | | | | |
 | 8 — Phase-3 finishing pass | | | | |
@@ -148,6 +148,22 @@ verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
 - Review approved the complete profile/stat data contract. Task 8 carries two
   verifier-only minors: structurally assert the executable guest gate after
   stripping Twig comments, and cover popularity/map output fields.
+
+### Notes from Phase 3 Task 5 (caster schedule)
+
+- Ported `/user/casterschedule` and the lowercase `casterschedule` override.
+  Each runtime `UpcomingMatches` child calls `onRender()` and consumes its
+  public `datesToMatches` groups for pending, accepted, and denied queues.
+- The frozen `can('cast_matches')` gate comes from ShahiemSeymor Roles—not the
+  legacy RainLab `Casters` group. This dump's four Shahiem permission tables
+  are empty, so a temporary role/permission assignment was required for live
+  verification and then removed with counters restored.
+- Review restored the frozen per-row caster request/status fragment. The
+  pending queue keeps `onCastRetract`; accepted/denied preserve their original
+  status branches, with each handler routed through the actual child alias.
+- Guest, non-caster, and all three pivot approval states were verified against
+  a temporary future fixture. Match time, pivot, accounts, permission tables,
+  and auto-increments were restored exactly.
 
 ### Notes from Task 0 (bracket spike — proven, de-risked)
 
