@@ -56,6 +56,7 @@ $css = Require-File (Join-Path $theme 'assets/css/pages.css') 'page stylesheet'
     'data-request-flash',
     'name="login"',
     'name="login" type="text"',
+    'autocomplete="username"',
     'name="password"',
     "{{ 'user/forgotpassword'|page }}"
 ) | ForEach-Object { Require-Text $signin $_ 'sign-in request contract' }

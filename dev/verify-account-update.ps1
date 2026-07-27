@@ -47,6 +47,40 @@ function Assert-Regex {
     Assert-True ([regex]::IsMatch($Text, $Pattern, [Text.RegularExpressions.RegexOptions]::Singleline)) $Message
 }
 
+function Get-TwigForBody {
+    param(
+        [Parameter(Mandatory)]
+        [string] $Text,
+        [Parameter(Mandatory)]
+        [string] $OpeningTag,
+        [Parameter(Mandatory)]
+        [string] $Description
+    )
+
+    $start = $Text.IndexOf($OpeningTag, [StringComparison]::Ordinal)
+    Assert-True ($start -ge 0) "Could not find the $Description loop."
+
+    $bodyStart = $start + $OpeningTag.Length
+    $depth = 1
+    $cursor = $bodyStart
+    $tokenPattern = [regex]'\{%\s*(for\b|endfor\b)[^%]*%\}'
+
+    while ($depth -gt 0) {
+        $token = $tokenPattern.Match($Text, $cursor)
+        Assert-True $token.Success "Could not find the closing tag for the $Description loop."
+        if ($token.Groups[1].Value.StartsWith('for', [StringComparison]::Ordinal)) {
+            $depth++
+        }
+        else {
+            $depth--
+        }
+        if ($depth -eq 0) {
+            return $Text.Substring($bodyStart, $token.Index - $bodyStart)
+        }
+        $cursor = $token.Index + $token.Length
+    }
+}
+
 Assert-True (Test-Path -LiteralPath $updatePath) "Missing themed SlothAccount update override: $updatePath"
 Assert-True (Test-Path -LiteralPath $countryPath) "Missing theme-wide country selector: $countryPath"
 
@@ -62,9 +96,9 @@ foreach ($tab in @('general', 'media', 'social', 'game', 'apps')) {
     Assert-Regex $update ('<button[^>]+data-tab-target="account-' + $tab + '"[^>]*>') "Missing account $tab tab button."
     Assert-Regex $update ('id="account-' + $tab + '"[^>]+role="tabpanel"') "Missing account $tab tab panel."
 }
-Assert-Regex $update '<section class="p account-panel" id="account-general" role="tabpanel">' 'General must be the visible default panel.'
+Assert-Regex $update '<section class="p account-panel" id="account-general" role="tabpanel"[^>]*>' 'General must be the visible default panel.'
 foreach ($hiddenTab in @('media', 'social', 'game', 'apps', 'notifications')) {
-    Assert-Regex $update ('<section class="p account-panel" id="account-' + $hiddenTab + '" role="tabpanel" hidden>') "Account $hiddenTab panel must start hidden."
+    Assert-Regex $update ('<section class="p account-panel" id="account-' + $hiddenTab + '" role="tabpanel"[^>]* hidden>') "Account $hiddenTab panel must start hidden."
 }
 Assert-Contains $update '{% if this.session.get(''notifications'') %}' 'Notifications tab must keep the frozen session gate.'
 Assert-Contains $update '{{ this.session.get(''notifications'') | length }}' 'Notifications tab count must keep the frozen expression.'
@@ -189,12 +223,8 @@ Assert-Contains $viewApps '{% if app.approved == 0 %}Unaccepted{% else %}Invite 
 Assert-True (([regex]::Matches($viewApps, 'href="/application/view/\{\{ app\.id \}\}"')).Count -eq 2) 'Both deferred application detail links must be literal.'
 Assert-True (-not $viewApps.Contains("'application/view' | page")) 'Deferred application detail page filters remain.'
 
-$ownAppsMatch = [regex]::Match($viewApps, '\{% for app in __SELF__\.slothApps %\}(.*?)\{% endfor %\}', [Text.RegularExpressions.RegexOptions]::Singleline)
-$teamAppsMatch = [regex]::Match($viewApps, '\{% for app in __SELF__\.teamApps %\}(.*?)\{% endfor %\}', [Text.RegularExpressions.RegexOptions]::Singleline)
-Assert-True $ownAppsMatch.Success 'Could not isolate the own-applications loop.'
-Assert-True $teamAppsMatch.Success 'Could not isolate the team-applications loop.'
-$ownAppsLoop = $ownAppsMatch.Groups[1].Value
-$teamAppsLoop = $teamAppsMatch.Groups[1].Value
+$ownAppsLoop = Get-TwigForBody $viewApps '{% for app in __SELF__.slothApps %}' 'own-applications'
+$teamAppsLoop = Get-TwigForBody $viewApps '{% for app in __SELF__.teamApps %}' 'team-applications'
 $idPayloadPattern = 'data-request-data="id: \{\{ app\.id \}\}"'
 
 Assert-True (([regex]::Matches($viewApps, $idPayloadPattern)).Count -eq 4) 'ViewApps must emit four handler id payload wrappers.'

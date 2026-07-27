@@ -64,6 +64,12 @@ $statsMarkup = [regex]::Replace(
     '',
     [Text.RegularExpressions.RegexOptions]::Singleline
 )
+$profileMarkup = [regex]::Replace(
+    $profile,
+    '\{#.*?#\}',
+    '',
+    [Text.RegularExpressions.RegexOptions]::Singleline
+)
 
 # Page/component contract and the documented detail-page 404 improvement.
 Assert-Contains $page 'title = "Profile"' 'Profile page title contract changed.'
@@ -79,7 +85,7 @@ Assert-Regex $page 'SANCTIONED DEVIATION:.*frozen page returns HTTP 200.*empty' 
 
 # Profile override: three mutually exclusive states each own one h1.
 Assert-True (-not $profile.Contains('profile-theme-override-marker')) 'Temporary profile marker remains.'
-Assert-Contains $profile '{% if user %}' 'Profile must retain the full-page authentication gate.'
+Assert-Contains $profileMarkup '{% if user %}' 'Profile must retain the executable full-page authentication gate.'
 Assert-Contains $profile '{% if __SELF__.sloth %}' 'Authenticated profile rendering needs a null-sloth branch.'
 Assert-True (([regex]::Matches($profile, '<h1\b')).Count -eq 3) 'Valid, not-found, and guest profile states must each own exactly one h1.'
 Assert-Contains $profile 'You must be logged in to view this page.' 'Frozen guest-gate copy changed.'
@@ -138,6 +144,12 @@ Assert-Contains $stats '{% for h in __SELF__.heroes %}' 'Sloth hero statistics l
 Assert-Contains $stats '{% for m in __SELF__.maps %}' 'Sloth map statistics loop changed.'
 foreach ($field in @('picks', 'winrate', 'bans_by_team', 'bans_against_team', 'kills', 'assists', 'deaths', 'siege_dmg', 'hero_dmg', 'healing', 'dmg_taken', 'xp')) {
     Assert-Contains $stats ("h['" + $field + "']") "Sloth hero table lost $field."
+}
+foreach ($field in @('pick_popularity', 'bbt_popularity', 'bat_popularity')) {
+    Assert-Contains $stats ("h['" + $field + "']") "Sloth hero table lost $field."
+}
+foreach ($field in @('picks_by', 'picks_vs', 'winrate')) {
+    Assert-Contains $stats ("m['" + $field + "']") "Sloth map table lost $field."
 }
 Assert-True (-not [regex]::IsMatch($statsMarkup, 'DataTable|data-request|onSeasonChange|collapse|data-toggle|nav-tabs|table-bordered|table-responsive')) 'DataTables/AJAX/Bootstrap collapse remnants remain in slothstatistics markup.'
 Assert-True (([regex]::Matches($stats, '<h1\b')).Count -eq 0) 'slothstatistics must not introduce another h1.'
