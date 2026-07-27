@@ -80,8 +80,8 @@
                     {{ form_open({request: 'onUpdateAvatar', model: user, files: true }) }}
                         <div class="fileselect">
                             <label class="account-file-button">
+                                <input class="account-file-input" type="file" accept="image/png" name="avatar">
                                 <span class="btn btn-ghost">Browse..</span>
-                                <input type="file" accept="image/png" name="avatar" style="display:none">
                             </label>
                             <input type="text" class="input account-filename" readonly aria-label="Selected avatar file" aria-describedby="shortLogoBlock">
                             <small id="avatarUploadError" class="account-upload-error" role="alert"></small>
@@ -111,8 +111,8 @@
                     {{ form_open({request: 'onUpdateBanner', model: user, files: true }) }}
                         <div class="fileselect">
                             <label class="account-file-button">
+                                <input class="account-file-input" type="file" accept="image/png" name="banner">
                                 <span class="btn btn-ghost">Browse..</span>
-                                <input type="file" accept="image/png" name="banner" style="display:none">
                             </label>
                             <input type="text" class="input account-filename" readonly aria-label="Selected banner file" aria-describedby="shortBannerBlock">
                             <small id="bannerUploadError" class="account-upload-error" role="alert"></small>

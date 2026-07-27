@@ -28,9 +28,11 @@ $default = Require-File (Join-Path $theme 'partials/slothaccount/default.htm') '
 $signin = Require-File (Join-Path $theme 'partials/slothaccount/signin.htm') 'SlothAccount sign-in override'
 $register = Require-File (Join-Path $theme 'partials/slothaccount/register.htm') 'SlothAccount registration override'
 $activation = Require-File (Join-Path $theme 'partials/slothaccount/activation_check.htm') 'SlothAccount activation override'
+$update = Require-File (Join-Path $theme 'partials/slothaccount/update.htm') 'SlothAccount update override'
 $ruleset = Require-File (Join-Path $theme 'partials/site/ruleset.htm') 'ruleset partial'
-$countryState = Require-File (Join-Path $theme 'partials/country-state/default.htm') 'interim SlothAccount country-state dependency'
+$countrySelect = Require-File (Join-Path $theme 'partials/user/country-select.htm') 'final account country selector'
 $css = Require-File (Join-Path $theme 'assets/css/pages.css') 'page stylesheet'
+$interimCountryStatePath = Join-Path $theme 'partials/country-state/default.htm'
 
 @(
     'title = "Account"',
@@ -81,7 +83,11 @@ $css = Require-File (Join-Path $theme 'assets/css/pages.css') 'page stylesheet'
 
 Require-Text $activation 'data-request="onSendActivationEmail"' 'activation-email request contract'
 Require-Text $ruleset 'We are the largest Heroes of the Storm amateur league.' 'ruleset welcome copy'
-Require-Text $countryState "form_select_country('country_id'" 'frozen update country selector contract'
+Require-Text $update "{% partial 'user/country-select' countryId=user.country_id %}" 'final account country-selector integration'
+Require-Text $countrySelect "form_select_country('country_id'" 'final RainLab.Location country-selector contract'
+if (Test-Path -LiteralPath $interimCountryStatePath) {
+    throw "Unused interim country-state compatibility partial remains: $interimCountryStatePath"
+}
 
 @('dialog.showModal()', 'dialog.close()') |
     ForEach-Object { Require-Text $account $_ 'native dialog script contract' }

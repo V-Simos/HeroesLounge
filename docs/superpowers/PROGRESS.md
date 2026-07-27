@@ -75,7 +75,7 @@ Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
 | 5 — Caster schedule `/user/casterschedule` | ✅ | ✅ | ✅ (1 fix round; approved) | 864a3c7, acbf89d |
 | 6 — Events archive port + Events link | ✅ | ✅ | ✅ (3 fix rounds; approved) | 6ffa2ad, 83b745b, 60004cd, 69191e6 |
 | 7 — Guides static-pages port | ✅ | ✅ | ✅ (approved) | 1c09098 |
-| 8 — Phase-3 finishing pass | ✅ | ✅ (phase-wide contract pass) | ✅ (review fixes + static/server/browser matrix) | c2216f0, ffbe6f3, 172f5ff, 61a5035, _review-fix docs commit_ |
+| 8 — Phase-3 finishing pass | ✅ | ✅ (phase-wide contract pass) | ✅ (review fixes + static/server/browser matrix) | c2216f0, ffbe6f3, 172f5ff, 61a5035, 239b294, _final-review fixes (this commit)_ |
 
 Design facts that drove the spec (verified live 2026-07-24, this session): the
 blog is **Indikator.Content** (NOT RainLab.Blog — query the `indikator_content_*`
@@ -245,6 +245,20 @@ temporary flip; `selectFile.js` contract =
   storm underline affordance. Opening an Events group by its visible
   `<summary>` left the summary focused with the same expected focus-visible
   outline.
+- Final review made the avatar/banner native file inputs keyboard-focusable
+  without changing `selectFile.js`'s `.fileselect`, sibling text-input,
+  `avatar`/`banner`, PNG accept, or upload-error contracts. The visible Browse
+  control now mirrors the native input's `:focus-visible` storm ring. It also
+  replaced the guest profile's undefined `btn-primary` variant and removed the
+  now-unused interim `country-state/default.htm`; final account rendering is
+  protected against regression to anything but `user/country-select.htm`.
+- Final review also identified two frozen-plugin authorization gaps:
+  `UpcomingMatches` caster apply/retract trusts client-supplied match/caster
+  IDs without caller authorization, and `ViewApps::onSendAccept()` checks team
+  membership rather than captain authority. This theme-only round did not
+  change either mutation surface. Plugin edits require separate authorization;
+  before production, authorize server-side fixes with request-level tests or
+  withhold the affected controls.
 - User 41's imported-dump identity remains `Hapcher` / `sloth25`; the standing
   dev-only password is `dev12345`. Verification restored the account exactly
   from the known-good pre-Task-3 snapshot, including volatile auth timestamps

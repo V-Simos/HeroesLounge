@@ -92,6 +92,8 @@ Assert-Contains $profile 'You must be logged in to view this page.' 'Frozen gues
 Assert-Contains $profile '<h1>{{ sloth.title }}</h1>' 'Authenticated profile h1 must use sloth.title.'
 Assert-Contains $profile '<h1>Profile not found</h1>' 'Authenticated bad-ID state needs its sole h1.'
 Assert-Contains $profile '<h1>Sign in to view profiles</h1>' 'Guest state needs its sole h1.'
+Assert-Contains $profile '<a class="btn btn-solid" href="/user">Sign in</a>' 'Guest profile CTA must use a defined theme button variant.'
+Assert-True (-not $profile.Contains('btn-primary')) 'Legacy btn-primary remains in the profile override.'
 
 # Banner/avatar/social fallbacks are presentation-only sanctioned deviations.
 Assert-Contains $profile '{% if sloth.banner %} style="background-image:url({{ sloth.banner.path }})"{% endif %}' 'Profile banner attachment binding changed.'

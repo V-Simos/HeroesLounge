@@ -92,6 +92,11 @@ Full environment details: `dev/README.md`.
   bindings, handlers, and behavior.
 - Plugins under `plugins/rikki/*` and the old theme
   `themes/HeroesLounge-Theme/` remain frozen.
+- Two final-review security findings remain behind frozen handlers:
+  `UpcomingMatches` caster apply/retract lacks caller/permission/identity
+  authorization, and `ViewApps::onSendAccept()` permits any team member rather
+  than enforcing captain authority. Do not treat theme markup as a security
+  boundary. Editing either plugin requires separate explicit authorization.
 - Override directories must be all lowercase. October probes the lowercase
   alias first, while Docker Desktop can hide casing mistakes.
 - Keep `components.css`'s reduced-motion block last and preserve inset
@@ -103,6 +108,12 @@ Full environment details: `dev/README.md`.
 
 ## Carry-forward production work
 
+- Resolve the two frozen-plugin authorization findings before exposing the
+  caster apply/retract or application-accept controls in production. The
+  authorized backend change must derive/validate the acting user, enforce the
+  relevant permission or captain role, validate object ownership, and include
+  request-level negative tests. If plugin work is not authorized, withhold the
+  affected controls instead.
 - Create or confirm the Indikator.Content category with slug `events` before
   production cutover so `/blog/category/events` resolves with content.
 - Apply the documented `gameparticipation` schema fix after any dump re-import.

@@ -185,7 +185,14 @@ foreach ($media in @(
     $fileSelect = $fileSelectMatch.Groups[1].Value
     Assert-True (([regex]::Matches($fileSelect, 'type="file"')).Count -eq 1) "$($media.Name) fileselect must contain exactly one file input."
     Assert-True (([regex]::Matches($fileSelect, 'type="text"')).Count -eq 1) "$($media.Name) fileselect must contain exactly one text sibling."
-    Assert-Regex $fileSelect ('<input[^>]+type="file"[^>]+accept="image/png"[^>]+name="' + $media.Name + '"[^>]+style="display:none"[^>]*>.*?<input[^>]+type="text"[^>]+readonly') "selectFile.js $($media.Name) sibling contract changed."
+    $fileInputMatch = [regex]::Match($fileSelect, '<input[^>]+type="file"[^>]*>')
+    Assert-True $fileInputMatch.Success "Missing native $($media.Name) file input."
+    $fileInput = $fileInputMatch.Value
+    Assert-Contains $fileInput 'accept="image/png"' "$($media.Name) file accept contract changed."
+    Assert-Contains $fileInput ('name="' + $media.Name + '"') "$($media.Name) file name contract changed."
+    Assert-Contains $fileInput 'class="account-file-input"' "$($media.Name) file input needs the accessible upload-control class."
+    Assert-True (-not [regex]::IsMatch($fileInput, '\b(?:hidden|disabled)\b|tabindex\s*=\s*["'']-1["'']|display\s*:\s*none')) "$($media.Name) native file input must remain keyboard-focusable."
+    Assert-Regex $fileSelect '<label class="account-file-button">\s*<input[^>]+type="file"[^>]*>\s*<span class="btn btn-ghost">Browse\.\.</span>\s*</label>\s*<input[^>]+type="text"[^>]+readonly' "selectFile.js $($media.Name) wrapper/sibling contract changed."
     Assert-Contains $fileSelect ('aria-label="Selected ' + $media.Name + ' file"') "Readonly $($media.Name) filename lacks an accessible name."
     Assert-Contains $fileSelect ('id="' + $media.ErrorId + '"') "Missing $($media.Name) upload error target."
     Assert-Regex $fileSelect ('id="' + $media.ErrorId + '"[^>]+role="alert"') "$($media.Name) upload errors must be announced."
@@ -265,11 +272,14 @@ foreach ($selector in @(
     '.account-links-grid',
     '.account-media-row',
     '.fileselect',
+    '.account-file-input',
+    '.account-file-input:focus-visible + .btn',
     '.account-app-row'
 )) {
     Assert-Contains $css $selector "Missing account styling selector $selector."
 }
 Assert-Regex $css '\.account-panel\[hidden\]\s*\{\s*display:\s*none' 'Hidden account panels must not display.'
+Assert-Regex $css '\.account-file-input:focus-visible\s*\+\s*\.btn\s*\{[^}]*outline:\s*2px\s+solid\s+var\(--storm\)' 'Keyboard-focused file inputs need a visible storm focus ring on the Browse control.'
 Assert-Regex $css '@media\s*\(max-width:\s*900px\).*?\.account-media-row' 'Account media row lacks tablet collapse.'
 Assert-Regex $css '@media\s*\(max-width:\s*640px\).*?\.account-tabs' 'Account tabs lack narrow-screen overflow handling.'
 $accountCssIndex = $css.IndexOf('/* ---------- authenticated account update')

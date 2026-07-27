@@ -26,6 +26,26 @@ archive, and seven Guides surfaces. Severity rows **1, 2, and 3** are now
 The original 2026-07-21 audit remains below as historical evidence. Resolution
 notes in §3.1–§3.3 supersede its old “not ported” conclusions.
 
+### Phase 3 final-review security findings — plugin authorization required
+
+The final review found two pre-existing server-side authorization gaps behind
+newly ported controls. Both handlers live under frozen `plugins/rikki/*`; this
+theme-only phase did not authorize plugin edits, so the controls and handlers
+were left unchanged pending a product/security decision:
+
+- `UpcomingMatches::onCastApply()` / `onCastRetract()` accept client-controlled
+  `match_id` and `caster_id` values without authenticating the caller, checking
+  `cast_matches`, or deriving the caster from the signed-in user. A forged
+  request can therefore alter another caster's assignments.
+- `ViewApps::onSendAccept()` accepts an arbitrary application when the caller
+  is merely a member of the target team. The rendered list is captain-filtered,
+  but the mutation handler does not enforce captain authority.
+
+Before production exposure, separately authorize plugin-side remediation and
+add request-level authorization tests. If plugin remediation is not approved,
+the affected caster apply/retract and application-accept controls must be
+disabled or withheld; a theme-only markup change is not a security fix.
+
 ## 2026-07-24 update — live-data seed (`fixtures:live-data`)
 
 The dev-only `fixtures:live-data` command (commits 29f23d7..cc8b60c) now
