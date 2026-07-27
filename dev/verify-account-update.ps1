@@ -62,6 +62,10 @@ foreach ($tab in @('general', 'media', 'social', 'game', 'apps')) {
     Assert-Regex $update ('<button[^>]+data-tab-target="account-' + $tab + '"[^>]*>') "Missing account $tab tab button."
     Assert-Regex $update ('id="account-' + $tab + '"[^>]+role="tabpanel"') "Missing account $tab tab panel."
 }
+Assert-Regex $update '<section class="p account-panel" id="account-general" role="tabpanel">' 'General must be the visible default panel.'
+foreach ($hiddenTab in @('media', 'social', 'game', 'apps', 'notifications')) {
+    Assert-Regex $update ('<section class="p account-panel" id="account-' + $hiddenTab + '" role="tabpanel" hidden>') "Account $hiddenTab panel must start hidden."
+}
 Assert-Contains $update '{% if this.session.get(''notifications'') %}' 'Notifications tab must keep the frozen session gate.'
 Assert-Contains $update '{{ this.session.get(''notifications'') | length }}' 'Notifications tab count must keep the frozen expression.'
 Assert-Contains $update 'Applications [{{ __SELF__.appsCount }}]' 'Applications tab must render the component appsCount.'
@@ -83,7 +87,10 @@ Assert-Contains $update '{% if user.sloth.newsletter_subscription %}' 'Newslette
 Assert-Contains $update 'request: ''onUpdateDescription''' 'Description handler changed.'
 Assert-Regex $update '<textarea[^>]+name="short_description"[^>]+maxlength="255"[^>]*>\{\{\s*__SELF__\.sloth\.short_description\s*\|\s*striptags\s*\}\}</textarea>' 'Description field contract changed.'
 Assert-Regex $update '<form[^>]*class="account-links-form"[^>]*>' 'Links must remain a plain form.'
-Assert-Contains $update 'data-request="{{ __SELF__ }}::onUpdateLinks"' 'Links request must remain on the submit button.'
+$linksRequest = 'data-request="{{ __SELF__ }}::onUpdateLinks"'
+Assert-True (([regex]::Matches($update, [regex]::Escape($linksRequest))).Count -eq 1) 'Links request must occur exactly once.'
+Assert-Regex $update ('<button(?=[^>]*type="submit")(?=[^>]*' + [regex]::Escape($linksRequest) + ')[^>]*>') 'Links request must remain only on its submit button.'
+Assert-True (-not [regex]::IsMatch($update, '<form[^>]*class="account-links-form"[^>]*data-request=')) 'Links form itself must not carry the AJAX request.'
 foreach ($field in @('facebook_url', 'twitter_url', 'twitch_url', 'youtube_url', 'website_url', 'discord_tag', 'battle_tag', 'region_id')) {
     Assert-Contains $update ('name="' + $field + '"') "Links form lost $field."
 }
@@ -122,11 +129,28 @@ foreach ($media in @(
     @{ Name = 'avatar'; Handler = 'onUpdateAvatar'; ErrorId = 'avatarUploadError' },
     @{ Name = 'banner'; Handler = 'onUpdateBanner'; ErrorId = 'bannerUploadError' }
 )) {
-    Assert-Regex $update ("\{\{\s*form_open\(\{request:\s*'" + $media.Handler + "',\s*model:\s*user,\s*files:\s*true\s*\}\)\s*\}\}") "Media $($media.Name) form contract changed."
-    Assert-Regex $update ('<div class="fileselect">.*?<input[^>]+type="file"[^>]+accept="image/png"[^>]+name="' + $media.Name + '"[^>]+style="display:none"[^>]*>.*?<input[^>]+type="text"[^>]+readonly') "selectFile.js $($media.Name) sibling contract changed."
-    Assert-Contains $update ('aria-label="Selected ' + $media.Name + ' file"') "Readonly $($media.Name) filename lacks an accessible name."
-    Assert-Contains $update ('id="' + $media.ErrorId + '"') "Missing $($media.Name) upload error target."
-    Assert-Regex $update ('id="' + $media.ErrorId + '"[^>]+role="alert"') "$($media.Name) upload errors must be announced."
+    $openForm = "{{ form_open({request: '$($media.Handler)', model: user, files: true }) }}"
+    $mediaFormMatch = [regex]::Match(
+        $update,
+        [regex]::Escape($openForm) + '(.*?)' + [regex]::Escape('{{ form_close() }}'),
+        [Text.RegularExpressions.RegexOptions]::Singleline
+    )
+    Assert-True $mediaFormMatch.Success "Media $($media.Name) form contract changed."
+    $mediaForm = $mediaFormMatch.Groups[1].Value
+    $fileSelectMatch = [regex]::Match(
+        $mediaForm,
+        '<div class="fileselect">(.*?)</div>',
+        [Text.RegularExpressions.RegexOptions]::Singleline
+    )
+    Assert-True $fileSelectMatch.Success "Missing $($media.Name) fileselect wrapper."
+    $fileSelect = $fileSelectMatch.Groups[1].Value
+    Assert-True (([regex]::Matches($fileSelect, 'type="file"')).Count -eq 1) "$($media.Name) fileselect must contain exactly one file input."
+    Assert-True (([regex]::Matches($fileSelect, 'type="text"')).Count -eq 1) "$($media.Name) fileselect must contain exactly one text sibling."
+    Assert-Regex $fileSelect ('<input[^>]+type="file"[^>]+accept="image/png"[^>]+name="' + $media.Name + '"[^>]+style="display:none"[^>]*>.*?<input[^>]+type="text"[^>]+readonly') "selectFile.js $($media.Name) sibling contract changed."
+    Assert-Contains $fileSelect ('aria-label="Selected ' + $media.Name + ' file"') "Readonly $($media.Name) filename lacks an accessible name."
+    Assert-Contains $fileSelect ('id="' + $media.ErrorId + '"') "Missing $($media.Name) upload error target."
+    Assert-Regex $fileSelect ('id="' + $media.ErrorId + '"[^>]+role="alert"') "$($media.Name) upload errors must be announced."
+    Assert-True (-not $mediaForm.Contains('account-media-preview')) "$($media.Name) preview must remain outside its upload form."
 }
 Assert-Contains $update 'Uploading a new avatar will replace your current avatar.<br />' 'Avatar helper copy changed.'
 Assert-Contains $update 'Image must be a PNG, under 100MB, and under 1280x1280 pixels.' 'Avatar limits copy changed.'
@@ -155,17 +179,43 @@ Assert-True (Test-Path -LiteralPath $viewAppsPath) "Missing lowercase viewapps o
 $viewApps = Get-Content -Raw -LiteralPath $viewAppsPath
 Assert-True (-not $viewApps.Contains('viewapps-theme-override-marker')) 'Temporary viewapps marker remains.'
 Assert-Contains $viewApps '{% for app in __SELF__.slothApps %}' 'Own-application collection loop changed.'
-Assert-Contains $viewApps '{{ __SELF__.slothAppsTeams[app.team_id].title }}' 'Own-application team binding changed.'
+Assert-Contains $viewApps '{% set applicationTeam = __SELF__.slothAppsTeams[app.team_id]|default(null) %}' 'Own-application team lookup needs an unavailable-team guard.'
+Assert-Contains $viewApps '{% if applicationTeam %}{{ applicationTeam.title }}{% else %}Team unavailable{% endif %}' 'Own-application team fallback changed.'
 Assert-Contains $viewApps '{% if app.approved == 0 %}No{% else %}Yes{% endif %}' 'Own-application approval binding changed.'
 Assert-Contains $viewApps '{% for app in __SELF__.teamApps %}' 'Team-application collection loop changed.'
-Assert-Contains $viewApps '{{ __SELF__.teamAppsUsers[app.user_id].title }}' 'Team-application user binding changed.'
+Assert-Contains $viewApps '{% set applicationPlayer = __SELF__.teamAppsUsers[app.user_id]|default(null) %}' 'Team-application user lookup needs an unavailable-player guard.'
+Assert-Contains $viewApps '{% if applicationPlayer %}{{ applicationPlayer.title }}{% else %}Player unavailable{% endif %}' 'Team-application player fallback changed.'
 Assert-Contains $viewApps '{% if app.approved == 0 %}Unaccepted{% else %}Invite pending{% endif %}' 'Team-application status binding changed.'
 Assert-True (([regex]::Matches($viewApps, 'href="/application/view/\{\{ app\.id \}\}"')).Count -eq 2) 'Both deferred application detail links must be literal.'
 Assert-True (-not $viewApps.Contains("'application/view' | page")) 'Deferred application detail page filters remain.'
-foreach ($handler in @('onAccept', 'onSendAccept', 'onWithdraw')) {
-    Assert-Contains $viewApps ('data-request="' + $handler + '"') "viewApps handler $handler changed."
-}
-Assert-Contains $viewApps 'data-request-data="id: {{ app.id }}"' 'viewApps application id request payload changed.'
+
+$ownAppsMatch = [regex]::Match($viewApps, '\{% for app in __SELF__\.slothApps %\}(.*?)\{% endfor %\}', [Text.RegularExpressions.RegexOptions]::Singleline)
+$teamAppsMatch = [regex]::Match($viewApps, '\{% for app in __SELF__\.teamApps %\}(.*?)\{% endfor %\}', [Text.RegularExpressions.RegexOptions]::Singleline)
+Assert-True $ownAppsMatch.Success 'Could not isolate the own-applications loop.'
+Assert-True $teamAppsMatch.Success 'Could not isolate the team-applications loop.'
+$ownAppsLoop = $ownAppsMatch.Groups[1].Value
+$teamAppsLoop = $teamAppsMatch.Groups[1].Value
+$idPayloadPattern = 'data-request-data="id: \{\{ app\.id \}\}"'
+
+Assert-True (([regex]::Matches($viewApps, $idPayloadPattern)).Count -eq 4) 'ViewApps must emit four handler id payload wrappers.'
+Assert-True (([regex]::Matches($viewApps, 'data-request="onAccept"')).Count -eq 1) 'ViewApps must emit one onAccept handler.'
+Assert-True (([regex]::Matches($viewApps, 'data-request="onSendAccept"')).Count -eq 1) 'ViewApps must emit one onSendAccept handler.'
+Assert-True (([regex]::Matches($viewApps, 'data-request="onWithdraw"')).Count -eq 2) 'ViewApps must emit two onWithdraw handlers.'
+
+Assert-True (([regex]::Matches($ownAppsLoop, $idPayloadPattern)).Count -eq 2) 'Own applications must carry two id payload wrappers.'
+Assert-True (([regex]::Matches($ownAppsLoop, 'data-request="onAccept"')).Count -eq 1) 'Own applications must carry one onAccept handler.'
+Assert-True (([regex]::Matches($ownAppsLoop, 'data-request="onWithdraw"')).Count -eq 1) 'Own applications must carry one onWithdraw handler.'
+Assert-True (([regex]::Matches($ownAppsLoop, 'data-request="onSendAccept"')).Count -eq 0) 'Own applications must not carry onSendAccept.'
+Assert-Regex $ownAppsLoop '\{% if app\.approved == 1 %\}(?:(?!\{% endif %\})[\s\S])*?<div data-request-data="id: \{\{ app\.id \}\}">\s*<button data-request="onAccept"(?:(?!\{% endif %\})[\s\S])*?\{% endif %\}' 'onAccept must stay id-bound inside the approved-invite branch.'
+Assert-Regex $ownAppsLoop '<div data-request-data="id: \{\{ app\.id \}\}">\s*<button data-request="onWithdraw"' 'Own-application onWithdraw must stay id-bound.'
+
+Assert-True (([regex]::Matches($teamAppsLoop, $idPayloadPattern)).Count -eq 2) 'Team applications must carry two id payload wrappers.'
+Assert-True (([regex]::Matches($teamAppsLoop, 'data-request="onSendAccept"')).Count -eq 1) 'Team applications must carry one onSendAccept handler.'
+Assert-True (([regex]::Matches($teamAppsLoop, 'data-request="onWithdraw"')).Count -eq 1) 'Team applications must carry one onWithdraw handler.'
+Assert-True (([regex]::Matches($teamAppsLoop, 'data-request="onAccept"')).Count -eq 0) 'Team applications must not carry onAccept.'
+Assert-Regex $teamAppsLoop '\{% if app\.approved == 0 %\}(?:(?!\{% endif %\})[\s\S])*?<div data-request-data="id: \{\{ app\.id \}\}">\s*<button data-request="onSendAccept"(?:(?!\{% endif %\})[\s\S])*?\{% else %\}' 'onSendAccept must stay id-bound inside the unaccepted branch.'
+Assert-Regex $teamAppsLoop '<div data-request-data="id: \{\{ app\.id \}\}">\s*<button data-request="onWithdraw"' 'Team-application onWithdraw must stay id-bound.'
+
 Assert-True (-not [regex]::IsMatch($viewApps, 'table-striped|btn-primary|btn-warning|btn-danger')) 'Bootstrap presentation remnants remain in viewapps.'
 Assert-True (([regex]::Matches($viewApps, '<h1\b')).Count -eq 0) 'viewapps must not introduce a second h1.'
 

@@ -12,10 +12,11 @@
 
         <div class="account-app-list">
             {% for app in __SELF__.slothApps %}
+                {% set applicationTeam = __SELF__.slothAppsTeams[app.team_id]|default(null) %}
                 <article class="account-app-row">
                     <div class="account-app-main">
                         <span class="account-app-label">Team</span>
-                        <strong>{{ __SELF__.slothAppsTeams[app.team_id].title }}</strong>
+                        <strong>{% if applicationTeam %}{{ applicationTeam.title }}{% else %}Team unavailable{% endif %}</strong>
                     </div>
                     <div class="account-app-status">
                         <span class="account-app-label">Approved</span>
@@ -52,10 +53,11 @@
 
         <div class="account-app-list">
             {% for app in __SELF__.teamApps %}
+                {% set applicationPlayer = __SELF__.teamAppsUsers[app.user_id]|default(null) %}
                 <article class="account-app-row">
                     <div class="account-app-main">
                         <span class="account-app-label">Player</span>
-                        <strong>{{ __SELF__.teamAppsUsers[app.user_id].title }}</strong>
+                        <strong>{% if applicationPlayer %}{{ applicationPlayer.title }}{% else %}Player unavailable{% endif %}</strong>
                     </div>
                     <div class="account-app-status">
                         <span class="account-app-label">Status</span>
