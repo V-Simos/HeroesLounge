@@ -347,20 +347,13 @@
 }
 
 /* ---------- caster schedule (/user/casterschedule) ------------------------
-   The three CasterSchedule queues share calendar rows, but have no interactive
-   caster column: the caster is reviewing their own applications here. Keep the
-   existing date groups and rows, only collapsing that unused third column. */
+   The three CasterSchedule queues share the calendar rows, including the
+   frozen caster request/status column and its responsive behavior. */
 .caster-schedule { padding-bottom: 72px; }
 .caster-schedule-section + .caster-schedule-section { margin-top: 36px; }
 .caster-schedule-heading { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px;
   padding-bottom: 11px; border-bottom: 1px solid var(--line); }
 .caster-schedule-heading h2 { font-size: 21px; font-weight: 700; letter-spacing: .01em; }
-.caster-schedule .cal-row { grid-template-columns: minmax(190px, 260px) minmax(0, 1fr); }
-
-@media (max-width: 760px) {
-  .caster-schedule .cal-row { grid-template-columns: 1fr; }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .cal-row { transition: none; }
 }

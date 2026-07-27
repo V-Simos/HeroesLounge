@@ -1,8 +1,8 @@
 {#- CasterSchedule injects three UpcomingMatches children at runtime. Their
     aliases have no component-override directories, so call onRender() and read
     the public datesToMatches collection directly instead of using {% component %}.
-    The caster is the viewer on this page: this is a schedule, not a place to
-    apply or retract casting requests. -#}
+    Each match retains the frozen caster-request/status fragment with its real
+    child-component alias, so its request and retract handlers stay functional. -#}
 {% if user and can('cast_matches') %}
 {% do upcomingMatchesPending.onRender() %}
 {% do upcomingMatchesAccepted.onRender() %}
@@ -17,9 +17,9 @@
         <p class="cal-tz mono">All times in {{ upcomingMatchesPending.timezone }} {{ upcomingMatchesPending.timezoneOffset }}</p>
 
         {% set schedules = [
-            { heading: 'Decision Pending', id: 'caster-schedule-pending', component: upcomingMatchesPending },
-            { heading: 'Accepted Applications', id: 'caster-schedule-accepted', component: upcomingMatchesAccepted },
-            { heading: 'Denied Applications', id: 'caster-schedule-denied', component: upcomingMatchesDenied }
+            { heading: 'Decision Pending', id: 'caster-schedule-pending', component: upcomingMatchesPending, requestAlias: 'upcomingMatchesPending' },
+            { heading: 'Accepted Applications', id: 'caster-schedule-accepted', component: upcomingMatchesAccepted, requestAlias: 'upcomingMatchesAccepted' },
+            { heading: 'Denied Applications', id: 'caster-schedule-denied', component: upcomingMatchesDenied, requestAlias: 'upcomingMatchesDenied' }
         ] %}
 
         {% for schedule in schedules %}
@@ -67,6 +67,9 @@
                                     <div class="cal-side cal-side-right">
                                         {% if away %}<a class="tname" href="/team/view/{{ away.slug }}">{{ away.title }}</a>{% partial 'team/shield' team=away size='sm' %}{% else %}<span class="tname cal-tbd">TBD</span>{% endif %}
                                     </div>
+                                </div>
+                                <div class="cal-casters caster-request" id="divCasterRequests{{ match.id }}">
+                                    {% partial 'calendar/caster-requests' match=match user=matches.user componentAlias=schedule.requestAlias %}
                                 </div>
                             </div>
                             {% endfor %}
