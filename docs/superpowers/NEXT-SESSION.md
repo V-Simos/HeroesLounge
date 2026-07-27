@@ -45,8 +45,9 @@ Phase 3 sources:
 - `/guides/aram-signup-guide`
 
 The First Game guide's frozen source contains six `<h1>` elements. This is
-recorded content-migration/a11y debt, not a re-skin defect; do not silently
-rewrite it or add the plan typo's `/guide/.../frist` alias.
+the explicitly approved sole Phase-3 one-`<h1>` exception under Task 7's
+byte-verbatim fidelity requirement, plus recorded content-migration/a11y debt;
+do not silently rewrite it or add the plan typo's `/guide/.../frist` alias.
 
 ## Environment resume
 

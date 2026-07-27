@@ -19,8 +19,9 @@ archive, and seven Guides surfaces. Severity rows **1, 2, and 3** are now
   content operation to create/confirm the Indikator.Content `events` category.
 - `/guides` and its six linked guide pages are ported under their frozen URLs.
   The First Game source intentionally remains byte-faithful and contains six
-  `<h1>` elements; semantic demotion is tracked as content-migration/a11y debt,
-  not silently changed by the re-skin.
+  `<h1>` elements. This is the explicitly approved sole Phase-3 one-`<h1>`
+  exception under Task 7 fidelity; semantic demotion remains tracked as
+  content-migration/a11y debt, not silently changed by the re-skin.
 
 The original 2026-07-21 audit remains below as historical evidence. Resolution
 notes in §3.1–§3.3 supersede its old “not ported” conclusions.
@@ -213,9 +214,10 @@ These are planned remaining-wave scope per `PROGRESS.md`, not regressions.
 The frozen source for
 `/guides/scheduling-and-playing-your-first-game` contains six `<h1>` section
 headings. Phase 3 intentionally preserves the source byte-for-byte except for
-its layout front matter. A future content migration should decide the intended
-heading hierarchy and demote section headings; the frontend re-skin must not
-make that editorial change silently.
+its layout front matter, and Task 8 explicitly accepts it as the sole Phase-3
+one-`<h1>` exception. A future authorized content migration should decide the
+intended heading hierarchy and demote section headings; the frontend re-skin
+must not make that editorial change silently.
 
 ---
 

@@ -75,15 +75,16 @@ Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
 | 5 — Caster schedule `/user/casterschedule` | ✅ | ✅ | ✅ (1 fix round; approved) | 864a3c7, acbf89d |
 | 6 — Events archive port + Events link | ✅ | ✅ | ✅ (3 fix rounds; approved) | 6ffa2ad, 83b745b, 60004cd, 69191e6 |
 | 7 — Guides static-pages port | ✅ | ✅ | ✅ (approved) | 1c09098 |
-| 8 — Phase-3 finishing pass | ✅ | ✅ (phase-wide contract pass) | ✅ (static/server/browser matrix) | c2216f0, ffbe6f3, _this docs commit_ |
+| 8 — Phase-3 finishing pass | ✅ | ✅ (phase-wide contract pass) | ✅ (review fixes + static/server/browser matrix) | c2216f0, ffbe6f3, 172f5ff, 61a5035, _review-fix docs commit_ |
 
 Design facts that drove the spec (verified live 2026-07-24, this session): the
 blog is **Indikator.Content** (NOT RainLab.Blog — query the `indikator_content_*`
 tables; 446 posts, 28 categories incl. the seeded `events`), so the Events nav
 link WORKS in dev; `deactivate_link.htm` is dead code (referenced nowhere, not
-ported); RainLab `Account::redirectForceSecure()` 302s plain-http non-AJAX GETs
-→ `/user` cannot render in dev with `forceSecure=1` (AJAX exempt; dev
-verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
+ported); RainLab's parent account component creates a plain-http redirect
+response, but frozen `SlothAccount::onRun()` does not return it, so `/user`
+renders locally with committed `forceSecure=1` and verification needs no
+temporary flip; `selectFile.js` contract =
 `.fileselect` wrapper + sibling `:text` + `#{fieldName}UploadError` ids +
 `avatar`/`banner` input names.
 
@@ -190,9 +191,10 @@ verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
   `/guides/scheduling-and-playing-your-first-game`; the plan's verification
   list contains a contradictory `guide/.../frist` typo and no alias was added.
 - The frozen First Game body contains six `<h1>` section headings. Task 7
-  preserves them byte-verbatim and the layout adds none. Semantic demotion
-  requires an explicit future content-migration decision; Task 8 should record,
-  not silently rewrite, this known source artifact.
+  preserves them byte-verbatim and the layout adds none. Task 8 formally
+  accepts this as the sole Phase-3 one-`<h1>` exception under Task 7 fidelity.
+  Semantic demotion requires a separately authorized content migration; the
+  re-skin must not silently rewrite this known source artifact.
 
 ### Notes from Phase 3 Task 8 (finishing pass)
 
@@ -208,6 +210,13 @@ verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
   in the page Tab sequence, and shared behavior supports wrapped Left/Right
   plus Home/End activation and focus. The new `dev/verify-tabs-a11y.ps1`
   protects the complete shared contract.
+- Task-8 review replaced the original token-only tab check with a dependency-
+  free Node DOM harness that executes the real `lounge.js`. It covers click,
+  wrapped Left/Right, Home/End, hidden/disabled-tab exclusion, initial/changed
+  hidden state, focus movement, and nested isolation. Static coverage now also
+  matches reference values in both directions, enforces template ID uniqueness,
+  verifies concrete one-selected/one-focusable/one-visible state, and requires
+  `type="button"` on all current tab consumers.
 - Closed Task 4's verifier-only items: executable profile guest-gate checks now
   ignore Twig comments, and hero popularity plus map pick/winrate output fields
   are asserted. The account-update verifier now scopes nested Twig loops
@@ -222,17 +231,20 @@ verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
   `/user/view/25`, `/user/casterschedule`, the logged-in forgot-password
   redirect, tab structure, and logout.
 - Parent in-app Browser coverage at 360/768/1200 found zero page overflow,
-  empty/hash links, rendered Bootstrap remnants, or console warnings/errors on
-  the representative guest and authenticated matrices. The native guest
-  dialog opened with focus inside and `Not now` closed it; the Browser backend
-  could not synthesize Escape, so only the source-native Escape contract is
-  retained rather than claiming a runtime result.
+  empty/hash links, rendered Bootstrap remnants, or console warnings/errors
+  across all 12 guest routes and the authenticated matrix. A fresh-cookie
+  dialog open focused its Close button with `:focus-visible` and the expected
+  solid 2px storm outline; `Not now` closed the original dialog check. The
+  Browser backend could not synthesize Escape, so only the source-native Escape
+  contract is retained rather than claiming a runtime result.
 - Authenticated keyboard coverage moved General → Media with ArrowRight,
   Applications with End, and back to General with Home. Focus followed the
   selected tab, one labelled panel remained visible, and the tab's computed
   focus ring was the expected solid 2px storm outline. Mobile/desktop account
   and mobile Events screenshots were visually clean; Events links retained the
-  storm underline affordance.
+  storm underline affordance. Opening an Events group by its visible
+  `<summary>` left the summary focused with the same expected focus-visible
+  outline.
 - User 41's imported-dump identity remains `Hapcher` / `sloth25`; the standing
   dev-only password is `dev12345`. Verification restored the account exactly
   from the known-good pre-Task-3 snapshot, including volatile auth timestamps

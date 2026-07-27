@@ -5,6 +5,16 @@ Wave-1 tip) · **Status:** designed autonomously per the standing subagent-drive
 workflow; decisions below follow the approved Phase-1/Phase-2 specs and do not
 re-litigate them.
 
+> **Task-8 acceptance amendment — 2026-07-28:** the global one-`<h1>` hygiene
+> rule has one approved Phase-3 exception:
+> `/guides/scheduling-and-playing-your-first-game` inherits six `<h1>` section
+> headings from the frozen source body. Task 7's byte-verbatim fidelity
+> requirement governs, so the re-skin MUST preserve that body. Any semantic
+> demotion requires a separately authorized content migration. Also, the
+> earlier forceSecure premise is superseded: frozen `SlothAccount::onRun()`
+> calls but does not return the parent response, so local `/user` renders with
+> committed `forceSecure = 1`; verification MUST NOT flip it.
+
 ## Goal
 
 Close the highest-impact frontend gap in `heroeslounge-next`: the entire `/user`
@@ -83,8 +93,9 @@ timezone page.
   - `default.htm` (15 l): guest → two-column Sign in / Register; authed →
     `activation_check` + `update`. Uses `{% partial __SELF__ ~ '::name' %}`.
   - `signin.htm` (25 l): `data-request="onSignin" data-request-flash`; fields
-    `login`, `password`; `{{ loginAttributeLabel }}` (renders "Email" — login
-    is by EMAIL on this install); link `{{ 'user/forgotpassword'|page }}`.
+    `login`, `password`; `{{ loginAttributeLabel }}` (renders the configured
+    attribute; the current local DB uses username); link
+    `{{ 'user/forgotpassword'|page }}`.
   - `register.htm` (78 l): ONE form `data-request="onRegister"`; the visible
     "Register" button opens a Bootstrap **modal** (body = old-theme partial
     `ruleSet/default`, 24 lines of welcome prose — NOT the actual rules);
@@ -122,12 +133,13 @@ timezone page.
   input names + `accept="image/png"`, and both error-div ids.
 - `ViewApps` (`components/ViewApps.php` + `viewapps/default.htm`, ~2 KB):
   applications list — needs a small override (`partials/viewapps/`).
-- **forceSecure gotcha (verified in RainLab source):** `Account::onRun()` →
-  `redirectForceSecure()` 302s any non-AJAX plain-http GET to `https://…`.
-  Dev serves plain http → the account page will NOT render in dev with
-  `forceSecure=1`. AJAX handlers are exempt (`Request::ajax()`)。 DECISION:
-  keep `forceSecure = 1` verbatim (prod parity); dev live-verification flips
-  it to 0 locally, restores before commit; document in dev/README.
+- **forceSecure gotcha (corrected against the frozen child component):**
+  RainLab `Account::onRun()` creates a redirect response for non-AJAX
+  plain-http GETs, but frozen `SlothAccount::onRun()` calls
+  `parent::onRun()` without returning that response. The account page therefore
+  renders locally with `forceSecure=1`. DECISION: keep `forceSecure = 1`
+  verbatim and verify it without a temporary source flip; do not fix the frozen
+  child behavior in this frontend re-skin.
 
 ### 2. Profile `/user/view/:id` — `Profile` (loungeviews, 81 l)
 
@@ -246,8 +258,9 @@ timezone page.
 ## Verification strategy (dev)
 
 - Sign-in/account/profile: real-dump user id 41 (DOF captain, password
-  `dev12345` via tinker — Task-7 precedent). forceSecure temporarily 0 during
-  Playwright passes (restored before commit).
+  `dev12345` via tinker — Task-7 precedent). Keep committed
+  `forceSecure = 1` throughout live verification; the frozen child behavior
+  described above permits local HTTP rendering.
 - Register/newsletter/Discord-sync: **dev-blind** (no Discord/MailChimp
   creds) — markup + client validation + handler wiring verified; full flows
   documented as verify-blind.
@@ -259,7 +272,8 @@ timezone page.
   data-blind.
 - Events/guides: plain HTTP + visual passes; `/blog/category/events` 200.
 - Standard hygiene every task: 0 ERROR/exception log lines, clean console
-  (bar known dev-data artifacts), 360/768/1200 responsive, one `<h1>`.
+  (bar known dev-data artifacts), 360/768/1200 responsive, one `<h1>` except
+  the explicitly approved frozen First Game body.
 
 ## Task breakdown (for the plan)
 
