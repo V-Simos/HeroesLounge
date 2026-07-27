@@ -552,6 +552,10 @@
 .arch-season[open] > .arch-summary { color: var(--storm); }
 .arch-season[open] > .arch-summary svg { color: var(--storm); transform: rotate(90deg); }
 .arch-body { padding: 16px 0 24px; }
+/* Archive entries are bare content links. Restore a non-colour affordance after
+   base.css's global link reset; no clip-path means the shared focus ring applies. */
+.arch-body a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
+.arch-body a:hover, .arch-body a:focus-visible { color: var(--ink); }
 /* the shared partial's bare "Nothing scheduled yet." line aligns with the
    summary's 20px text gutter (the .season-grid panels self-align full-width). */
 .arch-body > .season-empty { padding: 0 20px; }
