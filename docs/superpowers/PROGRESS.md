@@ -69,7 +69,7 @@ Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
 |---|---|---|---|---|
 | 1 — Forgot password `/user/forgotpassword` | ✅ | ✅ | ✅ (1 fix round; approved) | 2625539, 4deb149, e38d06b |
 | 2 — Account: guest half (signin/register) | ✅ | ✅ | ✅ (approved; 1 minor deferred) | 140f2a8 |
-| 3 — Account: authed half (tabs/update forms) | | | | |
+| 3 — Account: authed half (tabs/update forms) | ✅ | ✅ | ✅ (1 fix round; approved) | d1ff863, 8787dff |
 | 4 — Profile `/user/view/:id` | | | | |
 | 5 — Caster schedule `/user/casterschedule` | | | | |
 | 6 — Events archive port + Events link | | | | |
@@ -117,6 +117,22 @@ verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
   dialog focus/Esc, viewport overflow, and console checks remain for Task 8.
   Review's non-blocking `autocomplete="username"` suggestion is also parked
   for that finishing pass.
+
+### Notes from Phase 3 Task 3 (account authenticated half)
+
+- Replaced the interim Bootstrap update surface with the established
+  lounge.js tabs for General, Media, Social, Game, Applications, and gated
+  Notifications. Added lowercase `viewapps` plus the reusable country selector.
+- Live reversible checks covered description, links, game, general/password,
+  avatar, and banner handlers. New file/timeline rows were removed, original
+  attachments were restored, and final user/sloth/file/timeline fingerprints
+  matched the pre-write snapshots.
+- Review added null-safe `Team unavailable` / `Player unavailable`
+  presentation fallbacks and strengthened structural handler/payload, hidden
+  panel, link-submit, and upload-DOM verification.
+- Browser interaction/visual/console coverage and the project-wide complete
+  ARIA tabs pattern remain for Task 8. External Discord, MailChimp, mail, and
+  dead-session notification paths remain wiring-only.
 
 ### Notes from Task 0 (bracket spike — proven, de-risked)
 
