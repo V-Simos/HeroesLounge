@@ -72,7 +72,7 @@ Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
 | 3 — Account: authed half (tabs/update forms) | ✅ | ✅ | ✅ (1 fix round; approved) | d1ff863, 8787dff |
 | 4 — Profile `/user/view/:id` | ✅ | ✅ | ✅ (approved; verifier minors deferred) | c6176ed |
 | 5 — Caster schedule `/user/casterschedule` | ✅ | ✅ | ✅ (1 fix round; approved) | 864a3c7, acbf89d |
-| 6 — Events archive port + Events link | | | | |
+| 6 — Events archive port + Events link | ✅ | ✅ | ✅ (3 fix rounds; approved) | 6ffa2ad, 83b745b, 60004cd, 69191e6 |
 | 7 — Guides static-pages port | | | | |
 | 8 — Phase-3 finishing pass | | | | |
 
@@ -164,6 +164,18 @@ verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
 - Guest, non-caster, and all three pivot approval states were verified against
   a temporary future fixture. Match time, pivot, accounts, permission tables,
   and auto-increments were restored exactly.
+
+### Notes from Phase 3 Task 6 (events archive)
+
+- Ported `/events/archive` with the native season-archive accordion pattern and
+  a byte-identical copy of the frozen 3-group/14-link menu YAML, including its
+  intentionally quirky and protocol-relative URLs.
+- Live `/events/archive` and `/blog/category/events` returned 200. The
+  production cutover content operation to create/confirm the Indikator
+  `events` category is recorded in the hardening list below.
+- Review added a visible underline affordance for archive entries, then scoped
+  it beneath the Events-only page class so Season Archive `.season-link`
+  colors, decoration, and hover behavior remain unchanged.
 
 ### Notes from Task 0 (bracket spike — proven, de-risked)
 
