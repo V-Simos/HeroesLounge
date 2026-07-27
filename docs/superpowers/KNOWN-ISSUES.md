@@ -4,6 +4,27 @@
 `hl_test_data_dump_07_2026.sql` was (supposedly) loaded. Answers "what has no
 data / what is broken right now, and is it the DB or the frontend?"
 
+## 2026-07-28 update — Phase 3 complete
+
+Phase 3 ports and verifies the account/auth/profile, caster schedule, Events
+archive, and seven Guides surfaces. Severity rows **1, 2, and 3** are now
+**RESOLVED-BY-PORT**:
+
+- `/user`, `/user/forgotpassword`, `/user/view/:id`, and
+  `/user/casterschedule` render the new theme; authenticated account update,
+  profile, password-reset, and caster flows were exercised against the real
+  components.
+- `/events/archive` is ported, while the nav's `/blog/category/events` target
+  works in this seeded environment. Production still needs the documented
+  content operation to create/confirm the Indikator.Content `events` category.
+- `/guides` and its six linked guide pages are ported under their frozen URLs.
+  The First Game source intentionally remains byte-faithful and contains six
+  `<h1>` elements; semantic demotion is tracked as content-migration/a11y debt,
+  not silently changed by the re-skin.
+
+The original 2026-07-21 audit remains below as historical evidence. Resolution
+notes in §3.1–§3.3 supersede its old “not ported” conclusions.
+
 ## 2026-07-24 update — live-data seed (`fixtures:live-data`)
 
 The dev-only `fixtures:live-data` command (commits 29f23d7..cc8b60c) now
@@ -62,15 +83,16 @@ There are **two independent root causes**, and neither is a code bug:
 
 | # | What | DB or Frontend? | Severity | Root cause |
 |---|------|-----------------|----------|-----------|
-| 1 | **Sign in / Join Season / account / notifications** all dead (`/user*` not ported) | Frontend (not ported) | 🔴 High | §3.1 |
-| 2 | **Events** nav link → 404 | Frontend (bad link + missing data) | 🟠 Med | §3.2 |
-| 3 | **Guides** nav link → not-found | Frontend (not ported) | 🟠 Med | §3.3 |
+| 1 | **Sign in / Join Season / account / profile** | Frontend | ✅ Resolved by port | §3.1 |
+| 2 | **Events** nav + archive | Frontend + production content | ✅ Resolved by port in dev | §3.2 |
+| 3 | **Guides** nav + seven guide pages | Frontend | ✅ Resolved by port | §3.3 |
 | 4 | Calendar renders but is **empty** | DB (no upcoming matches exist) | 🟡 Data | §4.1 |
 | 5 | Active season divisions show **teams but no matches/rounds** | DB (no fixtures generated) | 🟡 Data | §4.2 |
 | 6 | All **per-game / player statistics** blank | DB (`gameparticipation` = 0 rows) | 🟡 Data | §4.3 |
 | 7 | **Blog** nearly empty (1 post, only "Uncategorized") | DB (content) | 🟡 Data | §4.4 |
-| 8 | FAQ / Contact / Statistics / Search / Events-archive / Division-S / static pages | Frontend (not ported) | 🟠 Med | §3.4 |
+| 8 | FAQ / Contact / Statistics / Search / Division-S / remaining static pages | Frontend (not ported) | 🟠 Med | §3.4 |
 | 9 | Team **create / manage / match** pages absent | Frontend (not ported) | 🟠 Med | §3.4 |
+| 10 | First Game guide source contains six `<h1>` headings | Content migration / a11y | 🟡 Debt | §3.5 |
 
 ---
 
@@ -120,7 +142,16 @@ so all of the above are simply absent from the active site.
 
 ## 3. Broken things reachable from the UI (frontend / not-ported)
 
-### 3.1 🔴 Authentication & account — completely non-functional
+### 3.1 ✅ Authentication & account — resolved by Phase 3
+
+**Current state (2026-07-28):** the new theme now owns `/user`,
+`/user/forgotpassword/:code?`, `/user/view/:id`, and
+`/user/casterschedule`. Guest, authenticated, reset, profile, and caster
+states were verified in Task 8. The text login field deliberately uses
+`autocomplete="username"` to match the current local RainLab.User setting.
+
+**Historical 2026-07-21 finding follows:**
+
 `partials/site/nav.htm` links **Sign in**, **Join Season**, the **avatar**, and
 the **notifications bell** all to **`/user`**. The new theme has no `pages/user/*`,
 so:
@@ -134,14 +165,28 @@ so:
 Effect: **you cannot sign in, register, join a season, view profiles, or see
 notifications.** Highest-impact gap. (Planned Phase-3 work.)
 
-### 3.2 🟠 Events nav link → 404
+### 3.2 ✅ Events nav and archive — resolved by Phase 3
+
+**Current state (2026-07-28):** `/events/archive` is ported and
+`/blog/category/events` returns 200 against the live-data seed. Production
+cutover must still create or confirm the `events` category; that is a content
+operation, not a theme-code gap.
+
+**Historical 2026-07-21 finding follows:**
+
 Nav "Events" points at **`/blog/category/events`** (not the old
 `/events/archive`). There is **no `events` blog category** in the fresh dump
 (only "Uncategorized"), so it returns **404 "Category not found"**. Two problems
 stacked: the target category doesn't exist *and* the old events archive isn't
 ported.
 
-### 3.3 🟠 Guides nav link → not-found
+### 3.3 ✅ Guides nav — resolved by Phase 3
+
+**Current state (2026-07-28):** `/guides` and all six linked guide pages render
+from the new theme under their frozen canonical URLs.
+
+**Historical 2026-07-21 finding follows:**
+
 Nav "Guides" points at **`/guides`** (a hardcoded old-theme literal — the nav
 comments say so). The guides landing + sub-guides are RainLab static pages that
 live only in the old theme → **200 themed "Not found"**.
@@ -152,17 +197,25 @@ graceful themed not-found / division fallback):
 
 - `/faq`, `/contact`, `/search`
 - `/statistics`, `/statistics/hero/:slug/:season?`
-- `/events/archive`
 - `/application`, `/application/view/:id` (season sign-up applications)
 - `/team/create`, `/team/manage/:slug`, `/team/match/:slug` (only `/team/view` is ported)
 - `/divisionS/*` (crew / general / ruleset / schedule / standings)
 - `/general/*` (staff, caster statistics, NA caster statistics, ruleset)
 - `/ext-div/:id` (extended division table), `/rssfeed.xml`, `/timezone`
-- **All RainLab static pages** (guides, rulesets, privacy statement, hall of
-  fame, staff, Division-S / Method-Mayhem content, etc.) — none ported.
+- RainLab static pages outside the seven Phase-3 guide entries (rulesets,
+  privacy statement, hall of fame, staff, Division-S / Method-Mayhem content,
+  etc.).
 
-These are the planned **Wave 2 (static content)** + **Phase 3 (auth/interactive)**
-scope, per `PROGRESS.md` — not regressions.
+These are planned remaining-wave scope per `PROGRESS.md`, not regressions.
+
+### 3.5 🟡 First Game guide heading structure — content migration debt
+
+The frozen source for
+`/guides/scheduling-and-playing-your-first-game` contains six `<h1>` section
+headings. Phase 3 intentionally preserves the source byte-for-byte except for
+its layout front matter. A future content migration should decide the intended
+heading hierarchy and demote section headings; the frontend re-skin must not
+make that editorial change silently.
 
 ---
 
@@ -220,13 +273,11 @@ No 500s, no exceptions in the logs.
 - Note: per-game statistics can't be demoed without a dump containing
   `gameparticipation`.
 
-**If the goal is to close the *frontend* gaps (porting):**
-- **Priority 1 (Phase 3):** port the `/user` auth/account/profile pages — Sign
-  in / Join Season / notifications are the most visible breakage.
-- **Priority 2 (Wave 2 static content):** guides, faq, contact, events, plus the
-  RainLab static pages; fix the Events + Guides nav links as part of that.
+**If the goal is to close the remaining *frontend* gaps (porting):**
+- Plan the remaining static content: FAQ, contact, rulesets, privacy, hall of
+  fame, staff, and Division-S / general surfaces.
 - Team create/manage/match, statistics, search, division-S/general sections:
-  schedule into the remaining Phase-3 waves.
+  schedule into a later interactive wave.
 
 **Housekeeping:** `dev/docker-compose.yml` still sets
 `CMS_ACTIVE_THEME: HeroesLounge-Theme` while the DB forces `heroeslounge-next`.

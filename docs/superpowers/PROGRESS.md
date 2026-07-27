@@ -9,9 +9,10 @@ maintained — this table is.)
 - Phase 1 spec: `docs/superpowers/specs/2026-07-03-ui-ux-rework-design.md`
 - Phase 1 plan: `docs/superpowers/plans/2026-07-03-ui-rework-phase-1.md` — ✅ DONE (PR #1 open)
 - Phase 2 spec: `docs/superpowers/specs/2026-07-04-phase-2-public-reskin-design.md`
-- **Phase 2 Wave 1 plan (NEXT TO EXECUTE):** `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`
-- Branch: `ui-rework` (fork V-Simos/HeroesLounge, upstream Fabian-Sommer/HeroesLounge).
-  Phase 2 recommended to start on a new `ui-rework-phase-2` branch off `ui-rework` (not yet created).
+- **Phase 2 Wave 1 plan (✅ COMPLETE):** `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`
+- **Phase 3 plan (✅ COMPLETE):** `docs/superpowers/plans/2026-07-24-phase-3-user-auth.md`
+- Branch: `ui-rework-phase-2` (fork V-Simos/HeroesLounge, upstream
+  Fabian-Sommer/HeroesLounge).
 - Process: superpowers subagent-driven development — per task: fresh implementer
   subagent → spec-compliance review → code-quality review → (fixes → re-review) → next task.
 
@@ -74,7 +75,7 @@ Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
 | 5 — Caster schedule `/user/casterschedule` | ✅ | ✅ | ✅ (1 fix round; approved) | 864a3c7, acbf89d |
 | 6 — Events archive port + Events link | ✅ | ✅ | ✅ (3 fix rounds; approved) | 6ffa2ad, 83b745b, 60004cd, 69191e6 |
 | 7 — Guides static-pages port | ✅ | ✅ | ✅ (approved) | 1c09098 |
-| 8 — Phase-3 finishing pass | | | | |
+| 8 — Phase-3 finishing pass | ✅ | ✅ (phase-wide contract pass) | ✅ (static/server/browser matrix) | c2216f0, ffbe6f3, _this docs commit_ |
 
 Design facts that drove the spec (verified live 2026-07-24, this session): the
 blog is **Indikator.Content** (NOT RainLab.Blog — query the `indikator_content_*`
@@ -192,6 +193,60 @@ verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
   preserves them byte-verbatim and the layout adds none. Semantic demotion
   requires an explicit future content-migration decision; Task 8 should record,
   not silently rewrite, this known source artifact.
+
+### Notes from Phase 3 Task 8 (finishing pass)
+
+- Completed the phase-wide committed-tree, static-contract, live-route,
+  responsive, accessibility, restoration, and documentation pass. The
+  finishing implementation is split into theme behavior (`c2216f0`) and
+  strengthened dev contracts (`ffbe6f3`).
+- Closed Task 2's parked login-semantic item: the text login control now uses
+  `autocomplete="username"`, matching this environment's configured
+  `login_attribute=username`.
+- Closed Task 3's parked ARIA item across all nine `[data-tabs]` consumers:
+  every tab/panel pair is labelled in both directions, exactly one tab starts
+  in the page Tab sequence, and shared behavior supports wrapped Left/Right
+  plus Home/End activation and focus. The new `dev/verify-tabs-a11y.ps1`
+  protects the complete shared contract.
+- Closed Task 4's verifier-only items: executable profile guest-gate checks now
+  ignore Twig comments, and hero popularity plus map pick/winrate output fields
+  are asserted. The account-update verifier now scopes nested Twig loops
+  structurally instead of relying on a broad regex.
+- All four `dev/verify-*.ps1` scripts pass. `node --check`, `git diff --check`,
+  `forceSecure = 1`, lowercase override paths, no marker/temp flips, no
+  next-theme Bootstrap leakage, no empty/hash links, and frozen plugin/old-theme
+  boundaries also pass.
+- Fresh-cache guest probes covered all 12 Phase-3 routes: every response was
+  200 with zero fatal/Twig signatures; each rendered one `<h1>` except the
+  frozen First Game guide's six. Authenticated user 41 checks covered `/user`,
+  `/user/view/25`, `/user/casterschedule`, the logged-in forgot-password
+  redirect, tab structure, and logout.
+- Parent in-app Browser coverage at 360/768/1200 found zero page overflow,
+  empty/hash links, rendered Bootstrap remnants, or console warnings/errors on
+  the representative guest and authenticated matrices. The native guest
+  dialog opened with focus inside and `Not now` closed it; the Browser backend
+  could not synthesize Escape, so only the source-native Escape contract is
+  retained rather than claiming a runtime result.
+- Authenticated keyboard coverage moved General → Media with ArrowRight,
+  Applications with End, and back to General with Home. Focus followed the
+  selected tab, one labelled panel remained visible, and the tab's computed
+  focus ring was the expected solid 2px storm outline. Mobile/desktop account
+  and mobile Events screenshots were visually clean; Events links retained the
+  storm underline affordance.
+- User 41's imported-dump identity remains `Hapcher` / `sloth25`; the standing
+  dev-only password is `dev12345`. Verification restored the account exactly
+  from the known-good pre-Task-3 snapshot, including volatile auth timestamps
+  and persistence fields after the final browser login. The in-app Browser test
+  tabs were closed; its inaccessible cookie store may retain a dormant local
+  session, but no further browser request will run. The final clean-log evidence
+  left `storage/logs/system.log` empty.
+- The First Game guide remains at the frozen canonical URL
+  `/guides/scheduling-and-playing-your-first-game`; no typo alias or silent
+  content rewrite was introduced. Its six source `<h1>` elements are recorded
+  in `KNOWN-ISSUES.md` as future content-migration/a11y debt.
+- Production cutover still requires the already-recorded content operation to
+  create or confirm the Indikator.Content `events` category. No plugin-side
+  workaround was added.
 
 ### Notes from Task 0 (bracket spike — proven, de-risked)
 

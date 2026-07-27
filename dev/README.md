@@ -76,12 +76,18 @@ docker compose -f dev/docker-compose.yml exec -T web php artisan fixtures:live-d
   - `PendingPete` — pending (unapproved) caster on an upcoming match
 
   `fixtures:seed` prints the full account list when it finishes.
+- **Imported July-2026 dump**: use user 41, username `Hapcher`, email
+  `Hapcher5166@fakegmail.com`, password `dev12345` (sloth 25). The current local
+  RainLab.User setting is `login_attribute=username`, so enter `Hapcher`; if an
+  environment is configured for email login instead, use the email. This is a
+  local verification convenience only and must not be copied to production.
 
 ## Useful URLs
 
-- `http://localhost:8090/user` — account sign-in and registration. Its new-theme page intentionally keeps
-  `forceSecure = 1`; for local HTTP-only account verification, temporarily change that one page property to
-  `0`, clear October's cache, and restore `1` before committing. Never commit the local-only flip.
+- `http://localhost:8090/user` — account sign-in and registration. Its new-theme
+  page intentionally keeps `forceSecure = 1`. The frozen SlothAccount component
+  drops the parent component's redirect response, so the page still renders on
+  local HTTP; do not change the committed property for verification.
 - `http://localhost:8090/` — home (blog posts from fixtures)
 - `http://localhost:8090/season-30` — season overview
 - `http://localhost:8090/season-30/division-1` — division page (standings,
@@ -194,8 +200,10 @@ October-v1-compatible releases, installed from GitHub:
      vs redirect after the swap.
 4. `docker compose -f dev/docker-compose.yml exec web php artisan october:up`
    to apply any pending migrations against the dump.
-5. Frontend logins from the dump use password `1234` (per the anonymised-dump
-   convention in the repo README).
+5. Raw dump frontend accounts follow the anonymised-dump password convention
+   documented in the repository README. In this standing dev database, user 41
+   has intentionally been set to `dev12345` for repeatable verification; see
+   **Logins** above.
 
 ## Housekeeping
 
