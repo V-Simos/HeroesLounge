@@ -68,7 +68,7 @@ Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
 | Task | Implemented | Spec review | Quality review | Commits |
 |---|---|---|---|---|
 | 1 — Forgot password `/user/forgotpassword` | ✅ | ✅ | ✅ (1 fix round; approved) | 2625539, 4deb149, e38d06b |
-| 2 — Account: guest half (signin/register) | | | | |
+| 2 — Account: guest half (signin/register) | ✅ | ✅ | ✅ (approved; 1 minor deferred) | 140f2a8 |
 | 3 — Account: authed half (tabs/update forms) | | | | |
 | 4 — Profile `/user/view/:id` | | | | |
 | 5 — Caster schedule `/user/casterschedule` | | | | |
@@ -97,6 +97,26 @@ verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
   account was restored to `dev12345`; runtime logs remained clean.
 - Logged-in redirect verification moves to Task 2 once `/user` exists.
   Browser-only viewport/console coverage remains for the Phase-3 finishing pass.
+
+### Notes from Phase 3 Task 2 (account guest half)
+
+- Ported `/user/:code?`, the lowercase `slothaccount` guest overrides, the
+  ruleset copy, responsive two-panel auth layout, and native Code-of-Conduct
+  dialog. Invalid registration exercised the real server validation path;
+  user-41 email sign-in and the interim authenticated branch both returned 200.
+- The frozen interim `SlothAccount::update` partial calls the old theme's
+  `country-state/default` partial. A minimal compatibility copy was required
+  here so the deliberately deferred Bootstrap update surface renders until
+  Task 3 replaces it.
+- **Corrected forceSecure finding:** the committed page correctly keeps
+  `forceSecure = 1`, but plain HTTP still returns 200 because frozen
+  `SlothAccount::onRun()` calls `parent::onRun()` without returning the parent
+  redirect response. This is a pre-existing frozen-plugin bug; do not "fix" it
+  during the re-skin.
+- All temporary user/password/settings mutations were restored. Browser-only
+  dialog focus/Esc, viewport overflow, and console checks remain for Task 8.
+  Review's non-blocking `autocomplete="username"` suggestion is also parked
+  for that finishing pass.
 
 ### Notes from Task 0 (bracket spike — proven, de-risked)
 
