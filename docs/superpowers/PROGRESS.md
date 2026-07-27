@@ -67,7 +67,7 @@ Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
 
 | Task | Implemented | Spec review | Quality review | Commits |
 |---|---|---|---|---|
-| 1 — Forgot password `/user/forgotpassword` | | | | |
+| 1 — Forgot password `/user/forgotpassword` | ✅ | ✅ | ✅ (1 fix round; approved) | 2625539, 4deb149, e38d06b |
 | 2 — Account: guest half (signin/register) | | | | |
 | 3 — Account: authed half (tabs/update forms) | | | | |
 | 4 — Profile `/user/view/:id` | | | | |
@@ -85,6 +85,18 @@ ported); RainLab `Account::redirectForceSecure()` 302s plain-http non-AJAX GETs
 verification flips it temporarily, prod keeps 1); `selectFile.js` contract =
 `.fileselect` wrapper + sibling `:text` + `#{fieldName}UploadError` ids +
 `avatar`/`banner` input names.
+
+### Notes from Phase 3 Task 1 (forgot password)
+
+- Ported `/user/forgotpassword/:code?` and all four `SlothResetPassword`
+  overrides in the required lowercase directory. The restore and reset AJAX
+  partial-swap contracts were exercised against the live Docker site.
+- Review removed an invented completion link, then added a semantic completion
+  `<h1>` so the AJAX-replaced document retains exactly one page heading.
+- The reversible user-41 password-reset flow completed successfully and the
+  account was restored to `dev12345`; runtime logs remained clean.
+- Logged-in redirect verification moves to Task 2 once `/user` exists.
+  Browser-only viewport/console coverage remains for the Phase-3 finishing pass.
 
 ### Notes from Task 0 (bracket spike — proven, de-risked)
 
