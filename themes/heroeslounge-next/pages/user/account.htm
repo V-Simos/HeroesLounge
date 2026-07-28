@@ -1,0 +1,29 @@
+title = "Account"
+url = "/user/:code?"
+layout = "default"
+
+[SlothAccount]
+redirect = "user/account"
+paramCode = "code"
+forceSecure = 1
+==
+{% component 'SlothAccount' %}
+
+{% put scripts %}
+<script>
+(() => {
+    const dialog = document.getElementById('account-rules-dialog');
+    const openButton = document.querySelector('[data-rules-dialog-open]');
+
+    if (!dialog || !openButton) return;
+
+    openButton.addEventListener('click', () => dialog.showModal());
+    dialog.querySelectorAll('[data-rules-dialog-close]').forEach((button) => {
+        button.addEventListener('click', () => dialog.close());
+    });
+
+    const submitButton = dialog.querySelector('[data-rules-dialog-submit]');
+    if (submitButton) submitButton.addEventListener('click', () => dialog.close());
+})();
+</script>
+{% endput %}

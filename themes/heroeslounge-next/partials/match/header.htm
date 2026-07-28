@@ -1,0 +1,101 @@
+{#- ============================================================================
+    match/header — season/round + division-or-playoff hierarchy + casters +
+    scheduled state. Faithful re-skin of the top of the frozen ViewMatch partial
+    (plugins/rikki/loungeviews/components/viewmatch/default.htm).
+
+    PARAMS: match (required); decoded_playoff_position (assoc bracket/round/
+    matchnumber — already Cantor-decoded by ViewMatch); timezone, timezoneOffset,
+    datetimeFormat (from ViewMatch, drive the scheduled-time render).
+
+    Heading policy (§7): design-system eyebrow (mono storm-blue label) + one <h1>
+    (the match's true subject) + supporting sub-labels, NOT the raw Bootstrap
+    h1/h2/h3/h4 stack — but the INFORMATION hierarchy, every link, the FROZEN
+    urls, and these EXACT strings are preserved: Finals / Winner Bracket /
+    Loser Bracket / "Round X - Match Y" / Casted by: / Scheduled for /
+    The match has not been scheduled yet!
+
+    Frozen urls (NOT | page): season /:slug, division /:slug/:divslug,
+    in-season playoff /:seasonslug/playoff/:title, standalone playoff
+    /tournament/:slug, team /team/view/:slug.
+
+    The three mutually-exclusive playoff blocks in the frozen partial
+    (match.division.playoff / match.playoff+season / match.playoff no-season)
+    share one decoded_playoff_position Finals/Winner/Loser label — factored into
+    the `playoffLabel` macro below so the exact-string decode lives in one place. -#}
+
+{% macro playoffLabel(pos) %}
+    {%- if pos %}
+        {%- if pos['bracket'] == 3 %}
+        <p class="matchhead-sub">Finals</p>
+        {%- else %}
+        <p class="matchhead-sub">
+            {%- if pos['bracket'] == 1 %}Winner Bracket{% elseif pos['bracket'] == 2 %}Loser Bracket{% endif -%}
+        </p>
+        <p class="matchhead-round mono">Round {{ pos['round'] }} - Match {{ pos['matchnumber'] }}</p>
+        {%- endif %}
+    {%- endif %}
+{% endmacro %}
+
+{#- playoffHref: in-season playoff → /:seasonslug/playoff/:title, standalone
+    (no season) → /tournament/:slug. Centralises the season-vs-standalone url so
+    both the division.playoff and the direct match.playoff branches stay in sync
+    and neither emits a malformed href when season is null. -#}
+{% macro playoffHref(p) %}{% if p.season %}/{{ p.season.slug }}/playoff/{{ p.title|url_encode }}{% else %}/tournament/{{ p.slug }}{% endif %}{% endmacro %}
+
+<header class="matchhead">
+    {#- Eyebrow: season (+ round when match.round > 0). The frozen partial only
+        emits the season/round h1 when round > 0; keep that gate. -#}
+    {% if match.round > 0 and match.division and match.division.season %}
+    <p class="eyebrow mono">
+        <a href="/{{ match.division.season.slug }}">{{ match.division.season.title|upper }}</a> &middot; ROUND {{ match.round }}
+    </p>
+    {% endif %}
+
+    {#- Primary subject = exactly ONE <h1> (chained so at most one fires; the branches
+        are mutually exclusive per match in real data). Season is null-guarded before
+        every dereference so a season-less division/playoff can't emit a malformed href
+        (the frozen partial assumed season non-null here — this hardens it). Standalone
+        playoffs resolve via playoffHref → /tournament/:slug. The Cantor label shows
+        only for a DIRECT playoff match (not a group-stage division match), matching
+        the frozen partial. -#}
+    {% if match.division %}
+        {% if match.division.playoff %}
+        <h1><a href="{{ _self.playoffHref(match.division.playoff) }}">{{ match.division.playoff.longTitle }}</a></h1>
+        <p class="matchhead-sub">{{ match.division.title }}</p>
+        {% elseif match.division.season %}
+        <h1><a href="/{{ match.division.season.slug }}/{{ match.division.slug }}">{{ match.division.title }}</a></h1>
+        {% else %}
+        <h1>{{ match.division.title }}</h1>
+        {% endif %}
+    {% elseif match.playoff %}
+    <h1><a href="{{ _self.playoffHref(match.playoff) }}">{{ match.playoff.longTitle }}</a></h1>
+    {{ _self.playoffLabel(decoded_playoff_position) }}
+    {% endif %}
+
+    {#- Casters: skip the whole line when no accepted casters. Twitch-icon link per
+        attached channel (replaces the frozen <i class="fa fa-twitch">). -#}
+    {% set casters = match.getAcceptedCasters %}
+    {% if casters|length > 0 %}
+    <p class="matchhead-cast mono">
+        <span class="matchhead-cast-lbl">Casted by:</span>
+        {% for caster in casters %}{{ caster.title }}{% if not loop.last %}, {% endif %}{% endfor %}
+        {% for channel in match.channels %}<a class="matchhead-twitch" href="{{ channel.url }}" rel="noopener" target="_blank" aria-label="Watch on Twitch{% if channel.title %} — {{ channel.title }}{% endif %}">{% partial 'site/icon' name='twitch' %}</a>{% endfor %}
+    </p>
+    {% endif %}
+
+    {#- Scheduled state. wbp is a raw db string → MUST go through
+        |date(datetimeFormat, timezone) or the time renders wrong. The
+        not-scheduled literal is reproduced exactly; .is-unscheduled carries the
+        danger colour (replaces Bootstrap .text-danger). -#}
+    {% if match.wbp %}
+    <p class="matchhead-time">
+        {% partial 'site/icon' name='calendar-clock' %}
+        <span>Scheduled for {{ match.wbp|date(datetimeFormat, timezone) }} <span class="matchhead-tz">({{ timezone }} {{ timezoneOffset }})</span></span>
+    </p>
+    {% else %}
+    <p class="matchhead-time is-unscheduled">
+        {% partial 'site/icon' name='calendar' %}
+        <span>The match has not been scheduled yet!</span>
+    </p>
+    {% endif %}
+</header>

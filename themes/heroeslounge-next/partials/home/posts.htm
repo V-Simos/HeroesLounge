@@ -1,0 +1,36 @@
+[blogList]
+postsPerPage = 3
+sortOrder = "published_at desc"
+categoryPage = "blog/category"
+postPage = "blog/post"
+==
+{#- Latest posts (markup from reference-design.html .post cards). Wiring
+    matches the old theme's partials/sections/posts.htm: [blogList] with the
+    same properties (no categoryFilter -> all posts), blogList.posts populated
+    in the component's onRun(), author via post.findAuthor.login (a dynamic
+    method added to the blog model by plugins/rikki/heroeslounge/Plugin.php
+    boot()), tags rendered from post.categories. Empty state: no published
+    posts -> no section. -#}
+{% set latestPosts = blogList.posts %}
+{% if latestPosts and latestPosts|length > 0 %}
+<section class="sec">
+    <div class="wrap">
+        <div class="sec-head">
+            <div><p class="eyebrow mono">FROM THE BLOG</p><h2>Latest posts</h2></div>
+            {#- Resolves to /blog — the frozen old-theme URL (pages/blog/list.htm,
+                url = "/blog/:page?", ported in Task 10). ({}, false) disables
+                route persistence (see site/nav.htm). -#}
+            <a class="sec-link mono" href="{{ 'blog/list'|page({}, false) }}">ALL POSTS {% partial 'site/icon' name='chevron-right' %}</a>
+        </div>
+        <div class="post-grid">
+            {% for post in latestPosts %}
+            {#- Card markup lives in blog/post-card.htm — the single source for
+                every .post card (blog grid, post-page siblings, here). post.url
+                resolves via this component's postPage = "blog/post" (see the
+                partial's notes for the URL/author/date-TZ details). -#}
+            {% partial 'blog/post-card' post=post %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

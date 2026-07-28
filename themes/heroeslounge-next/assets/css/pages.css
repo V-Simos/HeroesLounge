@@ -1,0 +1,841 @@
+/* Page/layout-level rules — styles scoped to a single page or layout rather
+   than the shared components in components.css. Currently: the focused
+   layout's centered panel; page sections land here as pages are ported. */
+
+/* ---------- focused layout (layouts/focused.htm) ----------
+   Centered 480px chamfered panel with the logo above it; no nav/footer. */
+.focused { min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 28px; padding: 48px 24px; }
+.focused .focused-panel { width: 100%; max-width: 480px;
+  background: var(--panel); padding: 34px 32px; }
+
+/* ---------- maintenance page (pages/maintenance.htm) ----------
+   Centered copy inside the focused panel: big Chakra Petch headline with a
+   storm-accented word (same em treatment as the .logo), muted lede, Discord
+   button. No mockup — derived from the established design language. */
+.maint { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+.maint .eyebrow { margin-bottom: 0; } /* the flex gap owns the rhythm; drop base.css's .eyebrow 10px margin */
+.maint h1 { font-size: clamp(1.9rem, 6vw, 2.6rem); font-weight: 700; line-height: 1.05; letter-spacing: .01em; }
+.maint h1 em { font-style: normal; color: var(--storm); }
+.maint-lede { color: var(--mute); font-size: 15.5px; }
+.maint .btn { margin-top: 8px; }
+
+/* ---------- home page (pages/home.htm) ----------
+   Hero background from reference-design.html — the radial glows on .hero and
+   the ::after grid-line backdrop. Structural .hero rules live in
+   components.css; Task 4 deliberately left these here. rgba tints rebased on
+   the v2 palette: storm 62,166,232 -> 79,179,242; arc 139,121,232 ->
+   157,140,242; line 126,146,205 -> 136,156,215. */
+.hero {
+  background:
+    radial-gradient(720px 420px at 12% -10%, rgba(79,179,242,0.14), transparent 65%),
+    radial-gradient(680px 420px at 92% 8%, rgba(157,140,242,0.13), transparent 65%),
+    var(--void);
+}
+.hero::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(136,156,215,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(136,156,215,0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(760px 480px at 50% 0%, black, transparent 78%);
+  -webkit-mask-image: radial-gradient(760px 480px at 50% 0%, black, transparent 78%);
+}
+
+/* ---------- dashboard (pages/home.htm, logged-in branch) ----------
+   Page-layout rules ported VERBATIM from dashboard-v2.html — Task 4
+   deliberately left .welcome/.welcome-in/.dash/.dash-grid/.span2 and the
+   900px dash collapse out of components.css because they are page grid,
+   not components; they land here now that the dashboard exists. The v2
+   values are already v2 — no palette rebasing needed. */
+.welcome { padding: 40px 0 30px; background:
+  radial-gradient(620px 300px at 8% -30%, rgba(79,179,242,0.15), transparent 65%), var(--void); }
+.welcome-in { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+.welcome h1 { font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; }
+.dash { padding: 8px 0 72px; }
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: stretch; }
+.span2 { grid-column: 1 / -1; }
+/* Next-match empty state (new — the mockup has no empty dashboard): centered
+   muted line + ghost calendar button inside the .cast panel body. */
+.cast-empty { display: flex; flex-direction: column; align-items: center; gap: 16px;
+  padding: 40px 24px 44px; text-align: center; color: var(--mute); }
+@media (max-width: 900px) {
+  .dash-grid { grid-template-columns: 1fr; }
+}
+
+/* ---------- playoff bracket scroll wrapper (pages/season/playoff.htm +
+   pages/playoff/view.htm; Task-0 spike foundation) ----------
+   The bracket box is a fixed rem size per playoff.type (se64 is 90x153rem,
+   de16 106x60rem) — far wider/taller than the viewport — so the wrapper must
+   scroll on BOTH axes rather than overflow the page. */
+.hl-bracket-scroll { overflow: auto; -webkit-overflow-scrolling: touch;
+  padding: 4px 4px 16px; max-width: 100%; }
+
+/* ---------- blog (pages/blog/*) ----------
+   There is no blog mockup — everything below derives from the established
+   system. Inventions: .pager chips restyle the old theme's blogList
+   pagination as .tab-like chamfered chips (mono type, storm-gradient active
+   state = .tab.on, 36px hit targets); the post article is a left-aligned
+   72ch measure inside the standard .wrap (matches the left-flowing sections
+   everywhere else — no centered column in the design language). */
+.pager { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 36px; }
+.pager a { display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; min-height: 36px; padding: 0 12px; font-size: 12px; font-weight: 600;
+  background: rgba(136,156,215,0.1); color: var(--mute);
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+.pager a:hover { color: var(--ink); background: rgba(79,179,242,0.16); }
+.pager a.on { background: linear-gradient(135deg, var(--storm), #2E86DD); color: #041020; }
+.pager a:focus-visible { outline-offset: -4px; } /* clip-path clips outside outlines (see components.css) */
+.pager svg { width: 15px; height: 15px; }
+/* Non-interactive ellipsis between windowed page numbers (partials/blog/pagination.htm) */
+.pager .pager-gap { display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; min-height: 36px; font-size: 12px; font-weight: 600; color: var(--mute); }
+
+.blog-empty { color: var(--mute); }
+.blog-empty a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
+.blog-empty a:hover { color: var(--ink); }
+
+/* ---------- blog post article (pages/blog/post.htm) ---------- */
+.post-article .post-head { max-width: 72ch; margin-bottom: 30px; }
+.post-article .post-head .eyebrow { text-transform: uppercase; }
+.post-article .post-head h1 { font-size: clamp(1.9rem, 4.2vw, 2.9rem); font-weight: 700;
+  line-height: 1.1; text-wrap: balance; }
+.post-cover { display: block; max-width: 100%; margin-bottom: 30px; }
+/* Post content is backend-authored rich HTML rendered |raw — style the tags
+   it may contain. Fixture posts only exercise <p>; the rest is speced blind
+   (h2/h3, blockquote, code/pre, img, lists, links) — re-verify with real data. */
+.post-content { max-width: 72ch; overflow-wrap: break-word; } /* break-word: long unbroken URLs must wrap, not overflow the column */
+.post-content > * + * { margin-top: 16px; }        /* base.css zeroes all margins — restore prose flow */
+.post-content blockquote > * + * { margin-top: 12px; }
+.post-content h2, .post-content h3 { line-height: 1.25; }
+.post-content h2 { font-size: 1.45rem; margin-top: 36px; }
+.post-content h3 { font-size: 1.15rem; margin-top: 30px; }
+/* A post that opens with a heading shouldn't add heading-margin below .post-head */
+.post-content > h2:first-child, .post-content > h3:first-child { margin-top: 0; }
+/* Link affordance (WCAG 1.4.1): base.css strips link styling globally, which
+   would leave prose links color-only/invisible — underline + storm here. */
+.post-content a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
+.post-content a:hover { color: var(--ink); }
+.post-content blockquote { border-left: 3px solid var(--storm); padding: 6px 0 6px 20px; color: var(--mute); }
+.post-content img { max-width: 100%; height: auto; clip-path: var(--ch); }
+.post-content iframe { max-width: 100%; } /* real posts embed fixed-width YouTube iframes */
+.post-content code { font-family: 'JetBrains Mono', monospace; font-size: .85em;
+  background: var(--panel); padding: 2px 7px; }
+.post-content pre { background: var(--panel); padding: 16px 18px; overflow-x: auto; }
+.post-content pre code { background: none; padding: 0; }
+.post-content ul, .post-content ol { padding-left: 24px; }
+.post-content li + li { margin-top: 6px; }
+.post-content hr { border: 0; border-top: 1px solid var(--line); }
+.post-foot { max-width: 72ch; margin-top: 30px; }
+.post-foot .post-tags a:hover span { color: var(--ink); }
+.post-siblings { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 56px; }
+.post-siblings .eyebrow { margin-bottom: 12px; }
+
+/* ---------- frozen static guides (layouts/static.htm) ----------
+   The body HTML is intentionally copied verbatim from the legacy theme and
+   rendered through the same .post-content prose treatment as blog posts. The
+   static-only rules cover legacy heading levels and the layout-owned title. */
+.static-head { max-width: 72ch; margin-bottom: 30px; }
+.static-head h1, .static-content > h1 { font-size: clamp(1.9rem, 4.2vw, 2.9rem); font-weight: 700;
+  line-height: 1.1; text-wrap: balance; }
+.static-content h4 { font-family: 'Chakra Petch', sans-serif; line-height: 1.25; margin-top: 26px; }
+.static-content figure { max-width: 100%; }
+.static-content figcaption { margin-top: 8px; color: var(--mute); font-size: .9em; }
+.static-content .alert { border-left: 3px solid var(--storm); background: var(--panel); padding: 12px 16px; color: var(--mute); }
+@media (max-width: 720px) {
+  .post-siblings { grid-template-columns: 1fr; }
+}
+
+/* ---------- season overview (partials/season/overview.htm — SHARED by
+   pages/season/view.htm [Task 2] + the season archive [Task 8]) and the
+   SeasonOverview override's heading / empty state ----------
+   No mockup — derived from the established system: the season title reuses the
+   .welcome h1 type scale; the Divisions/Playoffs lists are standard .p panels
+   whose rows share the 52px .p-head rhythm as .season-link rows (chevron pulled
+   from the shared design language). .season-link carries no clip-path, so the
+   global :focus-visible ring applies as-is (no focus-affordance entry needed). */
+.season-head { margin-bottom: 34px; }
+.season-head h1 { font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; letter-spacing: .01em; }
+.season-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; align-items: start; }
+.season-list { list-style: none; padding: 0; }
+.season-link { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 20px;
+  border-bottom: 1px solid var(--line); color: var(--ink);
+  font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 15.5px;
+  transition: background .15s ease, color .15s ease; }
+.season-panel .season-list li:last-child .season-link { border-bottom: 0; }
+.season-link-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.season-link svg { width: 16px; height: 16px; color: var(--mute); flex-shrink: 0;
+  transition: color .15s ease, transform .15s ease; }
+.season-link:hover { background: var(--panel2); color: var(--storm); }
+.season-link:hover svg { color: var(--storm); transform: translateX(2px); }
+.season-empty { color: var(--mute); }
+@media (max-width: 720px) {
+  .season-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .season-link, .season-link svg { transition: none; }
+}
+/* Unknown-division / empty-season copy links (colour-only links fail WCAG
+   1.4.1 under base.css's global link-stripping — underline them). */
+.season-empty a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
+.season-empty a:hover { color: var(--ink); }
+
+/* ---------- division page (pages/season/division.htm) ----------
+   No mockup — composed from the established design language: the season/
+   division header (eyebrow + h1) beside the spoiler toggle, then a two-column
+   grid (main viewing column + sidebar) that collapses to one column. */
+.divsec { padding-top: 44px; }
+.divtop { display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 18px 24px; flex-wrap: wrap; margin-bottom: 36px; }
+.divhead h1 { font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; letter-spacing: .01em; }
+/* The toggle aligns to the header baseline on wide rows; margin-top nudges it
+   down to sit with the h1 rather than the eyebrow. */
+.divtop .spoiler-toggle { margin-top: 6px; }
+.divwrap { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+.divmain { display: flex; flex-direction: column; gap: 40px; min-width: 0; }
+.divside { display: flex; flex-direction: column; gap: 20px; }
+
+/* main-column block heading (standings / rounds) */
+.blockhead { display: flex; align-items: baseline; justify-content: space-between;
+  gap: 14px; margin-bottom: 16px; }
+.blockhead h2 { font-size: 1.3rem; font-weight: 700; letter-spacing: .01em; }
+.blockmeta { font-size: 11px; letter-spacing: .16em; color: var(--mute); text-transform: uppercase; }
+
+/* round tabs + panels — panels toggle via [hidden] (lounge.js), but the grid
+   display would beat the UA [hidden] rule, so restore display:none explicitly. */
+.round-tabs { flex-wrap: wrap; margin-bottom: 18px; }
+.round-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.round-grid[hidden] { display: none; }
+.round-empty { grid-column: 1 / -1; color: var(--mute); padding: 6px 2px; }
+
+/* sidebar day divider (upcoming groups) + clickable matchup rows */
+.mday { padding: 13px 20px 7px; font-size: 10.5px; letter-spacing: .16em; color: var(--storm);
+  text-transform: uppercase; font-family: 'JetBrains Mono', monospace; font-weight: 600;
+  border-bottom: 1px solid var(--line); }
+.divside-panel a.who:hover { color: var(--storm); }
+/* recent results reuse match/card; the card shares the panel's --panel bg, so
+   align it to the panel's 20px gutter and separate the stacked rows. */
+.divside-panel .match { padding: 14px 20px; }
+.divside-panel .match + .match { border-top: 1px solid var(--line); }
+
+/* ---------- division timeline (partials/division/timeline.htm) ----------
+   Net-new re-skin of TimelineEntries — the legacy #cd-timeline/timeline.css is
+   dropped. A shield-shaped icon (avatar/logo or a lucide fallback) + a sentence
+   + a mono timestamp, sharing the panel's row rhythm. */
+.tl { display: flex; flex-direction: column; }
+.tl-row { display: grid; grid-template-columns: 52px 1fr; gap: 14px; padding: 14px 20px;
+  border-bottom: 1px solid var(--line); }
+.tl-row:last-child { border-bottom: 0; }
+.tl-ic { width: 52px; height: 52px; flex-shrink: 0; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(136,156,215,0.1); color: var(--storm);
+  border-radius: 50%; }
+.tl-ic img { width: 100%; height: 100%; object-fit: cover; }
+.tl-ic svg { width: 22px; height: 22px; }
+.tl-bd { min-width: 0; }
+.tl-txt { font-size: 14px; line-height: 1.45; color: var(--ink); overflow-wrap: anywhere; }
+.tl-txt i { font-style: italic; color: var(--mute); }
+.tl-txt a { color: var(--storm); }
+.tl-txt a:hover { color: var(--ink); text-decoration: underline; }
+.tl-when { display: block; margin-top: 5px; font-size: 10.5px; letter-spacing: .1em; color: var(--mute); }
+
+/* ---------- match detail page (pages/match/view.htm, Task 5a) ----------
+   Page-level layout for the /match/view/:id header + pre-game rosters. The
+   component-level text/meta and roster-card styles live in components.css. */
+.matchsec { padding: 40px 0 64px; }
+.matchhead { margin-bottom: 28px; }
+.matchhead h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; letter-spacing: .01em;
+  line-height: 1.15; }
+.matchhead h1 a { color: inherit; }
+.matchhead h1 a:hover { color: var(--storm); }
+
+/* two team panels side by side; stack under 720px. */
+.roster-deck { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+
+/* Game tabs + panels (Task 5b) — same lounge.js tab contract as .round-tabs:
+   [data-tabs] buttons toggle .game-panel via the [hidden] attribute. The panel
+   has no special display, so [hidden] already hides it, but the explicit rule
+   documents the contract and future-proofs against a display change. Tabs wrap
+   on long series (match 1061 has 18 games — the flex row wraps rather than
+   overflowing). */
+.game-tabs { flex-wrap: wrap; margin-bottom: 20px; }
+.game-panel[hidden] { display: none; }
+
+@media (max-width: 720px) {
+  .roster-deck { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 980px) {
+  .divwrap { grid-template-columns: 1fr; }
+}
+
+/* ---------- calendar page (pages/calendar.htm + partials/calendar/*) ----------
+   No mockup — composed from the established design language. The old plugin
+   partial (components/upcomingmatches/default.htm) was a Bootstrap .event-list
+   with row/col grids; re-skinned here as a date-grouped event list. NOTE: fresh
+   `cal-` class names throughout — the legacy `.event-list`/`.spoiler`/`.result`
+   selectors are deliberately NOT reused as STYLED hooks (the auto-injected
+   plugin heroeslounge.css loads last and would clobber them). No spoiler toggle:
+   upcoming matches are unplayed (no scores to mask), so no .score-masked wiring.
+
+   No new .chamfer/clip-path FOCUSABLE element and no transform/animation is
+   introduced here, so neither the focus-affordance list nor the reduced-motion
+   block in components.css needs a new entry; the color-only :hover transitions
+   below are motion-safe. */
+.calsec { padding: 40px 0 64px; }
+.calhead { margin-bottom: 30px; }
+.calhead h1 { font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; letter-spacing: .01em; }
+.cal-tz { font-size: 11px; letter-spacing: .12em; color: var(--mute); text-transform: uppercase; margin-bottom: 20px; }
+
+.cal-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+/* one date group = a chamfered panel: a left date column + a right stack of
+   game rows. Grid so the date column stays fixed-width and the games flex. */
+.cal-group { background: var(--panel); display: grid; grid-template-columns: 120px minmax(0, 1fr);
+  clip-path: var(--ch); }
+.cal-date { display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 20px 12px; gap: 2px; border-right: 1px solid var(--line);
+  background: rgba(136,156,215,0.05); text-align: center; }
+.cal-weekday { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--storm); font-weight: 600; }
+.cal-day { font-family: 'Chakra Petch', sans-serif; font-size: 30px; font-weight: 700; line-height: 1; color: var(--ink); }
+.cal-month { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--mute); font-weight: 600; }
+.cal-year { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: var(--mute); }
+
+.cal-games { display: flex; flex-direction: column; min-width: 0; }
+/* game row: [meta | matchup | casters]. The matchup flexes; meta + casters are
+   sized columns so rows align down the list. */
+.cal-row { display: grid; grid-template-columns: minmax(190px, 260px) minmax(0, 1fr) minmax(150px, 220px);
+  align-items: center; gap: 16px; padding: 14px 20px; border-bottom: 1px solid var(--line);
+  transition: background .15s ease; }
+.cal-row:last-child { border-bottom: 0; }
+.cal-row:hover { background: var(--panel2); }
+
+.cal-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.cal-time { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
+  letter-spacing: .06em; color: var(--storm); flex-shrink: 0; }
+.cal-label { font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 13px; color: var(--arc);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.cal-label:hover { color: var(--ink); }
+.cal-twitch { display: inline-flex; color: var(--mute); flex-shrink: 0; }
+.cal-twitch:hover { color: var(--storm); }
+.cal-twitch svg { width: 15px; height: 15px; }
+
+.cal-matchup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; min-width: 0; }
+.cal-side { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cal-side-right { justify-content: flex-end; text-align: right; }
+.cal-side .tname { color: var(--ink); }
+.cal-side a.tname:hover { color: var(--storm); }
+.cal-tbd { color: var(--mute); }
+.cal-vs { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--mute);
+  flex-shrink: 0; letter-spacing: .06em; }
+.cal-vs:hover { color: var(--storm); }
+
+.cal-casters { min-width: 0; }
+.cal-caster-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  font-size: 12.5px; color: var(--mute); }
+.cal-caster-btn { display: inline-flex; padding: 0; border: 0; background: none;
+  color: var(--storm); font: inherit; cursor: pointer; }
+.cal-caster-btn:hover { color: var(--ink); }
+.cal-caster-btn svg { width: 16px; height: 16px; }
+.cal-caster-applied { display: inline-flex; color: var(--mute); }
+.cal-caster-applied svg { width: 15px; height: 15px; }
+.cal-caster-mic { display: inline-flex; color: var(--arc); }
+.cal-caster-mic svg { width: 15px; height: 15px; }
+.cal-caster-name { color: var(--ink); font-weight: 500; }
+.cal-caster-name:hover { color: var(--storm); }
+
+/* empty state (guest-safe muted panel) */
+.cal-empty { padding: 40px 28px; text-align: center; }
+.cal-empty-title { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px; color: var(--ink); margin-bottom: 8px; }
+.cal-empty-lede { color: var(--mute); font-size: 14.5px; }
+
+/* Narrow: collapse the date column to a full-width header strip, and stack each
+   game row (meta / matchup / casters). */
+@media (max-width: 760px) {
+  .cal-group { grid-template-columns: 1fr; }
+  .cal-date { flex-direction: row; gap: 6px; justify-content: flex-start; padding: 12px 20px;
+    border-right: 0; border-bottom: 1px solid var(--line); text-align: left; }
+  .cal-day { font-size: 18px; }
+  .cal-row { grid-template-columns: 1fr; gap: 10px; }
+}
+
+/* ---------- caster schedule (/user/casterschedule) ------------------------
+   The three CasterSchedule queues share the calendar rows, including the
+   frozen caster request/status column and its responsive behavior. */
+.caster-schedule { padding-bottom: 72px; }
+.caster-schedule-section + .caster-schedule-section { margin-top: 36px; }
+.caster-schedule-heading { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px;
+  padding-bottom: 11px; border-bottom: 1px solid var(--line); }
+.caster-schedule-heading h2 { font-size: 21px; font-weight: 700; letter-spacing: .01em; }
+@media (prefers-reduced-motion: reduce) {
+  .cal-row { transition: none; }
+}
+
+/* ---------- team page (pages/team/view.htm + partials/ViewTeam + team/*) ----------
+   No mockup — composed from the established design language. The old page used
+   layout "plain-fluid" (full width) for a Bootstrap jumbotron banner + nav-tabs;
+   re-skinned here as a full-bleed banner (breaks out of .wrap) + a lounge.js
+   tabbed main column + a sidebar. Fresh `team-*`/`rmate-*` class names — the
+   legacy `.jumbotron`/`.blogPostWrapper`/`.f100`/`.result` selectors are NOT
+   reused (the auto-injected plugin heroeslounge.css loads last and would clobber
+   them). Scores in the recent/matches cards use the shared .score-masked spoiler
+   (via match/card revealScore=false). */
+
+/* full-bleed banner: break out of the centered .wrap to span the viewport, then
+   re-center content in an inner .wrap. The 100vw + negative-margin trick used by
+   nothing else in the theme yet, so it lives here scoped to .team-banner-bleed. */
+.team-banner-bleed { margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+  width: 100vw; }
+.team-banner { position: relative; background: var(--panel2); background-size: cover;
+  background-position: center; border-bottom: 1px solid var(--line); }
+.team-banner.has-img { background-color: var(--deep); }
+/* scrim: a dark wash so the name/shield read over any banner image (or the flat
+   fallback). Radial storm glow echoes the home hero without importing it. */
+.team-banner-scrim { background:
+  radial-gradient(1200px 300px at 20% -40%, rgba(79,179,242,0.18), transparent 60%),
+  linear-gradient(180deg, rgba(6,16,30,0.55), rgba(6,16,30,0.82)); }
+.team-banner-inner { display: flex; align-items: center; gap: 24px; padding: 46px 24px 40px; }
+.team-banner-id { min-width: 0; }
+.team-banner-id h1 { font-size: clamp(1.9rem, 4.2vw, 3rem); font-weight: 700; letter-spacing: .01em;
+  line-height: 1.05; color: var(--ink); overflow-wrap: anywhere; }
+.team-banner-id .socials { margin-top: 14px; }
+/* light variant: lift the social chips over the scrim. */
+.socials.light a { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); }
+.socials.light a:hover { background: rgba(79,179,242,0.28); color: #fff; }
+/* the lg shield gets a subtle ring so a logoless monogram reads over the scrim. */
+.team-banner-inner .badge-lg { flex-shrink: 0; box-shadow: 0 0 0 1px var(--line); }
+
+.teamsec { padding: 36px 0 64px; }
+.teamwrap { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+.teammain { min-width: 0; }
+.teamside { display: flex; flex-direction: column; gap: 20px; }
+.team-tabs { flex-wrap: wrap; margin-bottom: 22px; }
+/* panels toggle via [hidden] (lounge.js). A team-panel has no special display,
+   so [hidden] already hides it, but the explicit rule documents the contract. */
+.team-panel[hidden] { display: none; }
+
+/* roster grid: auto-fill cards; each card is a chamfered panel. */
+.roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.rmate { background: var(--panel); padding: 0; overflow: hidden; }
+.rmate-main { display: flex; align-items: center; gap: 12px; padding: 16px 18px; min-width: 0; }
+.rmate-av { width: 52px; height: 52px; flex-shrink: 0; border-radius: 50%; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(136,156,215,0.1); color: var(--storm); }
+.rmate-av img { width: 100%; height: 100%; object-fit: cover; }
+.rmate-av svg { width: 22px; height: 22px; }
+.rmate-id { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.rmate-name { display: flex; align-items: center; gap: 6px; font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700; font-size: 15.5px; color: var(--ink); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rmate-main:hover .rmate-name { color: var(--storm); }
+.rmate-role { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--mute); }
+.rmate-role img { width: 18px; height: 18px; border-radius: 3px; background: rgba(0,0,0,0.35); flex-shrink: 0; }
+/* auth-only rows: socials + battle/discord tags under the card head. */
+.rmate .socials { padding: 0 18px 8px; }
+.rmate-tags { margin: 0; padding: 4px 18px 16px; display: flex; flex-direction: column; gap: 8px;
+  border-top: 1px solid var(--line); padding-top: 12px; }
+.rmate-tag { display: flex; align-items: center; gap: 10px; min-width: 0; margin: 0; }
+.rmate-tag dt { flex-shrink: 0; margin: 0; display: inline-flex; }
+.rmate-tag dt img { width: 20px; height: 20px; object-fit: contain; }
+.rmate-tag dd { margin: 0; font-size: 13.5px; color: var(--ink); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rmate-tag dd a { color: var(--storm); }
+.rmate-tag dd a:hover { color: var(--ink); text-decoration: underline; }
+
+/* Matches tab (roundMatches grouped tabs) — one lounge.js tab per division/
+   playoff group; each panel is a grid of match cards. Panels toggle via
+   [hidden] (the grid display would beat the UA [hidden] rule, so restore
+   display:none explicitly — mirrors .round-grid). */
+.team-match-tabs { flex-wrap: wrap; margin-bottom: 20px; }
+.team-match-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.team-match-grid[hidden] { display: none; }
+.team-match-empty { padding: 28px 26px; }
+.team-match-empty p { color: var(--mute); font-size: 14.5px; }
+
+/* Timeline tab (timeLine) — reuses the .tl/.tl-row/.tl-ic classes (shared with
+   the division timeline); in the main column the rows sit in a chamfered panel. */
+.team-panel .tl { background: var(--panel); clip-path: var(--ch); }
+
+/* Statistics tab (teamStatistics) — static themed tables (DataTables deferred).
+   A season caption + two panels (heroes / maps), each a horizontally-scrollable
+   table sharing the design tokens. */
+.team-stats { display: flex; flex-direction: column; gap: 20px; }
+.team-stats-cap { font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--mute); }
+.team-stats-panel { overflow: hidden; }
+.stat-table-wrap { overflow-x: auto; }
+.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.stat-table thead th { position: sticky; top: 0; text-align: left; padding: 12px 16px;
+  font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--mute); font-weight: 600;
+  border-bottom: 1px solid var(--line); white-space: nowrap; background: var(--panel); }
+.stat-table tbody td, .stat-table tbody th { padding: 11px 16px; border-bottom: 1px solid var(--line);
+  color: var(--ink); text-align: left; font-weight: 400; }
+.stat-table tbody tr:last-child td, .stat-table tbody tr:last-child th { border-bottom: 0; }
+.stat-table tbody tr:hover { background: var(--panel2); }
+.stat-hero-col { min-width: 160px; }
+.stat-hero { display: flex; align-items: center; gap: 10px; font-family: 'Chakra Petch', sans-serif;
+  font-weight: 600; color: var(--ink); }
+.stat-hero img { width: 34px; height: 34px; border-radius: 6px; object-fit: cover; flex-shrink: 0;
+  background: rgba(136,156,215,0.1); }
+.stat-map { font-family: 'Chakra Petch', sans-serif; font-weight: 600; color: var(--ink); }
+.stat-pct { color: var(--mute); font-size: 12.5px; }
+.stat-none { color: var(--mute); text-align: center; font-style: italic; }
+
+/* stats empty state (fixture-blind: teams with 0 gameparticipation) */
+.team-stats-empty { flex-direction: row; align-items: center; gap: 18px; padding: 28px 26px; }
+.team-stats-empty-ic { width: 52px; height: 52px; flex-shrink: 0; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(136,156,215,0.1); color: var(--gold); }
+.team-stats-empty-ic svg { width: 24px; height: 24px; }
+.team-stats-empty h2 { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px; color: var(--ink); }
+.team-stats-empty p { color: var(--mute); font-size: 14.5px; margin-top: 4px; }
+
+/* disbanded notice */
+.team-disbanded { flex-direction: row; align-items: center; gap: 18px; padding: 28px 26px; }
+.team-disbanded-ic { width: 52px; height: 52px; flex-shrink: 0; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(136,156,215,0.1); color: var(--mute); }
+.team-disbanded-ic svg { width: 24px; height: 24px; }
+.team-disbanded h2 { font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 18px; color: var(--ink); }
+.team-disbanded p { color: var(--mute); font-size: 14.5px; margin-top: 4px; }
+
+/* sidebar panels: reuse the .p / .p-head rhythm. divisionTable standings drop in
+   as .tr rows; recent/upcoming reuse .divside-panel (match cards + .mrow rows);
+   their a.who:hover is already handled by the .divside-panel a.who:hover rule. */
+.team-standings { display: flex; flex-direction: column; }
+/* The divisionTable override emits the full 7-col .tr (built for the wide main
+   column); inside the 360px sidebar the fixed numeric tracks collapse the 1fr
+   name track to 0 and shatter the name. Retighten every track here so the name
+   keeps a real 1fr share, hide the L10 placeholder column (last child), and
+   single-line + ellipsize the name. Fixed tracks + 32px padding fit under 360px,
+   leaving the name a usable width. */
+.team-standings .tr { grid-template-columns: 26px minmax(0, 1fr) 26px 26px 34px 40px 0;
+  padding: 0 16px; font-size: 13.5px; min-height: 48px; }
+.team-standings .tr .l10 { display: none; }
+/* the header row's L10 cell is a classless <span> (not .l10), so hide it too, or
+   its label overflows the collapsed 0-width 7th track. */
+.team-standings .tr.th span:last-child { display: none; }
+.team-standings .tteam { min-width: 0; gap: 7px; }
+.team-standings .tteam a { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.team-desc { padding: 16px 20px; color: var(--mute); font-size: 14px; line-height: 1.55; }
+.team-desc a { color: var(--storm); }
+
+/* not-found + empty states */
+.team-notfound-head { margin-bottom: 16px; }
+.team-notfound-head h1 { font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; letter-spacing: .01em; }
+.team-empty { color: var(--mute); font-size: 14.5px; }
+.team-empty a { color: var(--storm); }
+
+/* clipped focusable roster card link (see components.css focus-affordance list) */
+.rmate-main:focus-visible { outline-offset: -4px; }
+
+@media (max-width: 980px) {
+  .teamwrap { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .team-banner-inner { flex-direction: column; align-items: flex-start; text-align: left; padding: 32px 24px 28px; }
+}
+
+/* ---------- season archive (pages/season/archive.htm, Task 8) ----------
+   No mockup — the old Bootstrap #accordion/.card/.collapse is re-skinned as
+   native <details>/<summary> (no JS). The summary is a panel row sharing the
+   .season-link rhythm (52px, Chakra Petch, chevron) and deliberately carries
+   NO clip-path/.chamfer, so the global :focus-visible ring applies as-is — no
+   focus-affordance entry needed (same call as .season-link, pages.css above).
+   The native marker is replaced by the shared chevron-right icon, rotated 90deg
+   when [open]. */
+.archsec { padding: 40px 0 64px; }
+.arch-head { margin-bottom: 30px; }
+.arch-head h1 { font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; letter-spacing: .01em; }
+.arch-region + .arch-region { margin-top: 44px; }
+.arch-region-title { font-size: 1.3rem; font-weight: 700; letter-spacing: .01em; margin-bottom: 16px; }
+.arch-season + .arch-season { margin-top: 10px; }
+.arch-summary { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 20px;
+  background: var(--panel); cursor: pointer; color: var(--ink); list-style: none;
+  font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 15.5px;
+  -webkit-user-select: none; user-select: none;
+  transition: background .15s ease, color .15s ease; }
+.arch-summary::-webkit-details-marker { display: none; }
+.arch-summary:hover { background: var(--panel2); color: var(--storm); }
+.arch-summary-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.arch-summary svg { width: 16px; height: 16px; color: var(--mute); flex-shrink: 0;
+  transition: transform .15s ease, color .15s ease; }
+.arch-summary:hover svg { color: var(--storm); }
+.arch-season[open] > .arch-summary { color: var(--storm); }
+.arch-season[open] > .arch-summary svg { color: var(--storm); transform: rotate(90deg); }
+.arch-body { padding: 16px 0 24px; }
+/* Events archive entries are bare content links. Restore a non-colour
+   affordance after base.css's global link reset without affecting the Season
+   Archive's .season-link rows; no clip-path means the shared focus ring applies. */
+.events-archive .arch-body a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
+.events-archive .arch-body a:hover, .events-archive .arch-body a:focus-visible { color: var(--ink); }
+/* the shared partial's bare "Nothing scheduled yet." line aligns with the
+   summary's 20px text gutter (the .season-grid panels self-align full-width). */
+.arch-body > .season-empty { padding: 0 20px; }
+.arch-empty { color: var(--mute); }
+/* ---------- forgot-password / reset-password pages
+   (/user/forgotpassword — SlothResetPassword component override)
+   No mockup — derived from the established system: a narrow centered .p panel
+   matching the auth/account family. The <section>.authsec owns the vertical
+   rhythm; .auth-wrap constrains width to 480px so the form doesn't stretch
+   full-page on large viewports; .auth-card is a plain .p (no clip-path, no
+   chamfer) so the global :focus-visible ring applies as-is — no focus-affordance
+   entry needed. .auth-note-warn is a subtle warning-tinted notice (off --gold)
+   replacing the frozen partial's invalid <div> nested inside a <p> (block-in-
+   inline, browsers auto-close the <p>; the sanctioned fix is a sibling element).
+   No transform/animation introduced — reduced-motion block needs no new entry. */
+.authsec { padding: 48px 0 72px; }
+.auth-wrap { max-width: 480px; }
+.auth-title { font-size: clamp(1.6rem, 3vw, 2rem); font-weight: 700;
+  letter-spacing: .01em; margin-bottom: 24px; }
+.auth-card { overflow: hidden; }
+.auth-body { display: flex; flex-direction: column; gap: 20px; padding: 28px 24px 30px; }
+.auth-lede { color: var(--mute); font-size: 15px; line-height: 1.55; }
+.auth-note { padding: 13px 16px; font-size: 14px; line-height: 1.5; }
+.auth-note-warn { background: rgba(242,190,85,0.1); border-left: 3px solid var(--gold);
+  color: var(--mute); }
+.auth-note-warn strong { color: var(--gold); }
+.auth-body form { display: flex; flex-direction: column; gap: 18px; }
+.auth-submit { align-self: flex-start; }
+/* complete state: retain compact bottom padding for the focused completion panel. */
+.auth-card-complete .auth-body { padding-bottom: 28px; }
+
+/* ---------- account guest surface (/user — SlothAccount override) ----------
+   The guest account surface widens the reset-password auth shell into two
+   independent .p panels. The form/AJAX contracts stay in the component
+   partials; these rules only own layout and native-dialog presentation. */
+.auth-account-wrap { max-width: 1040px; }
+.auth-guest-grid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  align-items: start; gap: 20px; }
+.auth-guest-grid .auth-card { min-width: 0; }
+.auth-guest-grid .p-head { justify-content: flex-start; }
+.auth-guest-grid .auth-body { gap: 20px; }
+.auth-guest-grid .auth-note { margin: -2px -2px 2px; }
+.auth-link { align-self: flex-start; color: var(--storm); font-size: 14px;
+  text-decoration: underline; text-underline-offset: 2px; }
+.auth-link:hover { color: var(--ink); }
+.auth-checkbox { display: inline-flex; align-items: flex-start; gap: 10px; color: var(--mute);
+  font-size: 14px; cursor: pointer; }
+.auth-checkbox input { margin-top: 5px; accent-color: var(--storm); }
+.auth-account-body { display: flex; flex-direction: column; gap: 20px; }
+.auth-activation { background: rgba(242,190,85,0.1); border-left: 3px solid var(--gold);
+  padding: 18px 20px; color: var(--mute); }
+.auth-activation h2 { color: var(--gold); font-size: 17px; margin-bottom: 6px; }
+.auth-activation p { font-size: 14.5px; line-height: 1.5; }
+
+/* Native modal replaces the frozen Bootstrap modal. The dialog has a bounded
+   internal scroller so welcome prose never pushes its actions off screen. */
+.auth-dialog { width: min(720px, calc(100% - 32px)); max-height: min(82vh, 760px);
+  margin: auto; padding: 0; overflow: hidden; color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); }
+.auth-dialog::backdrop { background: rgba(4,10,24,0.78); backdrop-filter: blur(3px); }
+.auth-dialog-shell { display: flex; flex-direction: column; max-height: min(82vh, 760px); }
+.auth-dialog-head, .auth-dialog-foot { display: flex; align-items: center; gap: 12px; padding: 16px 20px; }
+.auth-dialog-head { justify-content: space-between; border-bottom: 1px solid var(--line); }
+.auth-dialog-head h2 { font-size: 20px; font-weight: 700; }
+.auth-dialog-body { overflow-y: auto; padding: 22px 24px; color: var(--mute); font-size: 15px; line-height: 1.6; }
+.auth-dialog-body > * + * { margin-top: 15px; }
+.auth-dialog-body .lead { color: var(--ink); font-size: 17px; }
+.auth-dialog-body em { color: var(--ink); }
+.auth-dialog-body a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
+.auth-dialog-foot { justify-content: flex-end; border-top: 1px solid var(--line); }
+
+/* ---------- authenticated account update (/user — SlothAccount + ViewApps)
+   The account tabs use lounge.js' existing hidden-panel contract. Presentation
+   stays inside the Phase-1 panel/form vocabulary; no plugin behavior changes. */
+.account-update { min-width: 0; }
+.account-tabs { flex-wrap: wrap; margin-bottom: 14px; }
+.account-panel { overflow: hidden; }
+.account-panel[hidden] { display: none; }
+.account-panel-body { padding: 28px 24px 30px; }
+.account-panel-body h3, .account-app-heading h3 { font-size: 19px; font-weight: 700; }
+.account-form-section { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.account-form-section form, .account-media-form form, .account-links-form {
+  display: flex; flex-direction: column; gap: 18px; }
+.account-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.account-form-grid .field:first-child { grid-column: 1 / -1; }
+.account-submit { align-self: flex-start; }
+.account-help { color: var(--mute); font-size: 13px; line-height: 1.45; }
+
+/* Credentials and newsletter intentionally read as the primary console plus a
+   compact status rail, not two equal generic cards. */
+.account-general-grid { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(240px, .8fr);
+  align-items: start; gap: 28px; }
+.account-newsletter { display: flex; flex-direction: column; gap: 8px; padding: 20px;
+  background: rgba(136,156,215,0.07); border-left: 3px solid var(--storm); }
+.account-newsletter h3 { font-size: 18px; }
+.account-newsletter form { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+.account-newsletter p { color: var(--mute); font-size: 14px; line-height: 1.5; }
+
+/* Social connections: icon sits inside the form-control footprint; brand SVGs
+   keep their own silhouettes while lucide icons inherit the storm tint. */
+.account-social-body { display: flex; flex-direction: column; gap: 32px; }
+.account-social-body .account-form-section + .account-form-section {
+  padding-top: 28px; border-top: 1px solid var(--line); }
+.account-links-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.account-icon-field { position: relative; }
+.account-icon-field > .input, .account-icon-field .account-input-action .input { padding-left: 42px; width: 100%; }
+.account-input-icon { position: absolute; z-index: 1; left: 13px; bottom: 13px;
+  display: inline-flex; width: 18px; height: 18px; color: var(--storm); pointer-events: none; }
+.account-input-icon svg, .account-input-icon img { width: 18px; height: 18px; object-fit: contain; }
+.account-brand-icon img { filter: grayscale(1) brightness(1.65); opacity: .9; }
+.account-input-action { display: flex; min-width: 0; }
+.account-input-action .input { min-width: 0; flex: 1; }
+.account-sync { display: inline-flex; align-items: center; justify-content: center; width: 46px;
+  flex-shrink: 0; color: var(--storm); background: rgba(79,179,242,0.12);
+  border: 1px solid var(--line); border-left: 0; cursor: pointer; }
+.account-sync:hover { color: var(--ink); background: rgba(79,179,242,0.2); }
+.account-sync svg { width: 17px; height: 17px; }
+.account-icon-field .input:disabled { color: var(--mute); opacity: .82; cursor: not-allowed; }
+
+/* Upload rows keep the selectFile.js .fileselect/file/text sibling structure.
+   The preview well is quiet and rectangular so the uploaded artwork is the
+   only visual focal point in this utility surface. */
+.account-media-list { display: flex; flex-direction: column; padding-top: 0; padding-bottom: 0; }
+.account-media-row { display: grid; grid-template-columns: minmax(260px, .8fr) minmax(0, 1.2fr);
+  gap: 30px; align-items: center; padding: 30px 0; }
+.account-media-row + .account-media-row { border-top: 1px solid var(--line); }
+.account-media-form { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.fileselect { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: stretch; gap: 10px; }
+.account-file-button { position: relative; display: inline-flex; cursor: pointer; }
+.account-file-input { position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer; }
+.account-file-input:focus-visible + .btn { outline: 2px solid var(--storm); outline-offset: -4px; }
+.account-file-button .btn { height: 100%; justify-content: center; }
+.account-filename { min-width: 0; width: 100%; }
+.fileselect .account-upload-error, .fileselect .account-help { grid-column: 1 / -1; }
+.account-upload-error { min-height: 1em; color: var(--red); font-size: 13px; }
+.account-media-preview { display: flex; flex-direction: column; align-items: center; gap: 14px;
+  min-width: 0; padding: 20px; background: rgba(136,156,215,0.06); text-align: center; }
+.account-media-preview img { display: block; max-width: 100%; object-fit: contain;
+  background: rgba(7,10,22,.5); }
+.account-avatar-preview img { width: min(220px, 100%); aspect-ratio: 1; }
+.account-banner-preview img { width: 100%; max-height: 230px; aspect-ratio: 4 / 1; }
+
+/* Applications: a single callout leads into two handler-backed queues. Rows
+   wrap actions instead of forcing the frozen five-column table off-screen. */
+.account-apps-body { display: flex; flex-direction: column; gap: 30px; }
+.account-application-callout { display: flex; align-items: center; justify-content: space-between;
+  gap: 24px; padding: 20px; background: rgba(79,179,242,0.08); border-left: 3px solid var(--storm); }
+.account-application-callout h3 { font-size: 19px; }
+.account-application-callout p:last-child { color: var(--mute); margin-top: 4px; font-size: 14px; }
+.account-application-callout .btn { flex-shrink: 0; }
+.account-applications { display: flex; flex-direction: column; gap: 30px; }
+.account-app-group { border: 1px solid var(--line); }
+.account-app-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 17px 20px; border-bottom: 1px solid var(--line); background: rgba(136,156,215,0.05); }
+.account-app-count { min-width: 34px; padding: 4px 8px; color: var(--storm);
+  background: rgba(79,179,242,0.12); font: 600 12px 'JetBrains Mono', monospace; text-align: center; }
+.account-app-list { display: flex; flex-direction: column; }
+.account-app-row { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(120px, .45fr) minmax(260px, 1.3fr);
+  align-items: center; gap: 18px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.account-app-row:last-child { border-bottom: 0; }
+.account-app-main, .account-app-status { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.account-app-main strong { overflow-wrap: anywhere; }
+.account-app-label { color: var(--mute); font: 600 10px 'JetBrains Mono', monospace;
+  letter-spacing: .15em; text-transform: uppercase; }
+.account-app-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; }
+.account-app-accepted { color: var(--green); font-size: 13px; }
+.account-app-empty { padding: 22px 20px; color: var(--mute); font-size: 14px; }
+.account-notice-list .note strong { color: var(--storm); margin-right: 5px; }
+.account-notice-list .note.hot strong { color: var(--red); }
+
+@media (max-width: 900px) {
+  .account-general-grid { grid-template-columns: 1fr; }
+  .account-links-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .account-media-row { grid-template-columns: 1fr; }
+  .account-app-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .account-app-actions { grid-column: 1 / -1; justify-content: flex-start; }
+}
+
+@media (max-width: 760px) {
+  .auth-guest-grid { grid-template-columns: 1fr; }
+  .auth-dialog-head, .auth-dialog-foot { padding-right: 16px; padding-left: 16px; }
+  .auth-dialog-body { padding: 20px 16px; }
+  .auth-dialog-foot { align-items: stretch; flex-direction: column-reverse; }
+  .auth-dialog-foot .btn { justify-content: center; }
+}
+
+@media (max-width: 640px) {
+  .account-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 7px; }
+  .account-tabs .tab { flex: 0 0 auto; }
+  .account-panel-body { padding: 22px 16px 24px; }
+  .account-form-grid, .account-links-grid { grid-template-columns: 1fr; }
+  .account-form-grid .field:first-child { grid-column: auto; }
+  .account-media-row { gap: 22px; padding: 24px 0; }
+  .fileselect { grid-template-columns: 1fr; }
+  .fileselect .account-upload-error, .fileselect .account-help { grid-column: auto; }
+  .account-file-button .btn { width: 100%; }
+  .account-application-callout { align-items: stretch; flex-direction: column; }
+  .account-application-callout .btn { justify-content: center; }
+  .account-app-row { grid-template-columns: 1fr; }
+  .account-app-actions { grid-column: auto; align-items: stretch; flex-direction: column; }
+  .account-app-actions > div, .account-app-actions .btn { width: 100%; }
+  .account-app-actions .btn { justify-content: center; }
+}
+
+/* ---------- player profile (/user/view/:id — Profile + slothStatistics) -----
+   The page reuses the team banner, two-column teamwrap, team match/timeline
+   panels, and team-stats tables. These selectors only describe profile-only
+   data: an avatar monogram overlay, compact facts, team links, and the vertical
+   section rhythm. There is no new motion to add to the reduced-motion guard. */
+.profile-avatar { position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 112px; height: 112px; flex: 0 0 112px; overflow: hidden; border-radius: 16px;
+  background: rgba(79,179,242,0.16); box-shadow: 0 0 0 1px var(--line);
+  color: var(--storm); font: 700 32px 'Chakra Petch', sans-serif; letter-spacing: .04em; }
+.profile-avatar img { position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; background: var(--panel2); }
+.profile-stack { display: flex; flex-direction: column; gap: 36px; }
+.profile-section { min-width: 0; }
+.profile-section-title { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px;
+  padding-bottom: 11px; border-bottom: 1px solid var(--line); }
+.profile-section-title .eyebrow { margin: 0; }
+.profile-section-title h2 { font-size: 21px; font-weight: 700; letter-spacing: .01em; }
+.profile-timeline { overflow: hidden; }
+
+.profile-info, .profile-teams { overflow: hidden; }
+.profile-info-body { padding: 20px; }
+.profile-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px; margin: 0; }
+.profile-fact { min-width: 0; padding-bottom: 13px; border-bottom: 1px solid var(--line); }
+.profile-fact dt { margin-bottom: 6px; color: var(--mute);
+  font: 600 10px 'JetBrains Mono', monospace; letter-spacing: .12em; text-transform: uppercase; }
+.profile-fact dd { margin: 0; color: var(--ink); font-size: 14px; overflow-wrap: anywhere; }
+.profile-fact dd a { color: var(--storm); }
+.profile-fact dd a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.profile-fact-icon { display: flex; align-items: center; gap: 8px; }
+.profile-role-icon, .profile-brand-icon { width: 22px; height: 22px; flex: 0 0 22px;
+  border-radius: 4px; object-fit: contain; background: rgba(79,179,242,0.12); }
+.profile-brand-icon { padding: 2px; filter: grayscale(1) brightness(1.65); }
+.profile-description { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.profile-description h2 { margin-bottom: 8px; font-size: 16px; font-weight: 700; }
+.profile-description p { color: var(--mute); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+
+.profile-team-list { display: flex; flex-direction: column; }
+.profile-team-row { display: flex; align-items: center; gap: 11px; min-width: 0;
+  padding: 13px 16px; border-bottom: 1px solid var(--line); color: var(--ink);
+  font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 14.5px; }
+.profile-team-row:last-child { border-bottom: 0; }
+.profile-team-row:hover { background: var(--panel2); color: var(--storm); }
+.profile-team-row > span:not(.badge) { min-width: 0; flex: 1; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+.profile-team-row > svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--mute); }
+.profile-team-row:hover > svg { color: var(--storm); }
+.profile-team-empty { padding: 20px; color: var(--mute); font-size: 14px; }
+.profile-gate { display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; max-width: 680px; padding: 22px 24px; }
+.profile-gate p { color: var(--mute); }
+.profile-gate .btn { flex-shrink: 0; }
+
+@media (max-width: 640px) {
+  .profile-avatar { width: 88px; height: 88px; flex-basis: 88px; border-radius: 13px; font-size: 26px; }
+  .profile-facts { grid-template-columns: 1fr; }
+  .profile-section-title { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .profile-gate { align-items: stretch; flex-direction: column; }
+  .profile-gate .btn { justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arch-summary, .arch-summary svg { transition: none; }
+}

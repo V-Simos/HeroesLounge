@@ -1,0 +1,20 @@
+description = "Focused layout — centered chamfered panel, no site chrome"
+
+[session]
+security = "all"
+==
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% partial 'site/head' %}
+</head>
+<body>
+    <main id="main" class="focused">
+        <a class="logo" href="{{ 'home' | page }}">{% partial 'site/logo' %}<span>HEROES <em>LOUNGE</em></span></a>
+        <div class="focused-panel chamfer">
+            {% page %}
+        </div>
+    </main>
+    {% partial 'site/scripts' %}
+</body>
+</html>

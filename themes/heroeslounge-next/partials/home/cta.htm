@@ -1,0 +1,15 @@
+description = "Homepage footer CTA section (markup from reference-design.html)"
+==
+{#- Copy from the mockup, minus the hardcoded season number ("Season 30 is
+    live" -> "The season is live" — spec forbids fake-real numbers).
+    Discord invite URL matches site/footer.htm (from the old theme). -#}
+<section class="foot-cta">
+    <div class="wrap foot-cta-in">
+        <h2>Your first pick is waiting.</h2>
+        <p>The season is live. Free agents get matched — teams get cast.</p>
+        <div class="cta-row center">
+            <a class="btn btn-solid" href="/user">Sign up now {% partial 'site/icon' name='arrow-right' %}</a>
+            <a class="btn btn-ghost" href="https://discordapp.com/invite/aePkBsZ">{% partial 'site/icon' name='message-square' %} Join the Discord</a>
+        </div>
+    </div>
+</section>

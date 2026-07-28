@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heroes Lounge — Dashboard v2</title>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
+
+body { margin: 0; }
+
+.hl {
+  /* v2 tokens: higher contrast, larger type */
+  --void:  #070A16;            /* darker page for separation */
+  --panel: #151C3D;            /* lighter panels for contrast against void */
+  --panel2:#1B2350;
+  --line:  rgba(136,156,215,0.28);   /* stronger borders */
+  --storm: #4FB3F2;            /* brighter accents */
+  --arc:   #9D8CF2;
+  --gold:  #F2BE55;
+  --red:   #F26379;
+  --green: #57D49A;
+  --ink:   #F4F7FF;            /* brighter text */
+  --mute:  #AAB6DA;            /* muted text passes AA on panels */
+  --ch: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+
+  background: var(--void);
+  color: var(--ink);
+  font-family: 'Barlow', system-ui, sans-serif;
+  font-size: 17px;                   /* base up from 16 */
+  line-height: 1.55;
+  min-height: 100vh;
+  overflow-x: clip;
+}
+.hl *, .hl *::before, .hl *::after { box-sizing: border-box; margin: 0; }
+.hl a { color: inherit; text-decoration: none; }
+.mono { font-family: 'JetBrains Mono', monospace; font-weight: 500; letter-spacing: .12em; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.chamfer { clip-path: var(--ch); }
+h1, h2, h3 { font-family: 'Chakra Petch', sans-serif; }
+
+/* nav */
+.nav { position: sticky; top: 0; z-index: 50; background: rgba(7,10,22,0.88);
+  backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.nav-in { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+.logo { display: inline-flex; align-items: center; gap: 10px;
+  font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: .08em; }
+.logo em { font-style: normal; color: var(--storm); }
+.logo svg { color: var(--storm); width: 22px; height: 22px; }
+.links { display: flex; align-items: center; gap: 28px; font-weight: 500; font-size: 16px; color: var(--mute); }
+.links a:hover { color: var(--ink); }
+.avatar { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 600; }
+.avatar .pic { width: 32px; height: 35px; display: inline-flex; align-items: center; justify-content: center;
+  font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 13px;
+  clip-path: polygon(50% 0, 100% 18%, 100% 72%, 50% 100%, 0 72%, 0 18%);
+  background: linear-gradient(160deg, hsl(205 60% 30%), hsl(205 65% 16%)); color: hsl(205 90% 80%); }
+.bell { position: relative; color: var(--mute); }
+.bell svg { width: 20px; height: 20px; }
+.bell .n { position: absolute; top: -7px; right: -9px; background: var(--red); color: #fff;
+  font-size: 10px; font-family: 'JetBrains Mono', monospace; padding: 1px 5px; border-radius: 8px; font-weight: 600; }
+
+/* welcome strip */
+.welcome { padding: 40px 0 30px; background:
+  radial-gradient(620px 300px at 8% -30%, rgba(79,179,242,0.15), transparent 65%), var(--void); }
+.welcome-in { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+.eyebrow { font-size: 12.5px; color: var(--storm); letter-spacing: .22em; margin-bottom: 10px; font-weight: 600; }
+.welcome h1 { font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; }
+.teamchips { display: flex; gap: 10px; flex-wrap: wrap; }
+.teamchip { display: inline-flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 600;
+  font-family: 'Chakra Petch', sans-serif; padding: 10px 16px; background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--line);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.teamchip .pic { width: 22px; height: 24px; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 8px; font-family: 'Chakra Petch', sans-serif; font-weight: 700;
+  clip-path: polygon(50% 0, 100% 18%, 100% 72%, 50% 100%, 0 72%, 0 18%);
+  background: linear-gradient(160deg, hsl(205 60% 30%), hsl(205 65% 16%)); color: hsl(205 90% 80%); }
+.teamchip.cap { box-shadow: inset 0 0 0 1px rgba(242,190,85,0.5); }
+.teamchip .c { color: var(--gold); font-size: 10px; letter-spacing: .18em; }
+
+/* dashboard grid: symmetric */
+.dash { padding: 8px 0 72px; }
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: stretch; }
+.span2 { grid-column: 1 / -1; }
+
+/* unified panel */
+.p { background: var(--panel); display: flex; flex-direction: column; }
+.p-head { display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  min-height: 52px; padding: 0 20px; border-bottom: 1px solid var(--line);
+  font-size: 12px; letter-spacing: .2em; color: var(--storm); font-weight: 600;
+  font-family: 'JetBrains Mono', monospace; text-transform: uppercase; }
+.p-head a { color: var(--mute); display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; }
+.p-head a:hover { color: var(--ink); }
+.p-head svg { width: 13px; height: 13px; }
+
+/* next match (full-width, symmetric) */
+.cast-outer { padding: 1px; clip-path: var(--ch);
+  background: linear-gradient(150deg, rgba(79,179,242,0.6), rgba(157,140,242,0.4) 45%, rgba(136,156,215,0.15)); }
+.cast { background: linear-gradient(165deg, var(--panel2), var(--panel)); }
+.cast-teams { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px;
+  align-items: center; padding: 34px 40px 30px; text-align: center; }
+.cast-team { display: flex; flex-direction: column; align-items: center; gap: 12px;
+  font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 19px; line-height: 1.25; }
+.badge-lg { width: 64px; height: 70px; display: inline-flex; align-items: center; justify-content: center;
+  font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 21px;
+  clip-path: polygon(50% 0, 100% 18%, 100% 72%, 50% 100%, 0 72%, 0 18%); }
+.hue-sc { background: linear-gradient(160deg, hsl(205 60% 30%), hsl(205 65% 16%)); color: hsl(205 90% 80%); box-shadow: inset 0 0 0 1px hsl(205 65% 50% / 0.55); }
+.hue-ww { background: linear-gradient(160deg, hsl(230 60% 32%), hsl(230 65% 17%)); color: hsl(230 90% 82%); box-shadow: inset 0 0 0 1px hsl(230 65% 52% / 0.55); }
+.cast-mid { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.countdown { font-family: 'JetBrains Mono', monospace; font-size: 2.4rem; font-weight: 600;
+  font-variant-numeric: tabular-nums; letter-spacing: .05em; color: var(--ink); }
+.starts { font-size: 12px; letter-spacing: .2em; color: var(--mute); text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace; }
+.cast-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;
+  font-size: 12px; letter-spacing: .16em; color: var(--mute); font-family: 'JetBrains Mono', monospace;
+  padding: 15px 40px; border-top: 1px solid var(--line); text-transform: uppercase; }
+.cast-foot em { font-style: normal; color: var(--arc); }
+.cast-actions { display: flex; gap: 12px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; font-family: 'Chakra Petch', sans-serif;
+  font-weight: 600; font-size: 14.5px; letter-spacing: .04em; padding: 11px 20px; cursor: pointer; border: 0;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.btn svg { width: 16px; height: 16px; }
+.btn-solid { background: linear-gradient(135deg, var(--storm), #2E86DD); color: #041020; }
+.btn-ghost { background: rgba(79,179,242,0.12); color: var(--ink); box-shadow: inset 0 0 0 1px rgba(79,179,242,0.5); }
+
+/* tables & rows — one shared rhythm: 56px rows everywhere */
+.tabs { display: flex; gap: 6px; }
+.tab { font-size: 11px; letter-spacing: .1em; padding: 7px 13px; border: 0; cursor: pointer;
+  background: rgba(136,156,215,0.1); color: var(--mute); font-family: 'JetBrains Mono', monospace; font-weight: 600;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+.tab.on { background: linear-gradient(135deg, var(--storm), #2E86DD); color: #041020; }
+.tr { display: grid; grid-template-columns: 38px 1fr 52px 52px 64px 64px; align-items: center;
+  min-height: 56px; padding: 0 20px; border-bottom: 1px solid var(--line); font-size: 15.5px; }
+.tr.th { min-height: 44px; font-size: 11px; letter-spacing: .18em; color: var(--mute); text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.tr:last-child { border-bottom: 0; }
+.tr.you { background: rgba(79,179,242,0.1); box-shadow: inset 3px 0 0 var(--storm); }
+.tteam { font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 15.5px; display: flex; align-items: center; gap: 9px; color: var(--ink); }
+.tr.first .tteam { color: var(--gold); }
+.gold-ic { color: var(--gold); width: 14px; height: 14px; }
+.rank { font-family: 'JetBrains Mono', monospace; color: var(--mute); font-size: 14px; }
+.num { font-family: 'JetBrains Mono', monospace; color: var(--ink); font-size: 14.5px; }
+.num.dim { color: var(--mute); }
+.num.pos { color: var(--green); }
+.num.neg { color: var(--red); }
+.num.big { font-weight: 600; }
+.inact { opacity: .5; }
+
+/* list rows share the 56px rhythm */
+.mrow { display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 0 20px;
+  border-bottom: 1px solid var(--line); font-size: 15.5px; }
+.mrow:last-child { border-bottom: 0; }
+.mrow .when { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--storm);
+  width: 92px; flex-shrink: 0; letter-spacing: .08em; font-weight: 600; }
+.mrow .who { font-family: 'Chakra Petch', sans-serif; font-weight: 600; flex: 1; min-width: 0; color: var(--ink); }
+.mrow .who i { font-style: normal; color: var(--mute); font-weight: 400; font-family: 'Barlow', sans-serif; }
+.pill { font-size: 10px; letter-spacing: .14em; padding: 5px 11px; text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace; font-weight: 600; flex-shrink: 0; text-align: center; min-width: 118px;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
+.pill.ok { background: rgba(87,212,154,0.16); color: var(--green); }
+.pill.warn { background: rgba(242,190,85,0.16); color: var(--gold); }
+.pill.cast { background: rgba(157,140,242,0.18); color: var(--arc); }
+.mrow .res { font-family: 'JetBrains Mono', monospace; font-weight: 600; flex-shrink: 0; font-size: 15.5px; }
+.res .w { color: var(--storm); } .res .l { color: var(--mute); }
+
+/* notifications share the rhythm too */
+.note { display: flex; gap: 14px; align-items: flex-start; min-height: 56px; padding: 12px 20px;
+  border-bottom: 1px solid var(--line); font-size: 15.5px; }
+.note:last-child { border-bottom: 0; }
+.note svg { width: 17px; height: 17px; color: var(--arc); flex-shrink: 0; margin-top: 3px; }
+.note.hot svg { color: var(--red); }
+.note p { color: var(--ink); line-height: 1.4; }
+.note .t { display: block; font-size: 11px; color: var(--mute); font-family: 'JetBrains Mono', monospace;
+  letter-spacing: .12em; margin-top: 4px; text-transform: uppercase; }
+.note .t b { color: var(--red); font-weight: 600; }
+
+@media (max-width: 900px) {
+  .dash-grid { grid-template-columns: 1fr; }
+  .links span.hidesm { display: none; }
+  .cast-teams { padding: 26px 16px 22px; }
+  .cast-foot { padding: 14px 20px; }
+}
+</style>
+</head>
+<body>
+<div class="hl">
+
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="logo" href="#"><i data-lucide="swords"></i><span>HEROES <em>LOUNGE</em></span></a>
+      <nav class="links">
+        <span class="hidesm"><a href="#">League</a></span>
+        <span class="hidesm"><a href="#">Events</a></span>
+        <span class="hidesm"><a href="#">Calendar</a></span>
+        <span class="hidesm"><a href="#">Blog</a></span>
+        <a class="bell" href="#"><i data-lucide="bell"></i><span class="n">3</span></a>
+        <a class="avatar" href="#"><span class="pic">SI</span> Simos</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="welcome">
+    <div class="wrap welcome-in">
+      <div>
+        <p class="eyebrow mono">EU · SEASON 30 · ROUND 4 OF 7</p>
+        <h1>Welcome back, Simos.</h1>
+      </div>
+      <div class="teamchips">
+        <span class="teamchip cap"><span class="pic">SC</span> Storm Chasers <span class="c">CAPTAIN</span></span>
+        <span class="teamchip"><span class="pic" style="background:linear-gradient(160deg,hsl(90 60% 28%),hsl(90 65% 15%));color:hsl(90 90% 78%)">DS</span> Dragon Shire Drakes</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="dash">
+    <div class="wrap dash-grid">
+
+      <!-- ROW 1: next match, full width -->
+      <div class="cast-outer span2">
+        <div class="cast chamfer">
+          <div class="p-head">YOUR NEXT MATCH · STORM CHASERS</div>
+          <div class="cast-teams">
+            <div class="cast-team"><span class="badge-lg hue-sc">SC</span><span>Storm Chasers</span></div>
+            <div class="cast-mid">
+              <span class="countdown">2D 04:12:33</span>
+              <span class="starts">Sat Jul 5 · 20:00 CEST</span>
+            </div>
+            <div class="cast-team"><span class="badge-lg hue-ww">WW</span><span>Warhead Wardens</span></div>
+          </div>
+          <div class="cast-foot">
+            <span>DIVISION 1 · ROUND 4 · BO3 · <em>CASTER APPROVED</em></span>
+            <div class="cast-actions">
+              <button class="btn btn-ghost"><i data-lucide="calendar-clock"></i> Reschedule</button>
+              <button class="btn btn-solid"><i data-lucide="swords"></i> Match page</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 2: standings | notifications -->
+      <div class="p chamfer">
+        <div class="p-head">
+          <span>STANDINGS · DIVISION 1</span>
+          <div class="tabs">
+            <button class="tab on">SC · DIV 1</button>
+            <button class="tab">DS · DIV 3</button>
+          </div>
+        </div>
+        <div class="tr th"><span>#</span><span>Team</span><span>P</span><span>W</span><span>Map W</span><span>Map ±</span></div>
+        <div class="tr first"><span class="rank">1</span><span class="tteam"><i data-lucide="trophy" class="gold-ic"></i>Sky Temple Titans</span><span class="num dim">4</span><span class="num big">4</span><span class="num">8</span><span class="num pos">+7</span></div>
+        <div class="tr you"><span class="rank">2</span><span class="tteam">Storm Chasers</span><span class="num dim">4</span><span class="num big">3</span><span class="num">7</span><span class="num pos">+4</span></div>
+        <div class="tr"><span class="rank">3</span><span class="tteam">Nexus Nomads</span><span class="num dim">4</span><span class="num big">3</span><span class="num">6</span><span class="num pos">+3</span></div>
+        <div class="tr"><span class="rank">4</span><span class="tteam">Warhead Wardens</span><span class="num dim">4</span><span class="num big">2</span><span class="num">4</span><span class="num dim">0</span></div>
+        <div class="tr inact"><span class="rank">5</span><span class="tteam">Alterac Alliance</span><span class="num dim">4</span><span class="num big">1</span><span class="num">2</span><span class="num neg">−4</span></div>
+      </div>
+
+      <div class="p chamfer">
+        <div class="p-head"><span>NOTIFICATIONS</span><a href="#">MARK ALL READ</a></div>
+        <div class="note hot"><i data-lucide="calendar-clock"></i><div><p>Warhead Wardens proposed a new time for your Round 4 match.</p><span class="t">12 min ago · <b>action needed</b></span></div></div>
+        <div class="note"><i data-lucide="radio"></i><div><p>Your match vs Warhead Wardens will be cast by <b>Khaldor</b>.</p><span class="t">2 h ago</span></div></div>
+        <div class="note"><i data-lucide="user-plus"></i><div><p>New application to Storm Chasers from <b>NexusFan42</b>.</p><span class="t">Yesterday</span></div></div>
+        <div class="note"><i data-lucide="newspaper"></i><div><p><b>Signups open for Season 31</b> — from the blog.</p><span class="t">Jul 2</span></div></div>
+      </div>
+
+      <!-- ROW 3: recent results | your matches -->
+      <div class="p chamfer">
+        <div class="p-head"><span>RECENT RESULTS · YOUR DIVISIONS</span><a href="#">ALL RESULTS <i data-lucide="chevron-right"></i></a></div>
+        <div class="mrow"><span class="when">JUN 30</span><span class="who">Sky Temple Titans <i>vs</i> Warhead Wardens</span><span class="res"><span class="w">2</span> : <span class="l">1</span></span></div>
+        <div class="mrow"><span class="when">JUN 29</span><span class="who">Dragon Shire Drakes <i>vs</i> Garden Terrors</span><span class="res"><span class="l">1</span> : <span class="w">2</span></span></div>
+        <div class="mrow"><span class="when">JUN 28</span><span class="who">Storm Chasers <i>vs</i> Alterac Alliance</span><span class="res"><span class="w">2</span> : <span class="l">0</span></span></div>
+        <div class="mrow"><span class="when">JUN 27</span><span class="who">Raven Court <i>vs</i> Fresh Meat</span><span class="res"><span class="w">2</span> : <span class="l">1</span></span></div>
+      </div>
+
+      <div class="p chamfer">
+        <div class="p-head"><span>YOUR MATCHES · NEXT 14 DAYS</span><a href="#">CALENDAR <i data-lucide="chevron-right"></i></a></div>
+        <div class="mrow"><span class="when">SAT 20:00</span><span class="who">SC <i>vs</i> Warhead Wardens</span><span class="pill ok">Scheduled</span></div>
+        <div class="mrow"><span class="when">SUN 19:00</span><span class="who">DS <i>vs</i> Garden Terrors</span><span class="pill warn">Propose time</span></div>
+        <div class="mrow"><span class="when">JUL 12</span><span class="who">SC <i>vs</i> Nexus Nomads</span><span class="pill cast">Cast requested</span></div>
+        <div class="mrow"><span class="when">JUL 13</span><span class="who">DS <i>vs</i> Luxoria Lions</span><span class="pill warn">Propose time</span></div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<script>
+lucide.createIcons();
+</script>
+</body>
+</html>

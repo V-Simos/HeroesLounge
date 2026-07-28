@@ -1,0 +1,53 @@
+[DivisionTable]
+==
+{#- Standings panel (markup: dashboard-v2.html .p/.p-head/.tabs/.tr).
+    Wiring ported from the old theme's partials/user/standings.htm: loop
+    user.sloth.teams -> team.active_divisions and render
+    {% component 'DivisionTable' id=div.id teamId=team.id %} per pair — the
+    output comes from this theme's override at partials/DivisionTable/
+    default.htm (teamId mode: surroundingEntries window around the team,
+    clamped startIndex, .you highlight). The old partial's maxEntries=2 is a
+    DEAD property (the component's real ones are teamId + surroundingEntries,
+    default 4) and is not carried over.
+
+    Tabs follow the lounge.js contract ([data-tabs] container, .tab buttons
+    with data-tab-target, panels toggled via [hidden]) + ARIA tab semantics;
+    labels are the mockup's "SC · DIV 1" shape (team initials via the shared
+    site/initials partial, "Division N" -> "DIV N"). Single team+division: no tabs,
+    the division moves into the panel head.
+
+    Empty state: a user with no team (or no active division) gets no panel at
+    all — the dash grid reflows around it. -#}
+{% set teams = user.sloth ? user.sloth.teams : [] %}
+{% set entries = [] %}
+{% for team in teams %}
+    {% for div in team.active_divisions %}
+        {% set entries = entries|merge([{ team: team, div: div }]) %}
+    {% endfor %}
+{% endfor %}
+{% if entries|length > 0 %}
+<div class="p chamfer">
+    <div class="p-head">
+        <span>STANDINGS{% if entries|length == 1 %} · {{ entries[0].div.title|upper }}{% endif %}</span>
+        {% if entries|length > 1 %}
+        <div class="tabs" data-tabs role="tablist" aria-label="Your teams">
+            {% for e in entries %}
+            <button class="tab{% if loop.first %} on{% endif %}" id="dash-standings-tab-{{ e.div.id }}-{{ e.team.id }}" type="button" role="tab" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="dash-standings-{{ e.div.id }}-{{ e.team.id }}" tabindex="{{ loop.first ? '0' : '-1' }}" data-tab-target="dash-standings-{{ e.div.id }}-{{ e.team.id }}">{% partial 'site/initials' name=e.team.title %} · {{ e.div.title|upper|replace({'DIVISION ': 'DIV '}) }}</button>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% for e in entries %}
+    <div id="dash-standings-{{ e.div.id }}-{{ e.team.id }}" role="tabpanel" aria-labelledby="dash-standings-tab-{{ e.div.id }}-{{ e.team.id }}"{% if not loop.first %} hidden{% endif %}>
+        {% component 'DivisionTable' id = e.div.id teamId = e.team.id %}
+        {#- Division page URL pattern frozen from the old theme's
+            pages/season/division.htm (url = "/:slug/:divslug"); playoff
+            divisions have no season -> no foot link (the old partial linked
+            those to the playoff page, unported until playoffs are themed). -#}
+        {% if e.div.season %}
+        <a class="table-foot mono" href="/{{ e.div.season.slug }}/{{ e.div.slug }}">FULL {{ e.div.title|upper }} TABLE {% partial 'site/icon' name='chevron-right' %}</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

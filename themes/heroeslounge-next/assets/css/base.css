@@ -1,0 +1,53 @@
+/* Base styles — ported from docs/superpowers/specs/assets/dashboard-v2.html global rules.
+   :focus-visible and .sec/.sec-alt band pattern ported from reference-design.html
+   (with v2 token values). The prefers-reduced-motion block lives at the END of
+   components.css so it follows the animation/transform rules it neutralizes. */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+/* Native UI — form controls, scrollbars, autofill — must match the dark theme. */
+:root { color-scheme: dark; }
+
+/* The sticky .nav (components.css) is 68px tall; pad anchor/focus scroll
+   targets so they land below it instead of hidden underneath. */
+html { scroll-padding-top: 84px; }
+
+body {
+  background: var(--void);
+  color: var(--ink);
+  font-family: 'Barlow', system-ui, sans-serif;
+  font-size: 17px;                   /* base up from 16 */
+  line-height: 1.55;
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--storm); outline-offset: 3px; }
+
+/* Skip link (layouts/default.htm) — clipped until keyboard focus, then pinned
+   top-left ABOVE the sticky .nav (z-index 50), same layer as #toasts (100).
+   Storm outline comes from the global :focus-visible rule. */
+.skip-link {
+  position: fixed; top: 12px; left: 12px; z-index: 100;
+  background: var(--panel); color: var(--ink);
+  padding: 10px 18px; font-weight: 600;
+  clip-path: inset(50%); /* visually hidden, still focusable */
+}
+.skip-link:focus { clip-path: none; }
+
+.mono { font-family: 'JetBrains Mono', monospace; font-weight: 500; letter-spacing: .12em; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.chamfer { clip-path: var(--ch); }
+
+h1, h2, h3 { font-family: 'Chakra Petch', sans-serif; }
+
+.eyebrow { font-size: 12.5px; color: var(--storm); letter-spacing: .22em; margin-bottom: 10px; font-weight: 600; }
+
+/* ---------- sections ---------- */
+.sec { padding: 76px 0; }
+.sec-alt { background: var(--deep); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+
+@media (max-width: 720px) {
+  .sec { padding: 56px 0; }
+}

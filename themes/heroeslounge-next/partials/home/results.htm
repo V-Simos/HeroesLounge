@@ -1,0 +1,87 @@
+[RecentResults]
+type = "season"
+maxItems = 6
+==
+{#- Results ticker + latest-results cards (markup from reference-design.html
+    .ticker family and .match cards).
+
+    Data: rikki/loungeviews [RecentResults] — is_played matches of one entity,
+    updated_at DESC, take maxItems, exposed as the public `matches` property.
+    type="all" is NOT implemented in the component (its switch leaves the
+    entity null and onRender would fatal), so it is scoped to the active EU
+    season (same source as hero/standings: layout-attached Navigation).
+    The season id is only known at runtime, hence setProperty before invoking
+    onRender() — which must be called explicitly anyway: the component only
+    collects data in onRender(), and rendering it via {% component %} would
+    emit the plugin's old Bootstrap partial. -#}
+{# Active-season derivation — canonical copy + rationale in site/nav.htm; keep the 5 sites in sync (nav, footer, hero, results, standings) #}
+{% set season = Navigation.current_eu_amateurseasons ? Navigation.current_eu_amateurseasons.first : null %}
+{% if season %}
+{% do RecentResults.setProperty('id', season.id) %}
+{% do RecentResults.onRender() %}
+{#- Eager-load what the ticker/cards below actually read: the component only
+    eager-loads teams+logo, so division, channels and the shields' smallLogo
+    would otherwise lazy-load per match (~24 extra queries for 6 cards). -#}
+{% do RecentResults.matches.load('division', 'channels', 'teams.smallLogo') %}
+{% set results = RecentResults.matches %}
+{#- Empty state: no played matches (or no active season, above) — no ticker,
+    no section, no empty shells. -#}
+{% if results and results|length > 0 %}
+<div class="ticker" aria-label="Latest results">
+    <div class="ticker-label mono">{% partial 'site/icon' name='radio' %} RESULTS</div>
+    <div class="ticker-clip">
+        <div class="ticker-track mono">
+            {#- Entries doubled: @keyframes scroll translates the track -50%,
+                so the two passes must be identical for a seamless loop. The
+                second pass is aria-hidden (visual copy only). -#}
+            {% for pass in 0..1 %}
+            {% for match in results %}
+            {% set home = match.teams[0] %}
+            {% set away = match.teams[1] %}
+            {% if home and away %}
+            <span{% if pass == 1 %} aria-hidden="true"{% endif %}>{% if match.division %}{{ match.division.title|replace({'Division ': 'D'}) }} — {% endif %}{{ home.title }} {{ home.pivot.team_score }}:{{ away.pivot.team_score }} {{ away.title }} <em>◆</em></span>
+            {% endif %}
+            {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<section class="sec">
+    <div class="wrap">
+        <div class="sec-head">
+            <div><p class="eyebrow mono">FROM THE CASTS</p><h2>Latest results</h2></div>
+            {#- Season overview lists every round's results; URL pattern frozen
+                from the old theme's pages/season/view.htm (url = "/:slug"). -#}
+            <a class="sec-link mono" href="/{{ season.slug }}">ALL MATCHES {% partial 'site/icon' name='chevron-right' %}</a>
+        </div>
+        <div class="match-grid">
+            {% for match in results %}
+            {% set home = match.teams[0] %}
+            {% set away = match.teams[1] %}
+            {% if home and away %}
+            <article class="match chamfer">
+                <div class="match-top mono">
+                    {% if match.division %}<span class="divtag">{{ match.division.title|upper|replace({'DIVISION ': 'DIV '}) }}</span>{% endif %}
+                    {#- Match page URL frozen from the old theme's
+                        pages/match/view.htm (url = "/match/view/:id").
+                        Date-TZ: human dates render in the app TZ (day
+                        granularity); cast.htm uses the viewer TZ via
+                        UpcomingMatches.timezone — unify when a viewer-TZ
+                        source exists outside UpcomingMatches. -#}
+                    <a href="/match/view/{{ match.id }}">{{ (match.wbp ?: match.updated_at)|date('M j') }}</a>
+                    {% if match.channels|length > 0 %}<a class="vod" href="{{ (match.channels|first).url }}" target="_blank" rel="noopener">VOD {% partial 'site/icon' name='chevron-right' %}</a>{% endif %}
+                </div>
+                <div class="match-body">
+                    <div class="side{% if match.winner_id == home.id %} win{% elseif match.winner_id %} loss{% endif %}">{% partial 'team/shield' team=home size='sm' %}<span class="tname">{{ home.title }}</span></div>
+                    <div class="score mono"><b{% if match.winner_id %} class="{{ match.winner_id == home.id ? 's-win' : 's-loss' }}"{% endif %}>{{ home.pivot.team_score }}</b><i>:</i><b{% if match.winner_id %} class="{{ match.winner_id == away.id ? 's-win' : 's-loss' }}"{% endif %}>{{ away.pivot.team_score }}</b></div>
+                    <div class="side right{% if match.winner_id == away.id %} win{% elseif match.winner_id %} loss{% endif %}"><span class="tname">{{ away.title }}</span>{% partial 'team/shield' team=away size='sm' %}</div>
+                </div>
+            </article>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endif %}

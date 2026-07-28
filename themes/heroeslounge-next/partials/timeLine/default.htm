@@ -1,0 +1,15 @@
+{#- Theme override for Rikki\LoungeViews\Components\TimelineEntries, resolved as
+    ViewTeam's `timeLine` child (NOTE the capital L — the registered alias casing;
+    a wrong-case dir would silently fall back to the plugin's #cd-timeline/
+    timeline.css Bootstrap partial). __SELF__ IS the TimelineEntries instance; it
+    fires its own onRender at render, so __SELF__.timeline is populated here.
+
+    type='team' (no `subsequent`) takes the team branch of onRender()
+    (Team::find(id)->timeline ordered created_at DESC, take maxItems). The per-type
+    sentence/icon switch lives in the shared partial division/timeline-entries (one
+    source of truth, also used by the division sidebar); here we just supply the
+    .tl wrapper and pass entries=__SELF__.timeline. Legacy #cd-timeline markup is
+    dropped entirely; the empty state ("No activity yet") lives in the shared partial. -#}
+<div class="tl">
+    {% partial 'division/timeline-entries' entries=__SELF__.timeline %}
+</div>

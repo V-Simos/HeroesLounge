@@ -1,0 +1,87 @@
+{#- ViewApps presentation override. Collections, approval branches, request
+    handlers, and request-data payloads mirror the frozen component contract. -#}
+<div class="account-applications">
+    <section class="account-app-group" aria-labelledby="account-own-apps-title">
+        <div class="account-app-heading">
+            <div>
+                <p class="eyebrow">Player desk</p>
+                <h3 id="account-own-apps-title">Your applications</h3>
+            </div>
+            <span class="account-app-count">{{ __SELF__.slothApps|length }}</span>
+        </div>
+
+        <div class="account-app-list">
+            {% for app in __SELF__.slothApps %}
+                {% set applicationTeam = __SELF__.slothAppsTeams[app.team_id]|default(null) %}
+                <article class="account-app-row">
+                    <div class="account-app-main">
+                        <span class="account-app-label">Team</span>
+                        <strong>{% if applicationTeam %}{{ applicationTeam.title }}{% else %}Team unavailable{% endif %}</strong>
+                    </div>
+                    <div class="account-app-status">
+                        <span class="account-app-label">Approved</span>
+                        <span class="pill{% if app.approved == 0 %} warn{% else %} ok{% endif %}">{% if app.approved == 0 %}No{% else %}Yes{% endif %}</span>
+                    </div>
+                    <div class="account-app-actions">
+                        {#- Deferred application detail page: keep the frozen route
+                            literal because |page has no active-theme target yet. -#}
+                        <a class="btn btn-ghost btn-sm" href="/application/view/{{ app.id }}">View application</a>
+                        {% if app.approved == 1 %}
+                            <div data-request-data="id: {{ app.id }}">
+                                <button data-request="onAccept" class="btn btn-solid btn-sm">Accept invite</button>
+                            </div>
+                        {% endif %}
+                        <div data-request-data="id: {{ app.id }}">
+                            <button data-request="onWithdraw" class="btn btn-ghost btn-sm">Withdraw application</button>
+                        </div>
+                    </div>
+                </article>
+            {% else %}
+                <p class="account-app-empty">You have no open applications.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="account-app-group" aria-labelledby="account-team-apps-title">
+        <div class="account-app-heading">
+            <div>
+                <p class="eyebrow">Captain desk</p>
+                <h3 id="account-team-apps-title">Applications to your team</h3>
+            </div>
+            <span class="account-app-count">{{ __SELF__.teamApps|length }}</span>
+        </div>
+
+        <div class="account-app-list">
+            {% for app in __SELF__.teamApps %}
+                {% set applicationPlayer = __SELF__.teamAppsUsers[app.user_id]|default(null) %}
+                <article class="account-app-row">
+                    <div class="account-app-main">
+                        <span class="account-app-label">Player</span>
+                        <strong>{% if applicationPlayer %}{{ applicationPlayer.title }}{% else %}Player unavailable{% endif %}</strong>
+                    </div>
+                    <div class="account-app-status">
+                        <span class="account-app-label">Status</span>
+                        <span class="pill{% if app.approved == 0 %} warn{% else %} ok{% endif %}">{% if app.approved == 0 %}Unaccepted{% else %}Invite pending{% endif %}</span>
+                    </div>
+                    <div class="account-app-actions">
+                        {#- Deferred application detail page: keep the frozen route
+                            literal because |page has no active-theme target yet. -#}
+                        <a class="btn btn-ghost btn-sm" href="/application/view/{{ app.id }}">View application</a>
+                        {% if app.approved == 0 %}
+                            <div data-request-data="id: {{ app.id }}">
+                                <button data-request="onSendAccept" class="btn btn-solid btn-sm">Accept application</button>
+                            </div>
+                        {% else %}
+                            <span class="account-app-accepted">Application accepted</span>
+                        {% endif %}
+                        <div data-request-data="id: {{ app.id }}">
+                            <button data-request="onWithdraw" class="btn btn-ghost btn-sm">Decline application</button>
+                        </div>
+                    </div>
+                </article>
+            {% else %}
+                <p class="account-app-empty">Your teams have no open applications.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>

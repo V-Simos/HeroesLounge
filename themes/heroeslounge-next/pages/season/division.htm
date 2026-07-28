@@ -1,0 +1,87 @@
+title = "Division"
+url = "/:slug/:divslug"
+layout = "default"
+is_hidden = 0
+
+[DivisionOverview]
+maxItems = 7
+daysInFuture = 7
+[SpoilersToggle]
+[DivisionTable]
+[RecentResults]
+type = "division"
+maxItems = 7
+[UpcomingMatches]
+type = "division"
+daysInFuture = 7
+showLogo = 1
+showName = 0
+showCasters = 0
+[RoundMatches]
+type = "division"
+showLogo = 1
+showName = 1
+[TimelineEntries]
+type = "division"
+maxItems = 15
+subsequent = 1
+==
+{#- Division page — the richest read-only viewing surface of the wave.
+
+    URL + [DivisionOverview] + [SpoilersToggle] copied from the frozen
+    themes/HeroesLounge-Theme/pages/season/division.htm (frozen catch-all URL
+    /:slug/:divslug). layout "plain" -> "default" (the new theme's chrome).
+
+    DivisionOverview is the RESOLVER only: it populates its public `.div` in
+    init() (every request) and sets this.page.title — so we read
+    DivisionOverview.div directly and never render its own Bootstrap partial.
+    The five leaf components (DivisionTable/RecentResults/UpcomingMatches/
+    RoundMatches/TimelineEntries) collect their data in onRender() ONLY; each
+    partial below sets the runtime division id, invokes onRender(), then reads
+    the public property into our own themed markup. Rendering them via
+    {% component %} would emit the plugins' old Bootstrap partials.
+
+    Spoilers: the shared match card (recent/round scores) masks scores in
+    .score-masked (blur), revealed by body.reveal-spoilers. SpoilersToggle's
+    frozen script calls hlToggleSpoilers() on ready with the cookie value
+    (correct initial state) and on each toggle (persisted via its
+    onSetShowSpoilers AJAX cookie). -#}
+{% set div = DivisionOverview.div %}
+{% if div %}
+<section class="sec divsec">
+    <div class="wrap">
+        <div class="divtop">
+            {% partial 'division/header' div=div %}
+            {% component 'SpoilersToggle' callback='hlToggleSpoilers' %}
+        </div>
+        <div class="divwrap">
+            <div class="divmain">
+                {% partial 'division/standings' div=div %}
+                {% partial 'division/rounds' div=div %}
+            </div>
+            <aside class="divside">
+                {% partial 'division/recent' div=div %}
+                {% partial 'division/upcoming' div=div %}
+                {% partial 'division/timeline' div=div %}
+            </aside>
+        </div>
+    </div>
+</section>
+{% else %}
+<section class="sec">
+    <div class="wrap">
+        <header class="divhead">
+            <p class="eyebrow mono">DIVISION</p>
+            <h1>Unknown division</h1>
+        </header>
+        <p class="season-empty">We couldn&rsquo;t find that division. It may have been renamed or removed &mdash; head back to the <a href="/">home page</a> to find an active season.</p>
+    </div>
+</section>
+{% endif %}
+{% put scripts %}
+<script type="text/javascript">
+    function hlToggleSpoilers(show) {
+        document.body.classList.toggle('reveal-spoilers', show > 0);
+    }
+</script>
+{% endput %}

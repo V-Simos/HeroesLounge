@@ -1,0 +1,23 @@
+title = "Blog"
+url = "/blog/:page?"
+layout = "default"
+
+[blogList]
+pageNumber = "{{ :page }}"
+postsPerPage = 9
+noPostsMessage = "No post found"
+sortOrder = "published_at desc"
+categoryPage = "blog/category"
+postPage = "blog/post"
+==
+{#- URL + [blogList] config copied from the old theme's pages/blog/list.htm
+    (frozen URL /blog/:page?). The old page's sidebar (modules/sidebar) is not
+    part of the new design; the grid + pagination live in partials/blog/. -#}
+<section class="sec">
+    <div class="wrap">
+        <div class="sec-head">
+            <div><p class="eyebrow mono">FROM THE BLOG</p><h2>All posts</h2></div>
+        </div>
+        {% partial 'blog/posts' %}
+    </div>
+</section>

@@ -1,0 +1,20 @@
+title = "Casterschedule"
+url = "/user/casterschedule"
+layout = "default"
+is_hidden = 0
+
+[CasterSchedule]
+daysInFuture = 50
+==
+{% if user %}
+{% component 'CasterSchedule' %}
+{% else %}
+<section class="calsec">
+    <div class="wrap">
+        <div class="p chamfer cal-empty">
+            <h1 class="cal-empty-title">Caster schedule</h1>
+            <p class="cal-empty-lede">You must be logged in to view this page.</p>
+        </div>
+    </div>
+</section>
+{% endif %}

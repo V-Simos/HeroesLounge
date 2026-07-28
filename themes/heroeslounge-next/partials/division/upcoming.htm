@@ -1,0 +1,34 @@
+{#- Sidebar: upcoming matches for this division (next daysInFuture days).
+
+    onRender pattern: set the runtime division id, invoke onRender(), read
+    UpcomingMatches.datesToMatches — unplayed matches with wbp in [today,
+    today+daysInFuture], eager-loaded teams/logo/casters/channels, grouped by
+    day (in the viewer TZ, UpcomingMatches.timezone). NOTE: the component's
+    wbp-window SQL excludes NULL-wbp (unscheduled) matches by design, so a
+    round's unscheduled match won't appear here.
+
+    Date-grouped: a mono day label per group, then a .mrow per match (time in
+    the viewer TZ + matchup + a Cast pill when a channel is attached). No score
+    (unplayed) => no spoiler mask. Frozen URLs: match /match/view/:id, full
+    /calendar up-link. Empty state: muted "Nothing scheduled". -#}
+{% do UpcomingMatches.setProperty('id', div.id) %}
+{% do UpcomingMatches.onRender() %}
+<section class="p chamfer divside-panel">
+    <div class="p-head"><span>Upcoming</span><a href="/calendar">CALENDAR {% partial 'site/icon' name='chevron-right' %}</a></div>
+    {% if UpcomingMatches.datesToMatches and UpcomingMatches.datesToMatches|length > 0 %}
+    {% for day, dayMatches in UpcomingMatches.datesToMatches %}
+    <div class="mday mono">{{ (dayMatches|first).wbp|date('D · M j', UpcomingMatches.timezone)|upper }}</div>
+    {% for match in dayMatches %}
+    {% set home = match.teams[0] %}
+    {% set away = match.teams[1] %}
+    <div class="mrow">
+        <span class="when">{{ match.wbp|date('H:i', UpcomingMatches.timezone) }}</span>
+        <a class="who" href="/match/view/{{ match.id }}">{{ home ? home.title : 'TBD' }} <i>vs</i> {{ away ? away.title : 'TBD' }}</a>
+        {% if match.channels|length > 0 %}<span class="pill cast">Cast</span>{% endif %}
+    </div>
+    {% endfor %}
+    {% endfor %}
+    {% else %}
+    <div class="mrow"><span class="who"><i>Nothing scheduled.</i></span></div>
+    {% endif %}
+</section>

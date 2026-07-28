@@ -1,0 +1,11 @@
+name: 'Heroes Lounge Next'
+description: 'Reworked Heroes Lounge theme — dark esports design system'
+author: 'Heroes Lounge Webdevs'
+code: heroeslounge-next
+# Intentionally minimal — grows only when a layout/page actually uses a plugin.
+require:
+    - RainLab.Blog
+    - RainLab.Pages
+    - RainLab.Translate
+    - RainLab.User
+    - Rikki.LoungeViews

@@ -1,0 +1,19 @@
+title = "Post by Tags"
+url = "/blog/tag/:slug"
+layout = "default"
+description = "Posts by Tags"
+==
+{#- URL frozen from the old theme's pages/blog/tag_posts.htm (/blog/tag/:slug).
+    That page was already an inert stub — no components, empty body — and the
+    Indikator.Content dev shim has no tags concept either (its tagsList always
+    returns an empty collection), so there is no tag archive to render. This
+    graceful fallback replaces the old blank page; see the dev/README.md
+    real-plugin swap checklist before porting a functional tag archive. -#}
+<section class="sec">
+    <div class="wrap">
+        <div class="sec-head">
+            <div><p class="eyebrow mono">FROM THE BLOG</p><h2>Posts by tag</h2></div>
+        </div>
+        <p class="blog-empty">Browsing posts by tag isn't available. <a href="{{ 'blog/list'|page({}, false) }}">Browse all posts</a> instead.</p>
+    </div>
+</section>

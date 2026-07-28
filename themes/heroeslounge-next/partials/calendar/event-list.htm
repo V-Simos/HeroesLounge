@@ -1,0 +1,92 @@
+{#- calendar/event-list — the global upcoming schedule, grouped by DATE.
+
+    Reads the page-attached [UpcomingMatches] component directly by alias (the
+    page calls onRender() before rendering this partial). datesToMatches is a
+    Collection grouped by 'd-M-y' (viewer TZ), already ordered wbp asc — iterate
+    AS-IS (the day-first key does NOT sort chronologically; do NOT re-sort).
+
+    Card-reuse decision: this row is HAND-ROLLED (team/shield + .side/.tname,
+    the shared vocabulary), NOT a composed match/card. The fixture card is a
+    self-contained chamfered <article> with its own match-top (division/date/vod)
+    row; nesting it inside a per-date event row reads as an awkward card-in-row,
+    and the calendar row needs things the card deliberately does NOT do —
+    kickoff time, playoff/division precedence label, per-channel twitch links,
+    the [REGION] tag, and the interactive caster column. So we reuse the design
+    tokens (shield, .tname, the .mday-style day header) but own the row shape.
+
+    Frozen URLs (NOT | page — that resolves against the ACTIVE theme and breaks
+    build-order independence): match /match/view/:id, team /team/view/:slug,
+    division /:season/:div, in-season playoff /:season/playoff/:title, standalone
+    playoff /tournament/:slug. -#}
+{% if UpcomingMatches.datesToMatches and UpcomingMatches.datesToMatches|length > 0 %}
+<p class="cal-tz mono">All times in {{ UpcomingMatches.timezone }} {{ UpcomingMatches.timezoneOffset }}</p>
+<ul class="cal-list">
+    {% for day, dayMatches in UpcomingMatches.datesToMatches %}
+    {% set head = dayMatches|first %}
+    <li class="cal-group">
+        {#- datetime: deliberate correction of the frozen source, which read `.wbp`
+            off the grouped Collection itself (not a real timestamp) and emitted the
+            HTML-invalid `m/d/Y`. We read the first match's wbp in valid ISO `Y-m-d`. -#}
+        <time class="cal-date" datetime="{{ head.wbp|date('Y-m-d', UpcomingMatches.timezone) }}">
+            <span class="cal-weekday">{{ head.wbp|date('l', UpcomingMatches.timezone) }}</span>
+            <span class="cal-day">{{ head.wbp|date('d', UpcomingMatches.timezone) }}</span>
+            <span class="cal-month">{{ head.wbp|date('M', UpcomingMatches.timezone) }}</span>
+            <span class="cal-year">{{ head.wbp|date('y', UpcomingMatches.timezone) }}</span>
+        </time>
+        <div class="cal-games">
+            {% for match in dayMatches %}
+            {% set home = match.teams[0] %}
+            {% set away = match.teams[1] %}
+            <div class="cal-row">
+                <div class="cal-meta">
+                    <span class="cal-time mono">{{ match.wbp|date(UpcomingMatches.timeFormat, UpcomingMatches.timezone) }}</span>
+                    {#- Label precedence (mirrors the old partial, null-guarded):
+                        1. division.playoff  2. match.playoff  3. plain division.
+                        In-season playoffs (has .season) link by TITLE; standalone by SLUG.
+                        DELIBERATE DEVIATION: branch 3 is gated `elseif match.division`
+                        where the frozen partial closed the chain with an unconditional
+                        `{% else %}` that emitted an empty, href-less <a> for an orphaned
+                        match with NEITHER a division nor a playoff. Suppressing that dead
+                        anchor is intentional — type='all' eager-loads division, so this
+                        only differs for a data anomaly, and a nameless <a> is worse a11y. -#}
+                    {% if match.division and match.division.playoff %}
+                        {% set po = match.division.playoff %}
+                        <a class="cal-label" href="{% if po.season %}/{{ po.season.slug }}/playoff/{{ po.title|url_encode }}{% else %}/tournament/{{ po.slug }}{% endif %}" title="{{ po.longTitle }}">{{ po.longTitle }}</a>
+                    {% elseif match.playoff %}
+                        {% set po = match.playoff %}
+                        <a class="cal-label" href="{% if po.season %}/{{ po.season.slug }}/playoff/{{ po.title|url_encode }}{% else %}/tournament/{{ po.slug }}{% endif %}" title="{{ po.longTitle }}">{{ po.longTitle }}</a>
+                    {% elseif match.division %}
+                        {% set d = match.division %}
+                        <a class="cal-label"{% if d.season %} href="/{{ d.season.slug }}/{{ d.slug }}"{% endif %} title="{{ d.title }}">{% if away and home.region_id is not null and home.region_id == away.region_id and UpcomingMatches.showName %}[{{ home.region.title }}] {% endif %}{{ d.title }}</a>
+                    {% endif %}
+                    {% for channel in match.channels %}
+                    <a class="cal-twitch" href="{{ channel.url }}" rel="noopener" target="_blank" title="{{ channel.title }}" aria-label="Watch on Twitch: {{ channel.title }}">{% partial 'site/icon' name='twitch' %}</a>
+                    {% endfor %}
+                </div>
+                <div class="cal-matchup">
+                    <div class="cal-side">
+                        {% if home %}{% partial 'team/shield' team=home size='sm' %}<a class="tname" href="/team/view/{{ home.slug }}">{{ home.title }}</a>{% else %}<span class="tname cal-tbd">TBD</span>{% endif %}
+                    </div>
+                    <a class="cal-vs mono" href="/match/view/{{ match.id }}" title="Match details">VS</a>
+                    <div class="cal-side cal-side-right">
+                        {% if away %}<a class="tname" href="/team/view/{{ away.slug }}">{{ away.title }}</a>{% partial 'team/shield' team=away size='sm' %}{% else %}<span class="tname cal-tbd">TBD</span>{% endif %}
+                    </div>
+                </div>
+                <div class="cal-casters caster-request" id="divCasterRequests{{ match.id }}">
+                    {% partial 'calendar/caster-requests' match=match user=UpcomingMatches.user %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+{#- Empty state (guest-safe): the old .jumbotron referenced {{user.username}}
+    (NPE/blank + h3/h1 tag mismatch for a guest) — replaced with a clean muted
+    panel that does NOT touch user.username. -#}
+<div class="p chamfer cal-empty">
+    <p class="cal-empty-title">Nothing scheduled right now.</p>
+    <p class="cal-empty-lede">Our little sloths are too lazy to schedule matches at the moment &mdash; check back soon.</p>
+</div>
+{% endif %}

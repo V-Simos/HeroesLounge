@@ -1,0 +1,53 @@
+description = "Sticky site nav (markup from docs/superpowers/specs mockups)"
+==
+{#- Requires the [Navigation] + [session] components (attached by layouts/default.htm):
+    Navigation.current_eu_amateurseasons drives the League link (the season page URL
+    is parameterized, "/:slug" in the old theme's pages/season/view.htm, so there is
+    no stable literal); `user` comes from [session]. The League link is hidden when
+    no EU amateur season is active.
+    URL literals below are copied from the old theme (pages that do not exist in
+    this theme yet cannot use the |page filter — it resolves against the ACTIVE
+    theme and would yield href=""):
+      /guides                content/static-pages/guides.htm (RainLab.Pages guides landing)
+      /calendar              pages/calendar.htm         url = "/calendar"
+      /user                  pages/user/account.htm     url = "/user/:code?"
+    Events + Blog resolve via |page since Task 10 ported the blog pages
+    (frozen URLs /blog/category/events and /blog). The ({}, false) second
+    argument disables route persistence: on a page with a :page route param
+    (e.g. /blog/2) persistence would leak it into these URLs.
+    There is no current-events landing page in the old theme (only the legacy
+    /events/archive accordion), so Events points at the events blog category. -#}
+{#- Active-season derivation — CANONICAL copy. Policy: "the current season" is
+    the first active EU amateur season from the layout-attached Navigation
+    component (populated in its init(), so available on every page regardless
+    of render order); when none is active, season-dependent UI is omitted.
+    The same derivation is repeated in site/footer.htm, home/hero.htm,
+    home/results.htm and home/standings.htm — keep the 5 sites in sync. -#}
+{% set currentSeason = Navigation.current_eu_amateurseasons ? Navigation.current_eu_amateurseasons.first : null %}
+<header class="nav">
+    <div class="wrap nav-in">
+        <a class="logo" href="{{ 'home' | page }}">{% partial 'site/logo' %}<span>HEROES <em>LOUNGE</em></span></a>
+        {#- Burger sits BEFORE the menu in the DOM so on mobile the Tab order is
+            toggle → menu links (the .links panel is position:fixed at <=720px,
+            so source order doesn't affect the flex row; desktop hides the
+            button entirely). -#}
+        <button class="burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="site-links"><span class="i-menu">{% partial 'site/icon' name='menu' %}</span><span class="i-close">{% partial 'site/icon' name='x' %}</span></button>
+        <nav class="links" id="site-links">
+            {% if currentSeason %}
+            <a href="/{{ currentSeason.slug }}">League</a>
+            {% endif %}
+            <a href="{{ 'blog/category'|page({ slug: 'events' }, false) }}">Events</a>
+            <a href="/guides">Guides</a>
+            <a href="/calendar">Calendar</a>
+            <a href="{{ 'blog/list'|page({}, false) }}">Blog</a>
+            {% if user %}
+            {# Avatar monogram: shared site/initials partial (first letter of each of the first two words of the username, or its first two letters when single-word — uppercased). #}
+            <a class="bell" href="/user" aria-label="Notifications">{% partial 'site/icon' name='bell' %}</a>
+            <a class="avatar" href="/user"><span class="pic" aria-hidden="true">{% partial 'site/initials' name=user.username %}</span> {{ user.username }}</a>
+            {% else %}
+            <a class="signin" href="/user">Sign in</a>
+            <a class="btn btn-solid btn-sm" href="/user">Join Season</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>

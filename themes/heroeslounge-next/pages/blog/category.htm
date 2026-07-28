@@ -1,0 +1,53 @@
+title = "Blog category"
+url = "/blog/category/:slug/:page?"
+layout = "default"
+
+[blogList]
+pageNumber = "{{ :page }}"
+categoryFilter = "{{ :slug }}"
+postsPerPage = 9
+noPostsMessage = "No post found"
+sortOrder = "published_at desc"
+categoryPage = "blog/category"
+postPage = "blog/post"
+==
+<?php
+// Mirrors the old theme's pages/blog/category.htm onEnd(): dynamic page title
+// from the category (blogList's onRun puts `category` into the controller
+// vars), 404 status when the slug doesn't exist ($this->setStatusCode
+// forwards to Cms\Classes\Controller — cleaner than the old raw header()+flush()).
+function onEnd()
+{
+    if ($this->category) {
+        $this->page->title = $this->category->name;
+    } else {
+        $this->page->title = 'Category not found';
+        $this->setStatusCode(404);
+    }
+}
+?>
+==
+{#- URL + [blogList] config copied from the old theme's pages/blog/category.htm
+    (frozen URL /blog/category/:slug/:page?). -#}
+{% if category %}
+<section class="sec">
+    <div class="wrap">
+        <div class="sec-head">
+            <div><p class="eyebrow mono">FROM THE BLOG</p><h2>{{ category.name }}</h2></div>
+            {#- ({}, false) disables route persistence: with it on, this page's
+                :slug/:page params would leak into /blog/:page? (e.g. /blog/2). -#}
+            <a class="sec-link mono" href="{{ 'blog/list'|page({}, false) }}">ALL POSTS {% partial 'site/icon' name='chevron-right' %}</a>
+        </div>
+        {% partial 'blog/posts' %}
+    </div>
+</section>
+{% else %}
+<section class="sec">
+    <div class="wrap">
+        <div class="sec-head">
+            <div><p class="eyebrow mono">FROM THE BLOG</p><h2>Category not found</h2></div>
+        </div>
+        <p class="blog-empty">There is no such category. <a href="{{ 'blog/list'|page({}, false) }}">Browse all posts</a> instead.</p>
+    </div>
+</section>
+{% endif %}

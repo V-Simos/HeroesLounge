@@ -1,0 +1,91 @@
+[UpcomingMatches]
+type = "team"
+daysInFuture = 14
+==
+{#- Full-width next-match panel (markup: dashboard-v2.html .cast-outer/.cast/
+    .cast-teams/.cast-mid/.cast-foot; renders as the .span2 row of .dash-grid).
+
+    Data: rikki/heroeslounge [UpcomingMatches] type="team" — the team's
+    matches with wbp between today and +daysInFuture, wbp ASC, eager-loaded
+    teams/casters/channels. Same onRender pattern as home/cast.htm: the
+    component only collects data in onRender() (no onRun), and {% component %}
+    would emit the plugin's Bootstrap partial — so set the runtime team id,
+    invoke onRender() directly, and read the public datesToMatches property.
+    One pass per user team; the earliest wbp across all of them wins (a match
+    between two of the user's teams is just found twice — same winner).
+    winner_id guard: the type="team" query does not exclude played matches
+    whose wbp is still inside the window (matches played earlier today).
+
+    daysInFuture=14 mirrors the old partials/user/matches.htm horizon; a next
+    match further out than 14 days renders the off-season empty state. -#}
+{# Cross-team merge scaffold — keep in sync with dashboard/matches.htm (same guard + per-team onRender pattern; only the accumulator differs) #}
+{% set teams = user.sloth ? user.sloth.teams : [] %}
+{% set nextMatch = null %}
+{% set nextTeam = null %}
+{% for team in teams %}
+    {% do UpcomingMatches.setProperty('id', team.id) %}
+    {% do UpcomingMatches.onRender() %}
+    {% for dayMatches in UpcomingMatches.datesToMatches %}
+        {% for match in dayMatches %}
+            {% if match.winner_id is null and match.teams|length >= 2 and (nextMatch is null or date(match.wbp) < date(nextMatch.wbp)) %}
+                {% set nextMatch = match %}
+                {% set nextTeam = team %}
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+{% endfor %}
+<div class="cast-outer span2">
+    <div class="cast chamfer">
+        {% if nextMatch %}
+        {#- The component eager-loads teams/teams.logo/casters/channels (but
+            NOT division — that is one lazy query in the foot); load the
+            shields' smallLogo once for both teams instead of per shield. -#}
+        {% do nextMatch.teams.load('smallLogo') %}
+        {% set casterApproved = false %}
+        {% set casterPending = false %}
+        {% for caster in nextMatch.casters %}
+            {% if caster.pivot.approved == 1 %}{% set casterApproved = true %}
+            {% elseif caster.pivot.approved == 0 %}{% set casterPending = true %}{% endif %}
+        {% endfor %}
+        <div class="p-head">YOUR NEXT MATCH · {{ nextTeam.title|upper }}</div>
+        <div class="cast-teams">
+            <div class="cast-team">{% partial 'team/shield' team=nextMatch.teams[0] size='lg' %}<span>{{ nextMatch.teams[0].title }}</span></div>
+            <div class="cast-mid">
+                {#- |date('c') is the lounge.js countdown contract (offset-
+                    qualified ISO 8601); type="team" guarantees wbp is set.
+                    Human line renders in the viewer TZ via the component's
+                    SetTimezone-fed timezone property (as home/cast.htm). -#}
+                <span class="mono countdown" data-countdown="{{ nextMatch.wbp|date('c') }}">&mdash;</span>
+                <span class="mono starts">{{ nextMatch.wbp|date('D M j · H:i T', UpcomingMatches.timezone) }}</span>
+            </div>
+            <div class="cast-team">{% partial 'team/shield' team=nextMatch.teams[1] size='lg' %}<span>{{ nextMatch.teams[1].title }}</span></div>
+        </div>
+        <div class="cast-foot mono">
+            {#- "BO3": league format per the ruleset (old theme
+                content/static-pages/general-rules.htm) — format copy, not
+                match data. Caster line: any approved casters pivot ->
+                CASTER APPROVED; else any pending (approved=0) request ->
+                CAST REQUESTED; denied (2) shows nothing. -#}
+            <span>{% if nextMatch.division %}{{ nextMatch.division.title|upper }} · {% endif %}{% if nextMatch.round %}ROUND {{ nextMatch.round }} · {% endif %}BO3{% if casterApproved %} · <em>CASTER APPROVED</em>{% elseif casterPending %} · <em>CAST REQUESTED</em>{% endif %}</span>
+            <div class="cast-actions">
+                {#- Unported Phase 2-3 pages, literal URLs frozen from the old
+                    theme: Reschedule -> pages/team/manageMatch.htm
+                    (url = "/team/match/:slug", :slug = the USER's team in the
+                    match); Match page -> pages/match/view.htm
+                    (url = "/match/view/:id"). -#}
+                <a class="btn btn-ghost" href="/team/match/{{ nextTeam.slug }}">{% partial 'site/icon' name='calendar-clock' %} Reschedule</a>
+                <a class="btn btn-solid" href="/match/view/{{ nextMatch.id }}">{% partial 'site/icon' name='swords' %} Match page</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="p-head">YOUR NEXT MATCH</div>
+        {#- Empty state (designed here — the mockup has no next-match empty
+            state): also what team-less users see. /calendar is the frozen
+            old-theme URL (pages/calendar.htm, url = "/calendar"). -#}
+        <div class="cast-empty">
+            <p>No upcoming matches — enjoy the off-season.</p>
+            <a class="btn btn-ghost" href="/calendar">{% partial 'site/icon' name='calendar' %} View calendar</a>
+        </div>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,15 @@
+description = "Shared <head> content for all layouts"
+==
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ this.page.title ? this.page.title ~ ' — ' }}Heroes Lounge</title>
+<link rel="shortcut icon" href="{{ 'assets/img/favicons/favicon.ico' | theme }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ 'assets/img/favicons/apple-touch-icon.png' | theme }}">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="{{ 'assets/fonts/chakra-petch-v13-latin-700.woff2' | theme }}">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="{{ 'assets/fonts/barlow-v13-latin-regular.woff2' | theme }}">
+<link rel="stylesheet" href="{{ 'assets/css/fonts.css' | theme }}">
+<link rel="stylesheet" href="{{ 'assets/css/tokens.css' | theme }}">
+<link rel="stylesheet" href="{{ 'assets/css/base.css' | theme }}">
+<link rel="stylesheet" href="{{ 'assets/css/components.css' | theme }}">
+<link rel="stylesheet" href="{{ 'assets/css/pages.css' | theme }}">
+{% styles %}

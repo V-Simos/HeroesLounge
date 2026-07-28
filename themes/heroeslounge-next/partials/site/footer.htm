@@ -1,0 +1,61 @@
+description = "Site footer (markup from docs/superpowers/specs/assets/reference-design.html)"
+==
+{#- Social URLs come from the old theme:
+      Twitch    partials/sections/features.htm   https://www.twitch.tv/heroes_lounge
+      YouTube   partials/sections/follow.htm     https://www.youtube.com/channel/UCbo4u4GMHlNPIVB4PPfyJZg
+      Twitter   partials/modules/footer.htm      https://twitter.com/HeroesLoungeGG
+      Facebook  partials/modules/footer.htm      https://www.facebook.com/heroeslounge.gg
+      Discord   partials/modules/footer.htm      https://discordapp.com/invite/aePkBsZ
+      Patreon   partials/modules/footer.htm      https://www.patreon.com/heroesloungegg
+    Link-column URL literals (unported pages; |page would resolve to "" — see nav.htm):
+      /season/archive        pages/season/archive.htm   url = "/season/archive"
+      /general/ruleset       pages/general/ruleset.htm  url = "/general/ruleset"
+      /calendar              pages/calendar.htm         url = "/calendar"
+      /guides/signup-guide   content/static-pages/guides-signup-guide.htm (RainLab.Pages)
+      /guides/captains-guide content/static-pages/guides-new-captains-guide-heroes-lounge.htm
+      /faq                   pages/faq.htm              url = "/faq"
+      /general/staff         pages/general/staff.htm    url = "/general/staff"
+      /privacy-statement     content/static-pages/privacy-statement.htm (RainLab.Pages)
+    "Current season" mirrors the nav League link (parameterized season URL,
+    hidden when no EU amateur season is active). -#}
+{# Active-season derivation — canonical copy + rationale in site/nav.htm; keep the 5 sites in sync (nav, footer, hero, results, standings) #}
+{% set currentSeason = Navigation.current_eu_amateurseasons ? Navigation.current_eu_amateurseasons.first : null %}
+<footer class="footer">
+    <div class="wrap foot-grid">
+        <div class="foot-brand">
+            <a class="logo" href="{{ 'home' | page }}">{% partial 'site/logo' %}<span>HEROES <em>LOUNGE</em></span></a>
+            <p>The largest amateur league for Heroes of the Storm — all skill levels, live-streamed games almost every day.</p>
+            <div class="socials">
+                <a aria-label="Twitch" href="https://www.twitch.tv/heroes_lounge">{% partial 'site/icon' name='twitch' %}</a>
+                <a aria-label="YouTube" href="https://www.youtube.com/channel/UCbo4u4GMHlNPIVB4PPfyJZg">{% partial 'site/icon' name='youtube' %}</a>
+                <a aria-label="Twitter" href="https://twitter.com/HeroesLoungeGG">{% partial 'site/icon' name='twitter' %}</a>
+                <a aria-label="Facebook" href="https://www.facebook.com/heroeslounge.gg">{% partial 'site/icon' name='facebook' %}</a>
+            </div>
+        </div>
+        <div class="foot-col">
+            <h4 class="mono">LEAGUE</h4>
+            {% if currentSeason %}
+            <a href="/{{ currentSeason.slug }}">Current season</a>
+            {% endif %}
+            <a href="/season/archive">Season archive</a>
+            <a href="/general/ruleset">Ruleset</a>
+            <a href="/calendar">Schedule</a>
+        </div>
+        <div class="foot-col">
+            <h4 class="mono">GUIDES</h4>
+            <a href="/guides/signup-guide">Signing up</a>
+            <a href="/guides/captains-guide">Captain's guide</a>
+            <a href="/faq">FAQ</a>
+        </div>
+        <div class="foot-col">
+            <h4 class="mono">COMMUNITY</h4>
+            <a href="https://discordapp.com/invite/aePkBsZ">Discord</a>
+            <a href="https://www.patreon.com/heroesloungegg">Patreon</a>
+            <a href="/general/staff">Volunteers</a>
+        </div>
+    </div>
+    <div class="wrap foot-base mono">
+        <span>© 2017–2026 HEROES LOUNGE · RUN BY VOLUNTEERS</span>
+        <a href="/privacy-statement">Privacy statement</a>
+    </div>
+</footer>

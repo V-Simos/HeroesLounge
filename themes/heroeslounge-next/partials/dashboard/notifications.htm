@@ -1,0 +1,34 @@
+description = "Dashboard notifications panel (session-driven; pipeline disabled upstream)"
+==
+{#- Notifications panel (markup: dashboard-v2.html .p/.note rows).
+
+    KNOWN UPSTREAM LIMITATION — the pipeline is dead: the only writer of the
+    'notifications' session key (Session::put on the rainlab.user.login event,
+    fed by classes/helpers/NotificationHelper.php) is commented out in
+    plugins/rikki/heroeslounge/Plugin.php boot() (~lines 114-117). The READ
+    logic below is ported as-is from the old theme's
+    partials/user/notifications.htm (this.session.get('notifications')) so
+    the panel lights up again if upstream re-enables the listener; until then
+    the "No notifications." empty state is the EXPECTED Phase 1 rendering.
+    Fixing the pipeline is a plugin change — out of scope here.
+
+    Data shape (NotificationHelper): a list of {type: info|warning|error,
+    message} — there are NO timestamps, so the mockup's mono .t line carries
+    the type instead: warning/error map to .hot (red icon) + the red
+    "action needed" label (the old partial's alert-danger equivalent).
+    The mockup's MARK ALL READ link is omitted: no backend flow exists. -#}
+<div class="p chamfer">
+    <div class="p-head"><span>NOTIFICATIONS</span></div>
+    {% for nf in this.session.get('notifications') %}
+    {% set hot = nf.type == 'warning' or nf.type == 'error' %}
+    <div class="note{% if hot %} hot{% endif %}">
+        {% partial 'site/icon' name='bell' %}
+        <div>
+            <p>{{ nf.message }}</p>
+            <span class="t">{% if hot %}<b>action needed</b>{% else %}{{ nf.type }}{% endif %}</span>
+        </div>
+    </div>
+    {% else %}
+    <div class="mrow"><span class="who"><i>No notifications.</i></span></div>
+    {% endfor %}
+</div>

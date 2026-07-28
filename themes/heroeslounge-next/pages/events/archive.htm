@@ -1,0 +1,31 @@
+title = "Events Archive"
+url = "/events/archive"
+layout = "default"
+is_hidden = 0
+
+[staticMenu staticMenuEventsArchive]
+code = "events_archive"
+==
+<section class="sec archsec events-archive">
+    <div class="wrap">
+        <header class="arch-head">
+            <p class="eyebrow mono">ARCHIVE</p>
+            <h1>Events Archive</h1>
+        </header>
+        {% for item in staticMenuEventsArchive.menuItems %}
+        <details class="arch-season">
+            <summary class="arch-summary">
+                <span class="arch-summary-name">{{ item.title }}</span>
+                {% partial 'site/icon' name='chevron-right' %}
+            </summary>
+            <div class="arch-body">
+                <ul>
+                    {% for child in item.items %}
+                    <li><a href="{{ child.url }}">{{ child.title }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </details>
+        {% endfor %}
+    </div>
+</section>

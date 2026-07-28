@@ -1,0 +1,35 @@
+{#- Theme override for Rikki\Heroeslounge\Components\UpcomingMatches, resolved as
+    ViewTeam's `upcomingMatches` child (type='team', id=team.id, daysInFuture,
+    showLogo=true, showName=FALSE, showCasters=FALSE). __SELF__ IS the
+    UpcomingMatches instance; it fires its own onRender at render, so __SELF__ is
+    populated here: datesToMatches (unplayed matches with wbp in [today, today+
+    daysInFuture], grouped by day in the viewer TZ, ALREADY orderBy('wbp','asc')
+    before groupBy — iterate AS-IS, never re-sort the day keys), .timezone.
+
+    Adapted from division/upcoming.htm: a mono day label per group, a .mrow per
+    match (time in viewer TZ + matchup + a Cast pill when a channel is attached).
+    No score (unplayed) => no spoiler mask. showName=false/showCasters=false mean
+    NO team names / caster column upstream, but the sidebar row still needs a
+    readable matchup, so we render the team titles here (shields-only would be
+    ambiguous in a text row) — a deliberate, minor divergence for legibility.
+
+    GUEST-SAFE EMPTY STATE: the frozen plugin partial's jumbotron derefs
+    __SELF__.user.username and CRASHES for guests on this public page — we NEVER
+    deref user here; empty renders a muted "Nothing scheduled." row instead.
+    Frozen URL: /match/view/:id. -#}
+{% if __SELF__.datesToMatches and __SELF__.datesToMatches|length > 0 %}
+{% for day, dayMatches in __SELF__.datesToMatches %}
+<div class="mday mono">{{ (dayMatches|first).wbp|date('D · M j', __SELF__.timezone)|upper }}</div>
+{% for match in dayMatches %}
+{% set home = match.teams[0] %}
+{% set away = match.teams[1] %}
+<div class="mrow">
+    <span class="when">{{ match.wbp|date('H:i', __SELF__.timezone) }}</span>
+    <a class="who" href="/match/view/{{ match.id }}">{{ home ? home.title : 'TBD' }} <i>vs</i> {{ away ? away.title : 'TBD' }}</a>
+    {% if match.channels|length > 0 %}<span class="pill cast">Cast</span>{% endif %}
+</div>
+{% endfor %}
+{% endfor %}
+{% else %}
+<div class="mrow"><span class="who"><i>Nothing scheduled.</i></span></div>
+{% endif %}

@@ -1,0 +1,31 @@
+description = "Default layout"
+
+[session]
+security = "all"
+
+[Navigation]
+paramCode = ""
+
+[SetTimezone]
+
+[staticPage]
+==
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% partial 'site/head' %}
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    {% partial 'site/nav' %}
+    <main id="main">
+        {% page %}
+    </main>
+    {% partial 'site/footer' %}
+    {#- SetTimezone must be RENDERED (not just attached) — its partial
+        {% put %}s the timezone-detect script into {% scripts %}, which is
+        rendered inside site/scripts below. -#}
+    {% component 'SetTimezone' %}
+    {% partial 'site/scripts' %}
+</body>
+</html>

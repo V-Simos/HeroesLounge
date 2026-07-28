@@ -1,0 +1,5 @@
+{% set post = __SELF__.post %}
+{% if post %}
+    <h1>{{ post.title }}</h1>
+    {{ post.content|raw }}
+{% endif %}

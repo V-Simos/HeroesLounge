@@ -1,0 +1,10 @@
+description = "Shared end-of-body scripts for all layouts"
+==
+{#- Order matters: jQuery, then October's AJAX framework (builds on jQuery),
+    then our behaviors, and {% scripts %} LAST — component-injected scripts
+    ({% put scripts %} blocks, e.g. SetTimezone's jQuery.request call) must
+    run after jQuery and the framework have loaded. -#}
+<script src="{{ 'assets/js/vendor/jquery.js' | theme }}"></script>
+{% framework extras %}
+<script src="{{ 'assets/js/lounge.js' | theme }}"></script>
+{% scripts %}

@@ -1,0 +1,179 @@
+{#- Theme override for Rikki\LoungeViews\Components\Profile. The component
+    resolves the requested sloth and, only for a valid model, attaches the
+    roundMatches / slothStatistics / timeLine children. The frozen full-page
+    `{% if user %}` gate remains the outer branch: profile data is not emitted
+    to guests. A null sloth gets a themed not-found state matching the page's
+    onEnd 404 instead of dereferencing the missing model.
+
+    The player banner deliberately reuses the team-banner vocabulary and shared
+    social row. Main content likewise reuses teamwrap/team-panel/team-stats:
+    only player-specific avatar, facts, team rows, and section rhythm add new
+    profile-* selectors. -#}
+{% if user %}
+{% if __SELF__.sloth %}
+{% set sloth = __SELF__.sloth %}
+
+{#- SANCTIONED IMAGE FALLBACK: the frozen bg_CCC.png is not copied. A missing or
+    broken banner leaves the themed team-banner gradient/scrim visible. The
+    frozen profile-icon.png is replaced by the shared initials monogram; an
+    attached avatar overlays it and removes itself on load failure, revealing
+    the already-rendered initials without an onerror loop. -#}
+<div class="team-banner-bleed">
+    <div class="team-banner profile-banner{% if sloth.banner %} has-img{% endif %}"{% if sloth.banner %} style="background-image:url({{ sloth.banner.path }})"{% endif %}>
+        <div class="team-banner-scrim">
+            <div class="wrap team-banner-inner">
+                <span class="profile-avatar" aria-hidden="true">
+                    {% partial 'site/initials' name=sloth.title %}
+                    {% if sloth.user.avatar %}<img src="{{ sloth.user.avatar.path }}" alt="" onerror="this.onerror=null;this.remove()">{% endif %}
+                </span>
+                <div class="team-banner-id">
+                    <h1>{{ sloth.title }}</h1>
+                    {% partial 'team/social' obj=sloth light=true %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="sec teamsec profilesec">
+    <div class="wrap">
+        <div class="teamwrap">
+            <main class="teammain profile-stack">
+                <section class="profile-section" aria-labelledby="profile-matches-title">
+                    <header class="profile-section-title">
+                        <p class="eyebrow mono">Record</p>
+                        <h2 id="profile-matches-title">Matches</h2>
+                    </header>
+                    {#- SPOILER INTENT: player-profile results stay revealed.
+                        The shared roundMatches override derives the sloth
+                        context and passes revealScore=true to match/card; the
+                        frozen trailing jQuery unmask script is unnecessary. -#}
+                    {% component 'roundMatches' %}
+                </section>
+
+                <section class="profile-section" aria-labelledby="profile-statistics-title">
+                    <header class="profile-section-title">
+                        <p class="eyebrow mono">Performance</p>
+                        <h2 id="profile-statistics-title">Statistics</h2>
+                    </header>
+                    {% component 'slothStatistics' %}
+                </section>
+
+                <section class="profile-section" aria-labelledby="profile-timeline-title">
+                    <header class="profile-section-title">
+                        <p class="eyebrow mono">Activity</p>
+                        <h2 id="profile-timeline-title">Timeline</h2>
+                    </header>
+                    <div class="team-panel profile-timeline">
+                        {% component 'timeLine' id=__SELF__.sloth.id %}
+                    </div>
+                </section>
+            </main>
+
+            <aside class="teamside">
+                <section class="p chamfer profile-info">
+                    <div class="p-head"><span>Player info</span></div>
+                    <div class="profile-info-body">
+                        <dl class="profile-facts">
+                            {% if sloth.role %}
+                            {% set rolePath = 'assets/img/roles/' ~ sloth.role.title|replace({' ':'-'})|lower ~ '.svg' %}
+                            <div class="profile-fact">
+                                <dt>Role</dt>
+                                <dd class="profile-fact-icon"><img class="profile-role-icon" src="{{ rolePath|theme }}" alt="" title="{{ sloth.role.title }}">{{ sloth.role.title }}</dd>
+                            </div>
+                            {% endif %}
+
+                            {% if sloth.battle_tag %}
+                            <div class="profile-fact">
+                                <dt>Battle tag</dt>
+                                <dd class="profile-fact-icon">
+                                    <img class="profile-brand-icon" src="{{ 'assets/img/battlenet.svg'|theme }}" alt="">
+                                    {% if sloth.heroesprofile_id %}
+                                    <a href="https://www.heroesprofile.com/Player/{{ sloth.getHeroesProfileBattletagReformatted }}/{{ sloth.heroesprofile_id }}/{{ sloth.getHeroesProfileRegionId }}" rel="noopener" target="_blank" title="View HeroesProfile page">{{ sloth.battle_tag }}</a>
+                                    {% else %}
+                                    {{ sloth.battle_tag }}
+                                    {% endif %}
+                                </dd>
+                            </div>
+                            {% endif %}
+
+                            {% if sloth.discord_tag %}
+                            <div class="profile-fact">
+                                <dt>Discord</dt>
+                                <dd class="profile-fact-icon"><img class="profile-brand-icon" src="{{ 'assets/img/discord.svg'|theme }}" alt="">{{ sloth.discord_tag }}</dd>
+                            </div>
+                            {% endif %}
+
+                            <div class="profile-fact">
+                                <dt>MMR</dt>
+                                <dd>{{ sloth.heroesprofile_mmr }}</dd>
+                            </div>
+
+                            {% if sloth.user.country_id %}
+                            <div class="profile-fact">
+                                <dt>Country</dt>
+                                <dd>{{ sloth.user.country.name }}</dd>
+                            </div>
+                            {% endif %}
+
+                            {% if sloth.birthday %}
+                            <div class="profile-fact">
+                                <dt>Birthday</dt>
+                                <dd>{{ sloth.birthday }}</dd>
+                            </div>
+                            {% endif %}
+                        </dl>
+
+                        {% if sloth.short_description %}
+                        <div class="profile-description">
+                            <h2>About</h2>
+                            <p>{{ sloth.short_description|striptags }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <section class="p chamfer profile-teams">
+                    <div class="p-head"><span>Teams</span></div>
+                    <div class="profile-team-list">
+                        {% for team in sloth.teams %}
+                        <a class="profile-team-row" href="/team/view/{{ team.slug }}">
+                            {% partial 'team/shield' team=team size='sm' %}
+                            <span>{{ team.title }}</span>
+                            {% partial 'site/icon' name='chevron-right' %}
+                        </a>
+                        {% else %}
+                        <p class="profile-team-empty">This player is not on a team.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </div>
+</section>
+
+{% else %}
+<section class="sec teamsec profilesec">
+    <div class="wrap">
+        <header class="team-notfound-head">
+            <p class="eyebrow mono">Player</p>
+            <h1>Profile not found</h1>
+        </header>
+        <p class="team-empty">We couldn&rsquo;t find that player. The profile may have been removed.</p>
+    </div>
+</section>
+{% endif %}
+{% else %}
+<section class="sec teamsec profilesec">
+    <div class="wrap">
+        <header class="team-notfound-head">
+            <p class="eyebrow mono">Player</p>
+            <h1>Sign in to view profiles</h1>
+        </header>
+        <div class="p chamfer profile-gate">
+            <p>You must be logged in to view this page.</p>
+            <a class="btn btn-solid" href="/user">Sign in</a>
+        </div>
+    </div>
+</section>
+{% endif %}

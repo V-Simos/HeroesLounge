@@ -1,0 +1,62 @@
+title = "Amateur Series Archive"
+url = "/season/archive"
+layout = "default"
+is_hidden = 0
+==
+<?php
+function onStart()
+{
+    $this['seasonsGroupedByRegion'] = \Rikki\Heroeslounge\Models\Season::where('type', 1)
+        ->with('divisions', 'playoffs')
+        ->where('is_active', 0)
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->groupBy('region_id');
+}
+?>
+==
+{#- Amateur Series Archive — inactive type-1 seasons grouped by region.
+    Query replicated VERBATIM from the frozen themes/HeroesLounge-Theme/pages/
+    season/archive.htm (order created_at desc, THEN groupBy region_id: group
+    order = first-appearance order, matching the old page — no explicit region
+    sort, faithful). Only divisions+playoffs are eager-loaded; season.region
+    lazy-loads per season (bounded ~28 rows — accepted, mirrored from the old
+    page, do NOT "fix").
+
+    The old Bootstrap #accordion/.card/.collapse markup is re-skinned as native
+    <details>/<summary> — keyboard-operable with NO JS. The group KEY is the int
+    region_id, so the region <h2> reads season.region.title off the group's
+    first season (same loop.first trick as the old page). Each body reuses the
+    SHARED partials/season/overview.htm (Task 2): Divisions -> /{slug}/{divslug},
+    Playoffs -> /{slug}/playoff/{title|url_encode} (frozen literals), and the
+    "Nothing scheduled yet." guard when a season has neither. -#}
+<section class="sec archsec">
+    <div class="wrap">
+        <header class="arch-head">
+            <p class="eyebrow mono">ARCHIVE</p>
+            <h1>Amateur Series Archive</h1>
+        </header>
+        {% if seasonsGroupedByRegion|length > 0 %}
+        {% for regionSeasons in seasonsGroupedByRegion %}
+        <section class="arch-region">
+            {% for season in regionSeasons %}
+            {% if loop.first %}
+            <h2 class="arch-region-title">{{ season.region.title }}</h2>
+            {% endif %}
+            <details class="arch-season">
+                <summary class="arch-summary">
+                    <span class="arch-summary-name">{{ season.title }}</span>
+                    {% partial 'site/icon' name='chevron-right' %}
+                </summary>
+                <div class="arch-body">
+                    {% partial 'season/overview' season=season %}
+                </div>
+            </details>
+            {% endfor %}
+        </section>
+        {% endfor %}
+        {% else %}
+        <p class="arch-empty">No archived seasons.</p>
+        {% endif %}
+    </div>
+</section>

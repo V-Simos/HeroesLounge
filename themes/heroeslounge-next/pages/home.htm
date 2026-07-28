@@ -1,0 +1,34 @@
+title = "Home"
+url = "/"
+layout = "default"
+==
+{#- Same branch structure as the old theme's home.htm: logged-in users get the
+    dashboard, everyone else the marketing page. -#}
+{% if user %}
+{#- Dashboard (layout per dashboard-v2.html): welcome strip, then the
+    symmetric .dash-grid — full-width next-match (.span2), then
+    standings | notifications, results | matches. Panels manage their own
+    empty states; standings renders nothing for team-less users and the
+    grid reflows around it. -#}
+{% partial 'dashboard/welcome' %}
+<section class="dash">
+    <div class="wrap dash-grid">
+        {% partial 'dashboard/next-match' %}
+        {% partial 'dashboard/standings' %}
+        {% partial 'dashboard/notifications' %}
+        {% partial 'dashboard/results' %}
+        {% partial 'dashboard/matches' %}
+    </div>
+</section>
+{% else %}
+{#- Section order matches reference-design.html: hero (with the next-cast
+    panel inside its grid) → results ticker + cards → standings → events →
+    how → posts → footer CTA. -#}
+{% partial 'home/hero' %}
+{% partial 'home/results' %}
+{% partial 'home/standings' %}
+{% partial 'home/events' %}
+{% partial 'home/how' %}
+{% partial 'home/posts' %}
+{% partial 'home/cta' %}
+{% endif %}

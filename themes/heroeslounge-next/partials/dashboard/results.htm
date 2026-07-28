@@ -1,0 +1,75 @@
+[RecentResults]
+type = "division"
+maxItems = 5
+==
+{#- "Recent results · your divisions" panel (markup: dashboard-v2.html
+    .p/.mrow/.res rows; winning score in storm, losing in mute).
+
+    Data: rikki/loungeviews [RecentResults] type="division" — the mode the old
+    theme's partials/user/recentResults.htm used (its onRender switch:
+    Divisions::findOrFail(id)->matches() where is_played=1, updated_at DESC,
+    take maxItems). type="all" is NOT implemented in the component. Same
+    onRender pattern as home/results.htm (set the runtime division id, invoke
+    onRender(), read the public matches property), once per DISTINCT active
+    division across all the user's teams (the old partial only covered
+    user.sloth.team — the first team; this one covers every team, per the
+    panel's "your divisions" promise). Per-division selection is the
+    component's updated_at DESC take-maxItems (report recency); the merged
+    rows are then deduped and re-ordered newest-first by the DISPLAYED date
+    (wbp, falling back to updated_at) via a sortable "date|zero-padded-id"
+    string key (Twig 1 has no arrow-function sort) so the visible list stays
+    monotonic, capped at 6 rendered rows (maxItems=5 is per-division; two+
+    divisions could otherwise stack 10+).
+
+    Empty state: muted row (also what team-less users see — no divisions
+    means no onRender calls at all). -#}
+{% set teams = user.sloth ? user.sloth.teams : [] %}
+{% set divIds = [] %}
+{% set divs = [] %}
+{% for team in teams %}
+    {% for div in team.active_divisions %}
+        {% if div.id not in divIds %}
+            {% set divIds = divIds|merge([div.id]) %}
+            {% set divs = divs|merge([div]) %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+{% set rowsByKey = {} %}
+{% set keys = [] %}
+{% for div in divs %}
+    {% do RecentResults.setProperty('id', div.id) %}
+    {% do RecentResults.onRender() %}
+    {% for match in RecentResults.matches %}
+        {# wbp is the raw DB 'Y-m-d H:i:s' string (Match has no wbp date-cast) but updated_at IS a Carbon — |date normalizes both to 'Y-m-d H:i:s' so lexicographic == chronological; %06d pad assumes id < 1e6 #}
+        {% set key = (match.wbp ?: match.updated_at)|date('Y-m-d H:i:s') ~ '|' ~ ('%06d'|format(match.id)) %}
+        {% if match.teams|length >= 2 and rowsByKey[key] is not defined %}
+            {% set rowsByKey = rowsByKey|merge({ (key): match }) %}
+            {% set keys = keys|merge([key]) %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+{# First division that HAS a season (a seasonless playoff division may come first) — Twig-1-safe loop, no arrow-function filter. #}
+{% set season = null %}
+{% for div in divs %}
+    {% if season is null and div.season %}{% set season = div.season %}{% endif %}
+{% endfor %}
+<div class="p chamfer">
+    {#- ALL RESULTS -> the season overview (every round's results) of the
+        user's first division with a season; URL pattern frozen from the old
+        theme's pages/season/view.htm (url = "/:slug"). -#}
+    <div class="p-head"><span>RECENT RESULTS · YOUR DIVISIONS</span>{% if season %}<a href="/{{ season.slug }}">ALL RESULTS {% partial 'site/icon' name='chevron-right' %}</a>{% endif %}</div>
+    {% for key in keys|sort|reverse|slice(0, 6) %}
+    {% set match = rowsByKey[key] %}
+    {% set home = match.teams[0] %}
+    {% set away = match.teams[1] %}
+    <div class="mrow">
+        {#- Human dates render in the app TZ (day granularity) — same
+            documented compromise as home/results.htm. -#}
+        <span class="when">{{ (match.wbp ?: match.updated_at)|date('M j')|upper }}</span>
+        <span class="who">{{ home.title }} <i>vs</i> {{ away.title }}</span>
+        <span class="res"><span class="{{ match.winner_id == home.id ? 'w' : 'l' }}">{{ home.pivot.team_score }}</span> : <span class="{{ match.winner_id == away.id ? 'w' : 'l' }}">{{ away.pivot.team_score }}</span></span>
+    </div>
+    {% else %}
+    <div class="mrow"><span class="who"><i>No results in your divisions yet.</i></span></div>
+    {% endfor %}
+</div>

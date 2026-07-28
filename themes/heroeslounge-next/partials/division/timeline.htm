@@ -1,0 +1,19 @@
+{#- Sidebar: division activity timeline — a net-new re-skin of TimelineEntries
+    (the legacy #cd-timeline / timeline.css markup is dropped entirely).
+
+    onRender pattern: set the runtime division id, invoke onRender(), then render
+    the shared division/timeline-entries partial (the per-type sentence/icon switch
+    — one source of truth, also used by the team page Timeline tab). Front-matter
+    pins type='division' + subsequent=1, which takes the chunk-based division branch
+    of TimelineEntries::onRender() (the season branch references an undefined
+    $allTimelines — a plugin bug we avoid, per spec). The branch eager-loads
+    teams.logo; match-team logos and sloth avatars lazy-load per entry (<=
+    maxItems=15 rows; the timeline is a Support collection, no eager .load()). -#}
+{% do TimelineEntries.setProperty('id', div.id) %}
+{% do TimelineEntries.onRender() %}
+<section class="p chamfer divside-panel">
+    <div class="p-head"><span>Timeline</span></div>
+    <div class="tl">
+        {% partial 'division/timeline-entries' entries=TimelineEntries.timeline %}
+    </div>
+</section>

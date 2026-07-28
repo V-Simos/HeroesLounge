@@ -1,0 +1,18 @@
+description = "Blog post grid + pagination (shared by the blog list and category pages)"
+==
+{#- Reads the PAGE-attached [blogList] component (both consumers declare it in
+    their front-matter); `pageParam` is the page var blogList sets in onRun().
+    Pagination renders outside the empty-state branch on purpose (old
+    partials/blogList/default.htm did the same): an out-of-range page number
+    shows the no-posts message but still offers the real pages. -#}
+{% set posts = blogList.posts %}
+{% if posts|length > 0 %}
+<div class="post-grid">
+    {% for post in posts %}
+    {% partial 'blog/post-card' post=post %}
+    {% endfor %}
+</div>
+{% else %}
+<p class="blog-empty">{{ blogList.noPostsMessage }}</p>
+{% endif %}
+{% partial 'blog/pagination' posts=posts pageParam=pageParam %}

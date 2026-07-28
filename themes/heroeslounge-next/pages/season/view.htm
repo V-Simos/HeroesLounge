@@ -1,0 +1,15 @@
+title = "season"
+url = "/:slug"
+layout = "default"
+is_hidden = 0
+
+[SeasonOverview]
+==
+{#- Season overview page. URL + [SeasonOverview] copied VERBATIM from the old
+    theme's pages/season/view.htm (frozen catch-all URL /:slug). layout "plain"
+    -> "default" (the new theme's chrome: [session] security="all" + Navigation +
+    SetTimezone). SeasonOverview::init() loads the season by :slug, sets
+    this.page.title to season.title, and — only when reg_open — dynamically
+    addComponent()s participationOverview; so no onRender() shim is needed here,
+    the component renders its (overridden) partials/SeasonOverview/default.htm. -#}
+{% component 'SeasonOverview' %}

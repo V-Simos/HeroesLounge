@@ -1,0 +1,19 @@
+description = "Team shield badge: logo clipped to the hex, or a generated fallback"
+==
+{#- Params: team (required), size ('lg' or 'sm', default 'sm').
+    Renders the team's smallLogo/logo attachment (System\Models\File, .path is
+    the public URL — same relation the old theme reads via team.logo.path)
+    clipped to the hex shape, or, when the team has no logo, the generated
+    shield: the site/initials monogram of team.title (shared with the nav
+    avatar and dashboard chips) on a deterministic .badge-hue-N background
+    (components.css defines hues 0-11).
+    Shields are always decorative — the team name is adjacent text wherever
+    this partial is used — hence aria-hidden. -#}
+{% set badgeClass = size == 'lg' ? 'badge-lg' : 'badge badge-sm' %}
+{% set logo = team.smallLogo ?: team.logo %}
+{% if logo %}
+<span class="{{ badgeClass }}" aria-hidden="true"><img src="{{ logo.path }}" alt="" loading="lazy"></span>
+{%- else -%}
+{% set hue = (team.title|length * 7) % 12 %}
+<span class="{{ badgeClass }} badge-hue-{{ hue }}" aria-hidden="true">{% partial 'site/initials' name=team.title %}</span>
+{%- endif %}

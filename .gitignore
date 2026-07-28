@@ -1,11 +1,15 @@
 /*
 /*/
+!/dev/
 !/plugins/
 /plugins/*/
 !/plugins/rikki/
+!/plugins/dev/
 !/themes/
 /themes/*/
 !/themes/HeroesLounge-Theme/
+!/themes/heroeslounge-next/
+!/docs/
 *.gitignore
 
 /plugins/rikki/.idea/*
@@ -18,3 +22,6 @@
 !install_hl.sh
 
 *.pyc
+
+# Superpowers brainstorm mockups (local only)
+.superpowers/

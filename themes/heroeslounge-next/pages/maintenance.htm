@@ -1,0 +1,18 @@
+title = "Maintenance"
+url = "/maintenance"
+layout = "focused"
+is_hidden = 0
+==
+{#- Title/URL/is_hidden copied from the old theme's pages/maintenance.htm
+    (frozen URL /maintenance). October serves the CMS-configured maintenance
+    page whenever maintenance mode is enabled (backend Settings), regardless of
+    this URL; the URL is kept so the page is also directly reachable/previewable.
+    The old page attached no components and neither does this one — the focused
+    layout supplies the logo + centered chamfered panel; the body is just copy
+    plus the Discord link (same URL as site/footer.htm). -#}
+<div class="maint">
+    <p class="eyebrow mono">STATUS · OFFLINE</p>
+    <h1>Down for <em>maintenance</em></h1>
+    <p class="maint-lede">Heroes Lounge is taking a short break for some upkeep. We'll be back in the Nexus shortly — thanks for your patience.</p>
+    <a class="btn btn-solid" href="https://discordapp.com/invite/aePkBsZ">{% partial 'site/icon' name='message-square' %} Join our Discord</a>
+</div>

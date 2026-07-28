@@ -1,0 +1,126 @@
+{#- Theme override for Rikki\LoungeViews\Components\ViewTeam (alias "ViewTeam"
+    in plugins/rikki/loungeviews/Plugin.php) — replaces the plugin's Bootstrap
+    jumbotron/nav-tabs partial. __SELF__ IS the ViewTeam instance; __SELF__.team
+    is resolved in init() every request (so the page's onEnd can 404 on a bad
+    slug). ViewTeam also addComponent()s SIX camelCase children in init() —
+    recentResults / divisionTable / upcomingMatches / roundMatches / timeLine /
+    teamStatistics — which we render via {% component 'alias' %}; each fires its
+    own onRender at render time (no {% do %} needed), and each has a theme
+    override at partials/<alias>/default.htm. NOTE the divisionTable (lowercase
+    runtime alias): October's ComponentPartial::loadOverrideCached probes
+    strtolower(alias) BEFORE the exact alias, so this alias AND the DivisionTable
+    page alias both resolve to the ONE all-lowercase partials/divisiontable/
+    override on a case-sensitive (production) FS.
+
+    Layout: a full-bleed banner (breaks out of .wrap via .team-banner-bleed), then
+    a .wrap holding a two-column grid — a tabbed main column (Roster / Timeline /
+    Matches / Statistics via the lounge.js [data-tabs] contract) + a sidebar
+    (description / standings / recent / upcoming). Bad slug -> __SELF__.team null
+    -> themed "Team not found" panel (the page also 404s via onEnd). -#}
+{% if __SELF__.team %}
+{% set team = __SELF__.team %}
+
+{#- ---------- full-bleed banner ---------- -#}
+<div class="team-banner-bleed">
+    <div class="team-banner{% if team.banner %} has-img{% endif %}"{% if team.banner %} style="background-image:url({{ team.banner.path }})"{% endif %}>
+        <div class="team-banner-scrim">
+            <div class="wrap team-banner-inner">
+                {% partial 'team/shield' team=team size='lg' %}
+                <div class="team-banner-id">
+                    <h1>{{ team.title }}</h1>
+                    {% partial 'team/social' team=team light=true %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="sec teamsec">
+    <div class="wrap">
+        <div class="teamwrap">
+            <div class="teammain">
+                {#- Tab bar — lounge.js [data-tabs]: .tab buttons carry
+                    data-tab-target=<panel id>; panels toggle via [hidden]. -#}
+                <div class="team-tabs tabs" data-tabs role="tablist" aria-label="Team sections">
+                    <button class="tab on" id="team-roster-tab" type="button" role="tab" aria-selected="true" aria-controls="team-roster" tabindex="0" data-tab-target="team-roster">Roster</button>
+                    <button class="tab" id="team-timeline-tab" type="button" role="tab" aria-selected="false" aria-controls="team-timeline" tabindex="-1" data-tab-target="team-timeline">Timeline</button>
+                    <button class="tab" id="team-matches-tab" type="button" role="tab" aria-selected="false" aria-controls="team-matches" tabindex="-1" data-tab-target="team-matches">Matches</button>
+                    <button class="tab" id="team-stats-tab" type="button" role="tab" aria-selected="false" aria-controls="team-stats" tabindex="-1" data-tab-target="team-stats">Statistics</button>
+                </div>
+
+                {#- Roster tab -#}
+                <div class="team-panel" id="team-roster" role="tabpanel" aria-labelledby="team-roster-tab">
+                    {% partial 'team/roster' team=team %}
+                </div>
+
+                {#- Timeline tab -#}
+                <div class="team-panel" id="team-timeline" role="tabpanel" aria-labelledby="team-timeline-tab" hidden>
+                    {% component 'timeLine' %}
+                </div>
+
+                {#- Matches tab -#}
+                <div class="team-panel" id="team-matches" role="tabpanel" aria-labelledby="team-matches-tab" hidden>
+                    {% component 'roundMatches' %}
+                </div>
+
+                {#- Statistics tab -#}
+                <div class="team-panel" id="team-stats" role="tabpanel" aria-labelledby="team-stats-tab" hidden>
+                    {% component 'teamStatistics' %}
+                </div>
+            </div>
+
+            {#- ---------- sidebar ---------- -#}
+            <aside class="teamside">
+                {% if team.short_description %}
+                <section class="p chamfer team-desc-panel">
+                    <div class="p-head"><span>About</span></div>
+                    {#- striptags|raw mirrors the old page: short_description is
+                        plain-text authored by staff, stripped of any tags then
+                        emitted (raw is redundant after striptags but kept faithful). -#}
+                    <div class="team-desc">{{ team.short_description|striptags|raw }}</div>
+                </section>
+                {% endif %}
+
+                {#- Standings — one windowed divisionTable per ACTIVE division.
+                    active_divisions' `active` scope JOINs seasons.is_active, so
+                    div.season is non-null here; the guard stays defensive (a
+                    playoff division could in principle slip in with a null season). -#}
+                {% for div in team.active_divisions %}
+                <section class="p chamfer team-side-panel">
+                    <div class="p-head">
+                        <span>Standings</span>
+                        {% if div.season %}<a href="/{{ div.season.slug }}/{{ div.slug }}">{{ div.title|upper }} {% partial 'site/icon' name='chevron-right' %}</a>{% endif %}
+                    </div>
+                    <div class="team-standings">
+                        {% component 'divisionTable' id=div.id teamId=team.id %}
+                    </div>
+                </section>
+                {% endfor %}
+
+                {#- Recent results -#}
+                <section class="p chamfer team-side-panel divside-panel">
+                    <div class="p-head"><span>Recent results</span></div>
+                    {% component 'recentResults' %}
+                </section>
+
+                {#- Upcoming matches -#}
+                <section class="p chamfer team-side-panel divside-panel">
+                    <div class="p-head"><span>Upcoming</span><a href="/calendar">CALENDAR {% partial 'site/icon' name='chevron-right' %}</a></div>
+                    {% component 'upcomingMatches' %}
+                </section>
+            </aside>
+        </div>
+    </div>
+</section>
+
+{% else %}
+<section class="sec teamsec">
+    <div class="wrap">
+        <header class="team-notfound-head">
+            <p class="eyebrow mono">TEAM</p>
+            <h1>Team not found</h1>
+        </header>
+        <p class="team-empty">We couldn&rsquo;t find that team. It may have been renamed or removed &mdash; head back to the <a href="/">home page</a> to find an active season.</p>
+    </div>
+</section>
+{% endif %}

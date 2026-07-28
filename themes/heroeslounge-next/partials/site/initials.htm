@@ -1,0 +1,16 @@
+description = "Monogram initials for a name (team title or username)"
+==
+{#- Param: name (required). Emits the uppercased monogram used by the shield
+    fallback and the avatar/team chips: the first letter of each of the first
+    two words for a multi-word name, or the first two characters for a
+    single-word name. Whitespace-controlled so callers can drop it straight
+    inside an element ({% partial 'site/initials' name=team.title %}) and get
+    exactly the initials with no surrounding whitespace.
+    CANONICAL: this replaces the equivalent inline ternary that used to live in
+    team/shield.htm, site/nav.htm (username; nav used split(' ',2) — same output),
+    dashboard/welcome.htm, dashboard/standings.htm and dashboard/matches.htm —
+    keep behaviour in sync if touched (output must stay byte-identical). -#}
+{%- set words = name|trim|split(' ') -%}
+{{- words|length > 1 and words[1]
+    ? ((words[0]|slice(0, 1)) ~ (words[1]|slice(0, 1)))|upper
+    : words[0]|slice(0, 2)|upper -}}

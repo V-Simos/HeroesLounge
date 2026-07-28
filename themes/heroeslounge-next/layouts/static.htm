@@ -1,0 +1,50 @@
+description = "Static page layout"
+
+[session]
+security = "all"
+
+[Navigation]
+paramCode = ""
+
+[SetTimezone]
+
+[staticPage]
+==
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% partial 'site/head' %}
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    {% partial 'site/nav' %}
+    <main id="main">
+        <section class="sec static-page">
+            <div class="wrap">
+                {#- Guide bodies are frozen and mixed: these three provide their
+                    own h1, so only the h1-less bodies receive their viewBag title
+                    here. This prevents the layout from duplicating a body h1. -#}
+                {% set contentOwnsH1 = this.page.url in [
+                    '/guides/signup-guide',
+                    '/guides/scheduling-and-playing-your-first-game',
+                    '/guides/aram-signup-guide'
+                ] %}
+                {% if not contentOwnsH1 %}
+                <header class="static-head">
+                    <h1>{{ this.page.title }}</h1>
+                </header>
+                {% endif %}
+                <article class="post-content static-content">
+                    {% page %}
+                </article>
+            </div>
+        </section>
+    </main>
+    {% partial 'site/footer' %}
+    {#- SetTimezone must be RENDERED (not just attached) â€” its partial
+        {% put %}s the timezone-detect script into {% scripts %}, which is
+        rendered inside site/scripts below. -#}
+    {% component 'SetTimezone' %}
+    {% partial 'site/scripts' %}
+</body>
+</html>

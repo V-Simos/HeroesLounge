@@ -1,0 +1,30 @@
+{#- SlothAccount::default override. The branch and partial calls mirror the
+    frozen component contract; only the presentation wrappers are new. -#}
+<section class="sec authsec">
+    <div class="wrap auth-wrap auth-account-wrap">
+        <h1 class="auth-title">Account</h1>
+
+        {% if not user %}
+            <div class="auth-guest-grid">
+                <section class="p auth-card" aria-labelledby="account-signin-title">
+                    <h2 class="p-head" id="account-signin-title">Sign in</h2>
+                    <div class="auth-body">
+                        {% partial __SELF__ ~ '::signin' %}
+                    </div>
+                </section>
+
+                <section class="p auth-card" aria-labelledby="account-register-title">
+                    <h2 class="p-head" id="account-register-title">Register</h2>
+                    <div class="auth-body">
+                        {% partial __SELF__ ~ '::register' %}
+                    </div>
+                </section>
+            </div>
+        {% else %}
+            <div class="auth-account-body">
+                {% partial __SELF__ ~ '::activation_check' %}
+                {% partial __SELF__ ~ '::update' %}
+            </div>
+        {% endif %}
+    </div>
+</section>

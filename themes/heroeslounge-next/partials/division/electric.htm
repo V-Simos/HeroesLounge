@@ -1,0 +1,11 @@
+{#- Shared electric-effect layers for a qualifying standings row (L10 >= 6).
+    Included as the FIRST children of a `.tr.eff` row by both standings partials
+    (division/standings.htm and divisiontable/default.htm) so the markup isn't
+    duplicated. The stage class (s1/s2/s3) on the parent row drives colour,
+    intensity, and how many of the three bolts show (CSS hides paths past the
+    stage's count). All layers are position:absolute — they consume no grid cell
+    — and .bolts clips to the row (overflow:hidden) so bolts never spill into a
+    neighbouring row. Styling + synchronized strike timing live in the .tr.eff
+    block of assets/css/components.css. -#}
+<span class="edge"></span><span class="flash"></span>
+<svg class="bolts" viewBox="0 0 800 54" preserveAspectRatio="none" aria-hidden="true"><path d="M130 2 L119 25 L137 25 L116 52"/><path d="M400 2 L389 25 L407 25 L386 52"/><path d="M660 2 L649 25 L667 25 L646 52"/></svg>

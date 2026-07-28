@@ -1,0 +1,79 @@
+{#- SlothAccount::register preserves every handler field name from the frozen
+    partial. The native dialog remains inside this form so its submit button
+    participates in October's onRegister AJAX request. -#}
+<form data-request="onRegister" data-request-flash>
+    <div class="auth-note auth-note-warn">
+        Registering for Heroes Lounge requires you to join our
+        <a href="https://discordapp.com/invite/aePkBsZ">Discord.</a> It may take several minutes until we verify that you have joined our server, so in case you can't register right away, please try again later.
+    </div>
+
+    <div class="field">
+        <label for="registerUsername">Username</label>
+        <input name="username" type="text" class="input" id="registerUsername" placeholder="Enter your username" autocomplete="username">
+    </div>
+
+    <div class="field">
+        <label for="registerEmail">Email</label>
+        <input name="email" type="email" class="input" id="registerEmail" placeholder="Enter your email" autocomplete="email">
+    </div>
+
+    <div class="field">
+        <label for="registerEmailConfirm">Confirm Email</label>
+        <input name="email_confirmation" type="email" class="input" id="registerEmailConfirm" placeholder="Enter your email again" autocomplete="email">
+    </div>
+
+    <div class="field">
+        <label for="registerBattletag">BattleTag</label>
+        <input name="battle_tag" type="text" class="input" id="registerBattletag" placeholder="Enter your BattleTag (e.g. Sloth#2345)">
+    </div>
+
+    <div class="field">
+        <label for="registerDiscordtag">DiscordTag</label>
+        <input name="discord_tag" type="text" class="input" id="registerDiscordtag" placeholder="Enter your DiscordTag (e.g. potato1234)">
+    </div>
+
+    <div class="field">
+        <label for="registerRegion">Region</label>
+        {#- Frozen source used invalid `</option selected>` markup. Keep the
+            placeholder selected with valid HTML so browser form behavior is stable. -#}
+        <select name="region_id" id="registerRegion" class="select" required>
+            <option value="0" selected>Select Region</option>
+            {% for region in __SELF__.regions %}
+                <option value="{{ region.id }}">{{ region.title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="field">
+        <label for="registerPassword">Password</label>
+        <input name="password" type="password" class="input" id="registerPassword" placeholder="Choose a password" autocomplete="new-password">
+    </div>
+
+    <div class="field">
+        <label for="registerPasswordConfirm">Confirm Password</label>
+        <input name="password_confirmation" type="password" class="input" id="registerPasswordConfirm" placeholder="Enter your chosen password again" autocomplete="new-password">
+    </div>
+
+    <label class="auth-checkbox" for="newsletterCheckbox">
+        <input name="newsletter_subscription" type="checkbox" id="newsletterCheckbox">
+        <span>Subscribe to our newsletter</span>
+    </label>
+
+    <button type="button" class="btn btn-solid auth-submit" data-rules-dialog-open>Register</button>
+
+    <dialog class="auth-dialog" id="account-rules-dialog" aria-labelledby="account-rules-title">
+        <div class="auth-dialog-shell">
+            <div class="auth-dialog-head">
+                <h2 id="account-rules-title">Welcome!</h2>
+                <button type="button" class="btn btn-ghost btn-sm" data-rules-dialog-close aria-label="Close rules">Close</button>
+            </div>
+            <div class="auth-dialog-body">
+                {% partial 'site/ruleset' %}
+            </div>
+            <div class="auth-dialog-foot">
+                <button type="button" class="btn btn-ghost" data-rules-dialog-close>Not now</button>
+                <button type="submit" class="btn btn-solid" data-rules-dialog-submit>I'm in - Register!</button>
+            </div>
+        </div>
+    </dialog>
+</form>

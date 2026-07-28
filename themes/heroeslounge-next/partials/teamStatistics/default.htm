@@ -1,0 +1,100 @@
+{#- Theme override for Rikki\LoungeStatistics\Components\TeamStatistics, resolved
+    as ViewTeam's `teamStatistics` child (team_id=team.id). __SELF__ IS the
+    TeamStatistics instance; it computes in init() (NOT onRender) — so __SELF__.
+    heroes / __SELF__.maps / __SELF__.participatedSeasons are ready at render.
+
+    SCOPE-CUT (per the plan): the frozen tab is a DataTables mini-app — a season
+    <select data-request="onSeasonChange"> that AJAX-re-renders two sortable/
+    collapsible DataTables (@stats). We ship the two stat tables as themed STATIC
+    tables (no DataTables, no Bootstrap collapse, no jQuery). DEFERRED: the AJAX
+    season-change select + client-side column sorting (a Phase-3+ enhancement).
+    We surface which season is shown (the component's init() picks the active
+    participated season, else the most recent) as a static caption so the static
+    scope is legible; the season picker is intentionally omitted.
+
+    heroes = Support Collection of arrays {hero, picks, pick_popularity, winrate,
+    bans_by_team, bbt_popularity, bans_against_team, bat_popularity}; maps = arrays
+    {map, picks_by, picks_vs, winrate}. picks/bans can be 0 or '-'; the popularity
+    % is only meaningful when the count isn't '-' (mirrors the frozen partial).
+    Hero icon: assets/img/heroes/<hero.image_url>.png (|theme). No participated
+    seasons OR empty hero+map data -> a clean "No statistics yet" empty state
+    (FIXTURE-BLIND for teams with 0 gameparticipation rows). -#}
+{% set selSeason = __SELF__.participatedSeasons and __SELF__.selectedSeasons|length > 0
+    ? __SELF__.participatedSeasons.firstWhere('id', __SELF__.selectedSeasons[0]) : null %}
+<div id="teamstatistics" class="team-stats">
+{% if (__SELF__.participatedSeasons is null or __SELF__.participatedSeasons|length == 0)
+   or ((__SELF__.heroes is null or __SELF__.heroes|length == 0) and (__SELF__.maps is null or __SELF__.maps|length == 0)) %}
+    <div class="p chamfer team-stats-empty">
+        <div class="team-stats-empty-ic">{% partial 'site/icon' name='trophy' %}</div>
+        <div>
+            <h2>No statistics yet</h2>
+            <p>This team hasn&rsquo;t played enough games for hero and map stats to be computed. Check back after a few matches.</p>
+        </div>
+    </div>
+{% else %}
+    {% if selSeason %}<p class="team-stats-cap mono">Showing {{ selSeason.title }}</p>{% endif %}
+
+    {#- Hero table -#}
+    <section class="p chamfer team-stats-panel">
+        <div class="p-head"><span>Heroes</span></div>
+        <div class="stat-table-wrap">
+            <table class="stat-table">
+                <thead>
+                    <tr>
+                        <th class="stat-hero-col">Hero</th>
+                        <th>Picks</th>
+                        <th>Winrate</th>
+                        <th>Bans by {{ __SELF__.team.slug }}</th>
+                        <th>Bans vs {{ __SELF__.team.slug }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in __SELF__.heroes %}
+                    <tr>
+                        <th scope="row" class="stat-hero">
+                            <img src="{{ ('assets/img/heroes/' ~ h['hero'].image_url ~ '.png')|theme }}" alt="" title="{{ h['hero'].title }}" loading="lazy">
+                            <span>{{ h['hero'].title }}</span>
+                        </th>
+                        <td>{{ h['picks'] }}{% if h['picks'] != '-' %} <span class="stat-pct">({{ h['pick_popularity'] }}%)</span>{% endif %}</td>
+                        <td>{{ h['winrate'] }}</td>
+                        <td>{{ h['bans_by_team'] }}{% if h['bans_by_team'] != '-' %} <span class="stat-pct">({{ h['bbt_popularity'] }}%)</span>{% endif %}</td>
+                        <td>{{ h['bans_against_team'] }}{% if h['bans_against_team'] != '-' %} <span class="stat-pct">({{ h['bat_popularity'] }}%)</span>{% endif %}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="stat-none">No hero data for this season.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    {#- Map table -#}
+    <section class="p chamfer team-stats-panel">
+        <div class="p-head"><span>Maps</span></div>
+        <div class="stat-table-wrap">
+            <table class="stat-table">
+                <thead>
+                    <tr>
+                        <th class="stat-hero-col">Map</th>
+                        <th>Picked by {{ __SELF__.team.slug }}</th>
+                        <th>Picked vs {{ __SELF__.team.slug }}</th>
+                        <th>Winrate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in __SELF__.maps %}
+                    <tr>
+                        <th scope="row" class="stat-map">{{ m['map'].title }}</th>
+                        <td>{{ m['picks_by'] }}</td>
+                        <td>{{ m['picks_vs'] }}</td>
+                        <td>{{ m['winrate'] }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="stat-none">No map data for this season.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endif %}
+</div>
