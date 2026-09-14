@@ -11,7 +11,12 @@
     maxItems=15 rows; the timeline is a Support collection, no eager .load()). -#}
 {% do TimelineEntries.setProperty('id', div.id) %}
 {% do TimelineEntries.onRender() %}
-<section class="p chamfer divside-panel">
+{#- timeline-panel: height-matched to division/rounds.htm's .rounds-block by
+    lounge.js (a JS measurement, not a CSS trick — see its header note for
+    why), then scrolls internally past that height (pages.css .timeline-panel
+    .tl). Below the 980px breakpoint (.divwrap collapses to one column) the
+    cap is lifted and this renders at its natural full height. -#}
+<section class="p chamfer divside-panel timeline-panel">
     <div class="p-head"><span>Timeline</span></div>
     <div class="tl">
         {% partial 'division/timeline-entries' entries=TimelineEntries.timeline %}

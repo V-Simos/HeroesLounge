@@ -283,6 +283,14 @@
 .tl-txt a:hover { color: var(--ink); text-decoration: underline; }
 .tl-when { display: block; margin-top: 5px; font-size: 10.5px; letter-spacing: .1em; color: var(--mute); }
 
+/* Timeline panel capped to .rounds-block's height by lounge.js (inline
+   max-height, set/cleared there). .p is already flex column (components.css);
+   the head must not shrink so the cap only eats into .tl, which becomes the
+   scrolling region. Unscoped from plain .divside-panel/.tl (also the team
+   page's Timeline tab, components.css) so neither gets the scroll behavior. */
+.timeline-panel .p-head { flex-shrink: 0; }
+.timeline-panel .tl { flex: 1; min-height: 0; overflow-y: auto; }
+
 /* ---------- match detail page (pages/match/view.htm, Task 5a) ----------
    Page-level layout for the /match/view/:id header + pre-game rosters. The
    component-level text/meta and roster-card styles live in components.css. */

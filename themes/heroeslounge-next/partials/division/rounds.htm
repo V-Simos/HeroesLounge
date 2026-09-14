@@ -20,7 +20,11 @@
     THIS division, so the redundant "DIV n" tag is dropped (also avoids a
     division lazy-load). Frozen match URL /match/view/:id is the card's job. -#}
 {% if div.season.current_round > 0 %}
-<section class="divblock">
+{#- rounds-block: a second, more specific hook alongside .divblock — lounge.js
+    measures THIS section's rendered height to cap partials/division/
+    timeline.htm's sidebar panel to match (.divblock alone also matches
+    division/standings.htm, which isn't the intended reference height). -#}
+<section class="divblock rounds-block">
     <div class="blockhead"><h2>Rounds</h2></div>
     <div class="round-tabs tabs" data-tabs role="tablist" aria-label="Round">
         {% for key, i in 1..div.season.current_round %}

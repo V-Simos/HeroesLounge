@@ -147,6 +147,51 @@
         });
     }
 
+    /* ---------- division sidebar height match ----------
+       pages/season/division.htm: the rounds block (.divmain .rounds-block)
+       and the timeline sidebar panel (.divside .timeline-panel) aren't
+       CSS-alignable siblings — different grid columns, different preceding
+       content (standings vs. recent+upcoming) — so matching their height
+       needs a measurement, not a grid trick. Caps the timeline panel's
+       height to the rounds block's rendered height; pages.css's
+       .timeline-panel .tl scrolls the rest. Skipped below the 980px
+       breakpoint where .divwrap collapses to one column (matching height to
+       a section it's no longer beside would just clip it pointlessly).
+       Re-measures on resize/breakpoint change and whenever a round tab
+       switches, since different rounds can have different match counts and
+       so a different .rounds-block height. */
+    var roundsBlock = document.querySelector('.divmain .rounds-block');
+    var timelinePanel = document.querySelector('.divside .timeline-panel');
+    if (roundsBlock && timelinePanel) {
+        var divWideQuery = window.matchMedia('(min-width: 981px)');
+        var resizeSettle = null;
+
+        function matchTimelineHeight() {
+            timelinePanel.style.maxHeight = divWideQuery.matches
+                ? roundsBlock.offsetHeight + 'px'
+                : '';
+        }
+
+        matchTimelineHeight();
+
+        window.addEventListener('resize', function () {
+            clearTimeout(resizeSettle);
+            resizeSettle = setTimeout(matchTimelineHeight, 150);
+        });
+
+        if (divWideQuery.addEventListener) {
+            divWideQuery.addEventListener('change', matchTimelineHeight);
+        } else {
+            divWideQuery.addListener(matchTimelineHeight); // Safari < 14
+        }
+
+        roundsBlock.addEventListener('click', function (event) {
+            // A round-tab switch changes [hidden] synchronously but the
+            // resulting reflow isn't visible until the next frame.
+            if (event.target.closest('[role="tab"]')) requestAnimationFrame(matchTimelineHeight);
+        });
+    }
+
     /* ---------- AJAX error toast ----------
        October v1's framework.js (a jQuery plugin) triggers the jQuery event
        'ajaxErrorMessage' on window from handleErrorMessage(); calling
