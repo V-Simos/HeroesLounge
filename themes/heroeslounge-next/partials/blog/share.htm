@@ -1,0 +1,17 @@
+description = "Share row for a post's detail page: Twitter/Facebook share intents (same brand icons as the site footer) plus a copy-link button. Expects `post` and `url` (the post's ABSOLUTE url — share intents need a fully-qualified link, not post.url's site-relative path)."
+==
+{#- Twitter/Facebook use their public share-intent URLs — plain outbound
+    links, no JS needed. Copy Link is the one interactive control: lounge.js
+    listens for [data-copy-link] clicks, writes `url` to the clipboard, and
+    reuses the existing AJAX-error #toasts host/showToast() for the
+    confirmation rather than inventing a second notification pattern.
+
+    No Discord button: Discord has no public web share-intent URL, so there's
+    nothing standard to link to — Copy Link + pasting into Discord manually is
+    the normal flow there. -#}
+<div class="post-share">
+    <span class="post-share-label mono">SHARE</span>
+    <a class="btn btn-ghost btn-sm" href="https://twitter.com/intent/tweet?url={{ url|url_encode }}&amp;text={{ post.title|url_encode }}" target="_blank" rel="noopener" aria-label="Share on Twitter">{% partial 'site/icon' name='twitter' %} Twitter</a>
+    <a class="btn btn-ghost btn-sm" href="https://www.facebook.com/sharer/sharer.php?u={{ url|url_encode }}" target="_blank" rel="noopener" aria-label="Share on Facebook">{% partial 'site/icon' name='facebook' %} Facebook</a>
+    <button type="button" class="btn btn-ghost btn-sm" data-copy-link="{{ url }}" aria-label="Copy link to this post">{% partial 'site/icon' name='link' %} Copy link</button>
+</div>

@@ -1,0 +1,38 @@
+description = "Resolves a post's decorative/cover image. Expects `post`; optional `allowEmpty` (default true) lets ~1-in-4 posts resolve to nothing so the design keeps some cards plain."
+==
+{#- Single source of truth for every `.post`/`.post-featured` image, so the
+    SAME post always shows the SAME picture in the grid, on the homepage
+    strip, as a prev/next sibling, AND at the top of its own detail page.
+
+    Called via the `partial()` TWIG FUNCTION (not the `{% partial %}` tag) so
+    the caller can capture the resolved URL as a string and branch on it —
+    add/omit the `has-img` class, build the inline background-image style.
+    (modules/cms/twig/Extension.php registers `partial` as a function backed
+    by the same renderPartial() as the tag, so every filter/global still
+    resolves normally; this is just the first theme file to use that form.)
+
+    Real `post.image` (an uploaded content image) wins when present. Nothing
+    in the current dataset has one, so this also carries the FALLBACK: one of
+    the 17 Heroes of the Storm battleground stills already shipped for
+    partials/match/game-stats.htm (assets/img/maps/bg_*.jpg) — on-brand, no
+    new assets, no external request. The choice is a stable hash of
+    `post.id`, not random, so it never flickers across requests/pagination.
+
+    `allowEmpty=false` (the featured card) always resolves to something,
+    because a "highlighted" post with a blank background would undercut the
+    point of highlighting it. The default (every other consumer) skips
+    ~1-in-4 posts entirely so the grid keeps some cards plain, as before this
+    feature existed. -#}
+{%- set maps = [
+    'alterac-pass', 'battlefield-of-eternity', "blackheart's-bay",
+    'braxis-holdout', 'cursed-hollow', 'dragon-shire', 'garden-of-terror',
+    'hanamura-temple', 'hanamura', 'haunted-mines', 'infernal-shrines',
+    'lost-cavern', 'sky-temple', 'tomb-of-the-spider-queen', 'towers-of-doom',
+    'volskaya-foundry', 'warhead-junction'
+] -%}
+{%- set skip = (allowEmpty is defined and not allowEmpty) ? false : (post.id % 4 == 0) -%}
+{%- if post.image -%}
+{{ post.image|media }}
+{%- elseif not skip -%}
+{{ ('assets/img/maps/bg_' ~ maps[post.id % maps|length] ~ '.jpg')|theme }}
+{%- endif -%}

@@ -1,15 +1,25 @@
-description = "Blog post grid + pagination (shared by the blog list and category pages)"
+description = "Blog post grid + pagination (shared by the blog list and category pages). Pass featured=true to pull page 1's first post into a big highlight card above the grid — blog/list.htm only; a category feed's first post isn't the site's overall latest, so category.htm doesn't opt in."
 ==
 {#- Reads the PAGE-attached [blogList] component (both consumers declare it in
     their front-matter); `pageParam` is the page var blogList sets in onRun().
     Pagination renders outside the empty-state branch on purpose (old
     partials/blogList/default.htm did the same): an out-of-range page number
-    shows the no-posts message but still offers the real pages. -#}
+    shows the no-posts message but still offers the real pages.
+
+    `featured` is only honored on page 1 (a later page's first post is not
+    the latest post) — guarded here so a caller can pass a bare
+    `featured=true` without also checking the page number itself. -#}
 {% set posts = blogList.posts %}
+{% set showFeatured = featured is defined and featured and posts.currentPage == 1 %}
 {% if posts|length > 0 %}
+{% if showFeatured %}
+{% partial 'blog/post-featured' post=posts|first %}
+{% endif %}
 <div class="post-grid">
     {% for post in posts %}
+    {% if not (showFeatured and loop.first) %}
     {% partial 'blog/post-card' post=post %}
+    {% endif %}
     {% endfor %}
 </div>
 {% else %}

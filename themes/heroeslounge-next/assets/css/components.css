@@ -197,6 +197,13 @@
   font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 21px;
   clip-path: polygon(50% 0, 100% 18%, 100% 72%, 50% 100%, 0 72%, 0 18%); }
 .badge-sm { width: 34px; height: 37.4px; font-size: 11.5px; }
+/* xs: inline author-avatar badges in a .post-meta byline (partials/blog/
+   author-avatar.htm) — smaller than any existing shield size. */
+.badge-xs { width: 17px; height: 18.7px; font-size: 6px; }
+/* The badge family only ever held a team-logo <img> or text initials before
+   author-avatar.htm's generic "Staff" fallback added a lucide icon (24x24
+   native) — constrain it to a sane fraction of the shield box. */
+.badge svg, .badge-lg svg { width: 50%; height: 50%; }
 
 /* ---------- cast (next match) panel ----------
    usage: .cast-outer wraps .cast (1px-padded gradient frame around the panel). */
@@ -304,9 +311,20 @@
 
 /* ---------- posts ---------- */
 .post-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.post { background: var(--panel); padding: 22px; display: flex; flex-direction: column;
-  gap: 10px; transition: background .15s ease; }
-.post:hover { background: var(--panel2); }
+.post { position: relative; background-color: var(--panel); background-size: cover;
+  background-position: center; padding: 22px; display: flex; flex-direction: column;
+  gap: 10px; transition: background-color .15s ease; }
+.post:hover { background-color: var(--panel2); }
+/* has-img: blog/post-image.htm resolves a real or placeholder picture, applied
+   inline as this element's own background-image. The ::before tint keeps it
+   "very low opacity" (only ~8-12% shows through) so text stays exactly as
+   readable as on a plain card. z-index -1 (no extra markup) is enough to sit
+   it behind the in-flow text — .post is the positioned ancestor so the
+   pseudo's negative z-index paints before .post's own static children. */
+.post.has-img::before { content: ""; position: absolute; inset: 0; z-index: -1;
+  background-color: var(--panel); opacity: .92; transition: background-color .15s ease;
+  pointer-events: none; }
+.post.has-img:hover::before { background-color: var(--panel2); opacity: .88; }
 .post-meta { display: flex; align-items: center; gap: 6px; font-size: 10px;
   letter-spacing: .14em; color: var(--mute); text-transform: uppercase; }
 .post-meta svg { width: 12px; height: 12px; }
@@ -315,6 +333,23 @@
 .post-tags { display: flex; gap: 8px; flex-wrap: wrap; }
 .post-tags span { font-size: 9.5px; letter-spacing: .14em; color: var(--arc);
   background: rgba(157,140,242,0.1); padding: 4px 9px; text-transform: uppercase; }
+
+/* Featured — one big highlight card above the grid (blog/list.htm page 1
+   only, partials/blog/post-featured.htm). A real <img> rather than the grid's
+   low-opacity background: the point of "featured" is to show the picture. */
+.post-featured { display: grid; grid-template-columns: 1fr 1fr;
+  background: var(--panel); margin-bottom: 16px; transition: background .15s ease; }
+.post-featured:hover { background: var(--panel2); }
+.pf-media { position: relative; min-height: 280px; background: var(--deep); overflow: hidden; }
+.pf-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pf-body { padding: 32px; display: flex; flex-direction: column; justify-content: center;
+  gap: 12px; min-width: 0; }
+.pf-body .eyebrow { margin-bottom: 0; }
+.pf-body h2 { font-size: clamp(1.4rem, 2.6vw, 2rem); font-weight: 700; line-height: 1.25; }
+.pf-body p { color: var(--mute); font-size: 15px; }
+.pf-go { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px;
+  letter-spacing: .18em; color: var(--storm); text-transform: uppercase; }
+.pf-go svg { width: 13px; height: 13px; }
 
 /* ---------- chips ---------- */
 .chips { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; margin-top: 28px; }
@@ -428,6 +463,9 @@
   .burger { display: inline-flex; }
   .hero { padding: 56px 0 52px; }
   .match-grid, .event-grid, .post-grid { grid-template-columns: 1fr; }
+  .post-featured { grid-template-columns: 1fr; }
+  .pf-media { min-height: 200px; }
+  .pf-body { padding: 24px; }
   .tr { grid-template-columns: 30px 1fr 40px 40px 52px 44px 46px; padding: 12px 14px; font-size: 13.5px; }
   /* Playoff score standings (5-col): tighten at phone width like .tr. */
   .tr-score { grid-template-columns: 30px 1fr 40px 52px 52px; padding: 10px 14px; font-size: 13.5px; }

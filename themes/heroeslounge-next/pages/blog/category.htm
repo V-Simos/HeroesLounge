@@ -10,6 +10,10 @@ noPostsMessage = "No post found"
 sortOrder = "published_at desc"
 categoryPage = "blog/category"
 postPage = "blog/post"
+
+[Indikator\Content\Components\Categories blogCategories]
+slug = "{{ :slug }}"
+categoryPage = "blog/category"
 ==
 <?php
 // Mirrors the old theme's pages/blog/category.htm onEnd(): dynamic page title
@@ -28,7 +32,13 @@ function onEnd()
 ?>
 ==
 {#- URL + [blogList] config copied from the old theme's pages/blog/category.htm
-    (frozen URL /blog/category/:slug/:page?). -#}
+    (frozen URL /blog/category/:slug/:page?).
+
+    [Indikator\Content\Components\Categories blogCategories] is declared by
+    full class path, not the bare alias — see pages/blog/list.htm's header
+    note: RainLab.Blog registers a DIFFERENT component under the identical
+    "blogCategories" alias, and the bare alias silently resolved to that one
+    (querying its own empty table) instead. -#}
 {% if category %}
 <section class="sec">
     <div class="wrap">
@@ -38,6 +48,7 @@ function onEnd()
                 :slug/:page params would leak into /blog/:page? (e.g. /blog/2). -#}
             <a class="sec-link mono" href="{{ 'blog/list'|page({}, false) }}">ALL POSTS {% partial 'site/icon' name='chevron-right' %}</a>
         </div>
+        {% partial 'blog/category-filters' %}
         {% partial 'blog/posts' %}
     </div>
 </section>

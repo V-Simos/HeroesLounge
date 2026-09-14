@@ -1,0 +1,19 @@
+description = "Category filter chips (All posts + every blogCategories entry, active one highlighted). Declare [blogCategories] (categoryPage = \"blog/category\") on the calling page — this reads the page-level `categories`/`currentCategorySlug` vars its onRun() sets, not passed params."
+==
+{#- Real Indikator.Content component alias `blogCategories` (dev shim:
+    dev/docker/plugins/indikator/content/components/Categories.php) — same
+    component the OLD theme's sidebar used via an undeclared {% component %}
+    call; declared explicitly here instead, matching this theme's [blogList]
+    convention of every page spelling out its own components.
+    `category.post_count` runs one COUNT query per category (Category::
+    getPostCountAttribute) — same N+1 shape the old theme's sidebar already
+    had via the identical call site; not a new cost this feature introduces,
+    and small at this category count (~27). -#}
+{% if categories|length > 0 %}
+<nav class="cat-filters mono" aria-label="Filter by category">
+    <a class="cat-filter{% if not currentCategorySlug %} on{% endif %}" href="{{ 'blog/list'|page({}, false) }}"{% if not currentCategorySlug %} aria-current="page"{% endif %}>All posts</a>
+    {% for category in categories %}
+    <a class="cat-filter{% if category.slug == currentCategorySlug %} on{% endif %}" href="{{ category.url }}"{% if category.slug == currentCategorySlug %} aria-current="page"{% endif %}>{{ category.name }}{% if category.post_count %}<span class="cat-count">{{ category.post_count }}</span>{% endif %}</a>
+    {% endfor %}
+</nav>
+{% endif %}

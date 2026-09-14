@@ -94,12 +94,32 @@
 .blog-empty a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
 .blog-empty a:hover { color: var(--ink); }
 
+/* Category filter chips (partials/blog/category-filters.htm — blog/list.htm
+   + blog/category.htm). Echoes .tab/.tab.on's pill look (same chamfer/
+   gradient) but these are real navigation links, not a role=tab JS-toggled
+   panel set, so they stay a distinct class rather than borrowing .tab's ARIA-
+   bearing markup. */
+.cat-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.cat-filter { display: inline-flex; align-items: center; gap: 6px; font-size: 11px;
+  color: var(--mute); background: rgba(136,156,215,0.08); padding: 8px 14px;
+  transition: background .15s ease, color .15s ease;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+.cat-filter:hover { color: var(--ink); background: rgba(136,156,215,0.16); }
+.cat-filter.on { background: linear-gradient(135deg, var(--storm), #2E86DD); color: #041020; }
+.cat-count { opacity: .75; }
+
 /* ---------- blog post article (pages/blog/post.htm) ---------- */
 .post-article .post-head { max-width: 72ch; margin-bottom: 30px; }
 .post-article .post-head .eyebrow { text-transform: uppercase; }
 .post-article .post-head h1 { font-size: clamp(1.9rem, 4.2vw, 2.9rem); font-weight: 700;
   line-height: 1.1; text-wrap: balance; }
-.post-cover { display: block; max-width: 100%; margin-bottom: 30px; }
+/* Hero — same .pf-media/.pf-body shell as .post-featured (components.css),
+   just its own non-link wrapper (see pages/blog/post.htm's header note).
+   .post-head keeps its type styling above but neither wants nor needs its
+   standalone max-width/margin-bottom once it's the sole content of .pf-body. */
+.post-hero { background: var(--panel); display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 30px; }
+.post-hero.no-media { grid-template-columns: 1fr; }
+.post-hero .post-head { max-width: none; margin-bottom: 0; }
 /* Post content is backend-authored rich HTML rendered |raw — style the tags
    it may contain. Fixture posts only exercise <p>; the rest is speced blind
    (h2/h3, blockquote, code/pre, img, lists, links) — re-verify with real data. */
@@ -127,6 +147,30 @@
 .post-content hr { border: 0; border-top: 1px solid var(--line); }
 .post-foot { max-width: 72ch; margin-top: 30px; }
 .post-foot .post-tags a:hover span { color: var(--ink); }
+
+/* Share row (partials/blog/share.htm) — plain outbound share-intent links
+   plus the one interactive control, [data-copy-link] (lounge.js). */
+.post-share { max-width: 72ch; margin-top: 32px; display: flex; align-items: center;
+  flex-wrap: wrap; gap: 12px; }
+.post-share-label { font-size: 10.5px; letter-spacing: .18em; color: var(--mute); }
+
+/* Author card (partials/blog/author-card.htm) — real data only (name, avatar,
+   published-post count); see author-name.htm's header note on why there's no
+   bio/role line. Same chamfer + .eyebrow language as .post-hero/.post-featured
+   above it and the .post cards below (previously the one sharp-cornered,
+   mute-labeled box on the page). */
+.author-card { max-width: 72ch; margin-top: 32px; padding: 24px 28px;
+  background: var(--panel); display: flex; align-items: center; gap: 20px; }
+.author-card-body { min-width: 0; }
+.author-card-body .eyebrow { margin-bottom: 6px; }
+.author-card-name { font-family: 'Chakra Petch', sans-serif; font-size: 17px; font-weight: 700; }
+.author-card-stat { font-size: 11px; letter-spacing: .08em; color: var(--storm); margin-top: 4px; }
+
+/* Related posts (pages/blog/post.htm) — reuses .sec-head + .post-grid/.post
+   verbatim (components.css); this margin makes it read as its own block
+   rather than crowding the author card right above it. */
+.related-head { margin-top: 48px; }
+
 .post-siblings { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 56px; }
 .post-siblings .eyebrow { margin-bottom: 12px; }
 
@@ -142,6 +186,7 @@
 .static-content figcaption { margin-top: 8px; color: var(--mute); font-size: .9em; }
 .static-content .alert { border-left: 3px solid var(--storm); background: var(--panel); padding: 12px 16px; color: var(--mute); }
 @media (max-width: 720px) {
+  .post-hero { grid-template-columns: 1fr; }
   .post-siblings { grid-template-columns: 1fr; }
 }
 

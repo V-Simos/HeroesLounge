@@ -13,10 +13,42 @@ redirectPage = "blog"
 // page set the title dynamically in onEnd() — this mirrors that mechanism.
 // Not-found gets a 404 (the real Indikator blogPage redirected via
 // redirectPage — the dev shim doesn't implement that, so render gracefully).
+//
+// Also computes, only when a post resolves: the absolute URL (share intents
+// need a fully-qualified link, unlike post.url's site-relative path), the
+// author's real published-post count (blog/author-card.htm — NOT a bio,
+// Backend\Models\User has no such field), and up to 3 related posts sharing
+// a category (blog/post.htm's "Related posts" section below). All theme-only
+// — Blog/Category are Indikator.Content models, not a frozen rikki/* plugin,
+// same class of direct-model-query already used by pages/season/archive.htm.
 function onEnd()
 {
     if ($this->post) {
         $this->page->title = $this->post->title;
+        $this['postAbsoluteUrl'] = request()->url();
+
+        $author = $this->post->findAuthor();
+        $this['authorPostCount'] = $author
+            ? \Indikator\Content\Models\Blog::isPublished()->where('author_id', $author->id)->count()
+            : null;
+
+        $categoryIds = $this->post->categories->pluck('id');
+        $related = $categoryIds->isEmpty() ? collect() : \Indikator\Content\Models\Blog::isPublished()
+            ->where('id', '!=', $this->post->id)
+            ->whereHas('categories', function ($query) use ($categoryIds) {
+                $query->whereIn('id', $categoryIds);
+            })
+            ->with('categories')
+            ->orderBy('published_at', 'desc')
+            ->limit(3)
+            ->get();
+        $related->each(function ($relatedPost) {
+            $relatedPost->setUrl($this->page->getBaseFileName(), $this->controller);
+            $relatedPost->categories->each(function ($category) {
+                $category->setUrl('blog/category', $this->controller);
+            });
+        });
+        $this['relatedPosts'] = $related;
     } else {
         $this->page->title = 'Post not found';
         $this->setStatusCode(404);
@@ -29,20 +61,44 @@ function onEnd()
     the Indikator blogPage (same attachment as the old page) — it adds the
     previousPost/nextPost siblings used below. The old page's [ssbuttonsnb]/
     [ssbuttonsssb] social-share components are not ported (marketplace plugin,
-    not part of the new design), nor are the post.images carousel / post.files
-    attachment list (unused by fixtures; revisit with real data if needed). -#}
+    not part of the new design; blog/share.htm below is a from-scratch native
+    replacement), nor are the post.images carousel / post.files attachment
+    list (unused by fixtures; revisit with real data if needed).
+
+    Author name/avatar come from the shared blog/author-name + blog/
+    author-avatar partials (see post-card.htm's header note on the "Heroes
+    Lounge Staff" fallback). Cover image goes through the SAME blog/
+    post-image.htm resolver as the card grid — real post.image first, else
+    the deterministic placeholder — so a post's detail page always matches
+    what its own card showed (an image-less card opens to an image-less
+    article, not a mismatched one).
+
+    .post-hero lays the header out the SAME way as the "latest post" card
+    above the grid (partials/blog/post-featured.htm) — image beside the
+    title, in a chamfered panel — reusing that card's .pf-media/.pf-body
+    shell verbatim (pages.css) so this reads as the enlarged version of
+    whichever card linked here. It's its own .post-hero wrapper rather than
+    reusing .post-featured itself: that class is also a clickable <a> and
+    carries a hover-background affordance that doesn't belong on static page
+    content. No image (the ~1-in-4 plain-card case) collapses to one column
+    via .no-media. -#}
 {% set post = blogPage.post %}
 {% if post %}
 {% set author = post.findAuthor %}
+{% set coverImage = partial('blog/post-image', { post: post })|trim %}
 <article class="sec post-article">
     <div class="wrap">
-        <header class="post-head">
-            <p class="eyebrow mono">{{ post.published_at|date('M j, Y') }}{% if author %} · {{ author.login }}{% endif %}</p>
-            <h1>{{ post.title }}</h1>
-        </header>
-        {% if post.image %}
-        <img class="post-cover chamfer" src="{{ post.image|media }}" alt="">
-        {% endif %}
+        <div class="post-hero chamfer{% if not coverImage %} no-media{% endif %}">
+            {% if coverImage %}
+            <div class="pf-media"><img src="{{ coverImage }}" alt="" loading="lazy" onerror="this.onerror=null;this.remove()"></div>
+            {% endif %}
+            <div class="pf-body">
+                <header class="post-head">
+                    <p class="eyebrow mono">{{ post.published_at|date('M j, Y') }} · {% partial 'blog/author-avatar' author=author %} {% partial 'blog/author-name' author=author %}</p>
+                    <h1>{{ post.title }}</h1>
+                </header>
+            </div>
+        </div>
         <div class="post-content">
             {#- |raw is the SANCTIONED exception (the theme's first): post.content
                 is rich HTML authored by trusted backend staff — the same trust
@@ -60,6 +116,22 @@ function onEnd()
             </div>
         </div>
         {% endif %}
+
+        {% partial 'blog/share' post=post url=postAbsoluteUrl %}
+
+        {% partial 'blog/author-card' post=post postCount=authorPostCount %}
+
+        {% if relatedPosts|length > 0 %}
+        <div class="sec-head related-head">
+            <div><p class="eyebrow mono">KEEP READING</p><h2>Related posts</h2></div>
+        </div>
+        <div class="post-grid">
+            {% for related in relatedPosts %}
+            {% partial 'blog/post-card' post=related %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
         {#- Prev/next posts — port of the old partials/blog/pagination.htm
             pattern (blogPage.previousPost/nextPost), rendered as .post cards. -#}
         {% set prevPost = blogPage.previousPost %}

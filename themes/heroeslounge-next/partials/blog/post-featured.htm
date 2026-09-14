@@ -1,0 +1,33 @@
+description = "Big highlighted card for the single latest post — expects `post`."
+==
+{#- Rendered once, above the grid, only for page 1 of the unfiltered blog list
+    (partials/blog/posts.htm's `featured` param). Same underlying data as a
+    regular .post card (partials/blog/post-card.htm) — url/author/date/
+    summary/categories, same fallbacks — just laid out bigger with a real
+    <img> instead of a low-opacity CSS background, since a "highlighted" post
+    is meant to show its picture, not hide it. allowEmpty=false on the
+    resolver call means this slot never goes image-less, even for a post
+    whose id would otherwise land in the ~1-in-4 plain-card bucket.
+
+    A real post.image can point at a media upload that isn't actually present
+    on disk (a pre-existing dev-data gap, same class as the documented
+    missing team-logo uploads) — onerror mirrors partials/profile/default.htm's
+    avatar fallback (remove the broken <img>) so .pf-media's own --deep
+    background shows instead of a broken-image icon. -#}
+{% set author = post.findAuthor %}
+{% set image = partial('blog/post-image', { post: post, allowEmpty: false })|trim %}
+<a class="post-featured chamfer" href="{{ post.url }}">
+    <div class="pf-media"><img src="{{ image }}" alt="" loading="lazy" onerror="this.onerror=null;this.remove()"></div>
+    <div class="pf-body">
+        <p class="eyebrow mono">LATEST POST</p>
+        <div class="post-meta mono">{% partial 'site/icon' name='calendar' %} {{ post.published_at|date('M j, Y') }} · {% partial 'blog/author-avatar' author=author %} {% partial 'blog/author-name' author=author %}</div>
+        <h2>{{ post.title }}</h2>
+        {#- |raw: see post-card.htm's header note — stops Twig re-encoding
+            entity references (&nbsp; etc.) that |striptags leaves as text. -#}
+        <p>{{ post.summary|striptags|raw }}</p>
+        {% if post.categories|length > 0 %}
+        <div class="post-tags mono">{% for category in post.categories %}<span>{{ category.name }}</span>{% endfor %}</div>
+        {% endif %}
+        <span class="pf-go mono">Read more {% partial 'site/icon' name='chevron-right' %}</span>
+    </div>
+</a>

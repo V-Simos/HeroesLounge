@@ -9,15 +9,39 @@ noPostsMessage = "No post found"
 sortOrder = "published_at desc"
 categoryPage = "blog/category"
 postPage = "blog/post"
+
+[Indikator\Content\Components\Categories blogCategories]
+slug = ""
+categoryPage = "blog/category"
 ==
 {#- URL + [blogList] config copied from the old theme's pages/blog/list.htm
     (frozen URL /blog/:page?). The old page's sidebar (modules/sidebar) is not
-    part of the new design; the grid + pagination live in partials/blog/. -#}
+    part of the new design; the grid + pagination live in partials/blog/.
+    featured=true: page 1 highlights the latest post in a big card above the
+    grid (partials/blog/posts.htm decides it's page 1 before honoring it).
+
+    [... blogCategories] MUST be declared by its FULL class path, not the bare
+    alias: RainLab.Blog (still installed, unused for content — see
+    dev/README.md) ALSO registers a component under the identical alias
+    "blogCategories" (RainLab\Blog\Components\Categories), and October's
+    ComponentManager lets the later plugin registration silently win a
+    contested alias — `[blogCategories]` alone resolved to RainLab's
+    component, which queried its own EMPTY rainlab_blog_categories table
+    (0 rows; this site's real categories live in
+    indikator_content_blog_categories) and so rendered no chips at all, with
+    no error anywhere. The fully-qualified class name in the section header
+    bypasses the alias map entirely (ComponentManager::resolve() checks it
+    against the class map, not the contested code map) and pins this to the
+    Indikator shim specifically; the `blogCategories` after it is just the
+    local Twig-facing name, unaffected by the collision. `slug = ""` (this
+    page has no :slug segment to read, unlike category.htm's real one) drives
+    blog/category-filters.htm's "All posts" chip as the active one. -#}
 <section class="sec">
     <div class="wrap">
         <div class="sec-head">
             <div><p class="eyebrow mono">FROM THE BLOG</p><h2>All posts</h2></div>
         </div>
-        {% partial 'blog/posts' %}
+        {% partial 'blog/category-filters' %}
+        {% partial 'blog/posts' featured=true %}
     </div>
 </section>

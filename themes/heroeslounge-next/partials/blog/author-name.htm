@@ -1,0 +1,17 @@
+description = "Display name for a post author. Expects `author` (post.findAuthor's Backend\Models\User, or null)."
+==
+{#- First + last name when the backend account has them set, else the raw
+    login, else the "Heroes Lounge Staff" fallback used everywhere `author`
+    doesn't resolve (true of every post in the current dataset — see
+    post-card.htm's header note: author_id is either 0 or points at a
+    since-deleted backend account across this whole imported archive).
+    Backend\Models\User has no bio/description field and its `role` relation
+    is an internal permission-group label ("Ban Editor", "Vod Manager"), not
+    a public-facing title — neither is used for display anywhere in blog/. -#}
+{%- if not author -%}
+Heroes Lounge Staff
+{%- elseif author.first_name or author.last_name -%}
+{{ (author.first_name ~ ' ' ~ author.last_name)|trim }}
+{%- else -%}
+{{ author.login }}
+{%- endif -%}

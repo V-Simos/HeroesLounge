@@ -1,0 +1,23 @@
+description = "End-of-post author card: big avatar, display name, real published-post count. Expects `post` and `postCount` (precomputed by pages/blog/post.htm's onEnd() — see its note on why this isn't a bio)."
+==
+{#- postCount is a genuine aggregate (Blog::isPublished()->where('author_id',
+    ...)->count()), not a bio — Backend\Models\User has no bio/description
+    field to show one from (see author-name.htm's header note), so this card
+    stays to what's actually real: who, their picture, how much they've
+    published. Null postCount (no resolved author, or 0 published posts
+    somehow attributed to a real one) just omits that line. -#}
+{% set author = post.findAuthor %}
+{#- chamfer + the shared .eyebrow class (not a bespoke label style): every
+    other panel/card on this page — .post-hero, .post-featured, .post — cuts
+    its corners and uses storm-blue .eyebrow captions above their heading, so
+    this card matched neither before; now it uses the exact same primitives. -#}
+<div class="author-card chamfer">
+    {% partial 'blog/author-avatar' author=author size='lg' %}
+    <div class="author-card-body">
+        <p class="eyebrow mono">WRITTEN BY</p>
+        <p class="author-card-name">{% partial 'blog/author-name' author=author %}</p>
+        {% if postCount %}
+        <p class="author-card-stat mono">{{ postCount }} post{{ postCount != 1 ? 's' : '' }} published</p>
+        {% endif %}
+    </div>
+</div>

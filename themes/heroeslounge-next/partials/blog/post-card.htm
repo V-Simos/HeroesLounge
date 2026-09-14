@@ -4,16 +4,34 @@ description = "One .post card; expects `post` with its url already set by the co
     card: the blog grid, the post page's prev/next siblings and home/posts.htm
     all delegate here. post.url comes from blogList's postPage property (or
     rikki's BlogPage setUrl for prev/next siblings) — /blog/post/:slug, the
-    frozen old-theme URL. Author via post.findAuthor.login (dynamic method
-    added to the blog model by plugins/rikki/heroeslounge/Plugin.php boot()).
-    Date-TZ: human dates render in the app TZ (day granularity); home/cast.htm
-    uses the viewer TZ via UpcomingMatches.timezone — unify when a viewer-TZ
-    source exists outside UpcomingMatches. -#}
+    frozen old-theme URL. Author via post.findAuthor (dynamic method added to
+    the blog model by plugins/rikki/heroeslounge/Plugin.php boot()) — name
+    and avatar both come from the shared blog/author-name + blog/author-avatar
+    partials, which fall back to a generic "Heroes Lounge Staff" identity
+    when author_id doesn't resolve to a backend user. That's true of EVERY
+    post in the current dataset: it's either 0, or points at a backend
+    account that's since been deleted — matches the theme's existing
+    null-safe "Team/Player unavailable" convention rather than silently
+    dropping the byline. Date-TZ: human dates render in the app TZ (day
+    granularity); home/cast.htm uses the viewer TZ via UpcomingMatches.timezone
+    — unify when a viewer-TZ source exists outside UpcomingMatches.
+
+    has-img: blog/post-image.htm resolves a real or placeholder picture; when
+    it does, it's applied as a low-opacity CSS background (components.css
+    `.post.has-img::before`), never as an <img> — some cards are meant to stay
+    plain, which a background can do invisibly but an <img> tag can't.
+
+    |striptags|raw: summary is backend-authored HTML (same trust model as
+    post.content|raw on the detail page) — strip its tags for the plain-text
+    teaser, then |raw so Twig's default autoescape doesn't re-encode any
+    entity references (&nbsp; etc.) left over in the text, which would
+    otherwise print as literal "&amp;nbsp;" instead of decoding. -#}
 {% set author = post.findAuthor %}
-<a class="post chamfer" href="{{ post.url }}">
-    <div class="post-meta mono">{% partial 'site/icon' name='calendar' %} {{ post.published_at|date('M j, Y') }}{% if author %} · {{ author.login }}{% endif %}</div>
+{% set bgImage = partial('blog/post-image', { post: post })|trim %}
+<a class="post chamfer{% if bgImage %} has-img{% endif %}" href="{{ post.url }}"{% if bgImage %} style="background-image:url({{ bgImage }})"{% endif %}>
+    <div class="post-meta mono">{% partial 'site/icon' name='calendar' %} {{ post.published_at|date('M j, Y') }} · {% partial 'blog/author-avatar' author=author %} {% partial 'blog/author-name' author=author %}</div>
     <h3>{{ post.title }}</h3>
-    <p>{{ post.summary|striptags }}</p>
+    <p>{{ post.summary|striptags|raw }}</p>
     {% if post.categories|length > 0 %}
     <div class="post-tags mono">{% for category in post.categories %}<span>{{ category.name }}</span>{% endfor %}</div>
     {% endif %}

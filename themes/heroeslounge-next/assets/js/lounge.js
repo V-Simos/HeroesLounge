@@ -169,6 +169,39 @@
         host.appendChild(toast);
         setTimeout(function () { toast.remove(); }, 6000);
     }
+
+    /* ---------- copy link (blog post share row) ----------
+       [data-copy-link="<absolute url>"] (partials/blog/share.htm) writes that
+       URL to the clipboard and confirms via showToast() above, so this
+       doesn't invent a second notification pattern. navigator.clipboard needs
+       a secure context; the fallback covers plain-HTTP dev/local use via a
+       hidden textarea + execCommand('copy'). */
+    document.querySelectorAll('[data-copy-link]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var url = button.dataset.copyLink;
+            function done() { showToast('Link copied to clipboard.'); }
+            function fail() { showToast('Could not copy the link.'); }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(done, fail);
+                return;
+            }
+            var input = document.createElement('textarea');
+            input.value = url;
+            input.setAttribute('readonly', '');
+            input.style.position = 'fixed';
+            input.style.opacity = '0';
+            document.body.appendChild(input);
+            input.select();
+            try {
+                document.execCommand('copy') ? done() : fail();
+            } catch (e) {
+                fail();
+            } finally {
+                input.remove();
+            }
+        });
+    });
+
     if (window.jQuery) {
         window.jQuery(window).on('ajaxErrorMessage', function (event, message) {
             event.preventDefault();

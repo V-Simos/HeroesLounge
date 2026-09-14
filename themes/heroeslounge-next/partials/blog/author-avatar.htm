@@ -1,0 +1,23 @@
+description = "Tiny (or, with size='lg', big) hex-shield avatar for a post author. Expects `author` (post.findAuthor's Backend\Models\User, or null); optional `size` ('xs' default, or 'lg')."
+==
+{#- Mirrors team/shield.htm's own no-logo fallback exactly — same hue formula,
+    same site/initials monogram, same badgeClass ternary ('lg' -> standalone
+    badge-lg; default -> badge + a size modifier) — so a person's avatar reads
+    as the SAME "identity" motif as a team shield or the nav's own avatar
+    (.avatar .pic), not a separate round-avatar convention invented just for
+    people. A null `author` gets a generic staff badge (lucide 'users', hue 7
+    — the theme's own storm-blue) instead of a monogram; there's no name to
+    hash a hue/initials from.
+    Shields are always decorative here too — author-name text sits right next
+    to every call site — hence aria-hidden throughout, same as team/shield.htm. -#}
+{% set badgeClass = size == 'lg' ? 'badge-lg' : 'badge badge-xs' %}
+{% if author %}
+    {% if author.avatar %}
+    <span class="{{ badgeClass }}" aria-hidden="true"><img src="{{ author.avatar.path }}" alt="" loading="lazy"></span>
+    {% else %}
+    {% set hue = (author.login|length * 7) % 12 %}
+    <span class="{{ badgeClass }} badge-hue-{{ hue }}" aria-hidden="true">{% partial 'site/initials' name=author.login %}</span>
+    {% endif %}
+{% else %}
+<span class="{{ badgeClass }} badge-hue-7" aria-hidden="true">{% partial 'site/icon' name='users' %}</span>
+{% endif %}

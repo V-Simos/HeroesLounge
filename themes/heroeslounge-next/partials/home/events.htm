@@ -39,7 +39,10 @@ postPage = "blog/post"
             <a class="event chamfer{% if gold %} event-gold{% endif %}" href="{{ post.url }}">
                 <span class="event-meta mono">{{ post.published_at|date('M j, Y') }}</span>
                 <h3>{{ post.title }}</h3>
-                <p>{{ post.summary|striptags }}</p>
+                {#- |raw: see partials/blog/post-card.htm's header note —
+                    stops Twig re-encoding entity references (&nbsp; etc.)
+                    that |striptags leaves as text. -#}
+                <p>{{ post.summary|striptags|raw }}</p>
                 <span class="event-go mono">DETAILS {% partial 'site/icon' name='chevron-right' %}</span>
             </a>
             {% endfor %}
