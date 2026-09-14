@@ -65,6 +65,11 @@ function showHideSpoilersPlayoffView(showSpoilers) {
 }
 </script>
 {% endput %}
-{% component 'SpoilersToggle' callback='showHideSpoilersPlayoffView' %}
-
+{#- PlayoffOverview renders this page's entire body from one {% component %}
+    call, so the toggle can't be threaded into its heading row (division.htm's
+    .divtop pattern) — it renders above instead, right-aligned in its own
+    .wrap row (pages.css .spoiler-bar) rather than bare at the page top. -#}
+<div class="wrap spoiler-bar">
+    {% component 'SpoilersToggle' callback='showHideSpoilersPlayoffView' %}
+</div>
 {% component 'PlayoffOverview' %}

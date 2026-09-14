@@ -17,7 +17,17 @@
     whose L10 wins reach 6/8/10, except disbanded rows; .you highlight only when
     the component set selTeam (it never does here — no teamId prop — but kept for
     parity). Shields lazy-load smallLogo per row (<= a handful of rows; a Support
-    collection has no eager .load()). Frozen team URL: /team/view/:slug. -#}
+    collection has no eager .load()). Frozen team URL: /team/view/:slug.
+
+    Spoiler mask: W / Map W / Map ± / L10 all leak match outcomes (a team's win
+    count climbing tells you it won its last match), so each is wrapped in the
+    shared .score-masked span — the SAME body.reveal-spoilers-gated blur the
+    match cards use (components.css), toggled by this page's SpoilersToggle
+    (pages/season/division.htm). NOT applied to partials/divisiontable/default.htm
+    (the 5-row homepage/dashboard widget reusing that same non-showScore branch —
+    those pages wire no spoiler toggle, so masking there would blur permanently
+    with no way to reveal; see that file's header comment). P/rank/team stay
+    unmasked: play count and table order don't reveal a result by themselves. -#}
 {% do DivisionTable.setProperty('id', div.id) %}
 {% do DivisionTable.onRender() %}
 <section class="divblock">
@@ -41,10 +51,10 @@
             <span class="rank mono">{{ loop.index }}</span>
             <span class="tteam">{% partial 'team/shield' team=team size='sm' %}<a href="/team/view/{{ team.slug }}">{{ team.title }}</a></span>
             <span class="num dim">{{ team.pivot.match_count }}</span>
-            <span class="num big">{{ team.match_wins }}</span>
-            <span class="num">{{ team.map_wins }}</span>
-            <span class="num {{ team.map_score > 0 ? 'pos' : (team.map_score < 0 ? 'neg' : 'dim') }}">{{ team.map_score > 0 ? '+' ~ team.map_score : team.map_score }}</span>
-            <span class="l10"><span class="w">{{ l10w }}</span><span class="s">-</span><span class="l">{{ l10l }}</span></span>
+            <span class="num big"><span class="score-masked">{{ team.match_wins }}</span></span>
+            <span class="num"><span class="score-masked">{{ team.map_wins }}</span></span>
+            <span class="num {{ team.map_score > 0 ? 'pos' : (team.map_score < 0 ? 'neg' : 'dim') }}"><span class="score-masked">{{ team.map_score > 0 ? '+' ~ team.map_score : team.map_score }}</span></span>
+            <span class="l10"><span class="score-masked"><span class="w">{{ l10w }}</span><span class="s">-</span><span class="l">{{ l10l }}</span></span></span>
         </div>
         {% else %}
         <div class="tr"><span class="rank mono">&ndash;</span><span class="tteam">No active teams yet</span><span class="num dim"></span><span class="num"></span><span class="num"></span><span class="num"></span><span class="l10"></span></div>

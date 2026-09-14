@@ -70,6 +70,17 @@
 .hl-bracket-scroll { overflow: auto; -webkit-overflow-scrolling: touch;
   padding: 4px 4px 16px; max-width: 100%; }
 
+/* ---------- page-level spoiler-toggle bar (pages/team/view.htm,
+   pages/season/playoff.htm, pages/playoff/view.htm) ----------
+   These three pages render their entire body from one component call
+   (ViewTeam / PlayoffOverview) whose markup the page can't inject into, so
+   {% component 'SpoilersToggle' %} has nowhere in-flow to sit beside a page
+   heading the way the division page threads it into .divtop (that page
+   assembles its own markup, see above). Wrapped in .wrap + right-aligned
+   instead, so it reads as a utility row lined up with the content beneath it
+   rather than a bare unstyled control flush to the viewport edge. */
+.spoiler-bar { display: flex; justify-content: flex-end; padding: 18px 0; }
+
 /* ---------- blog (pages/blog/*) ----------
    There is no blog mockup — everything below derives from the established
    system. Inventions: .pager chips restyle the old theme's blogList
@@ -235,6 +246,12 @@
 /* The toggle aligns to the header baseline on wide rows; margin-top nudges it
    down to sit with the h1 rather than the eyebrow. */
 .divtop .spoiler-toggle { margin-top: 6px; }
+/* Standings W/Map W/Map ± cells wrap a single value, so .score-masked's flex
+   gap (components.css, sized for the match card's <b>:<b> pair) never shows.
+   L10 wraps three children (.w/.s/.l) though, and .l10 .s already carries its
+   own 3px side margins for the "6-4" spacing — cancel the flex gap there so
+   masking the group doesn't ALSO widen it (partials/division/standings.htm). */
+.l10 .score-masked { gap: 0; }
 .divwrap { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
 .divmain { display: flex; flex-direction: column; gap: 40px; min-width: 0; }
 .divside { display: flex; flex-direction: column; gap: 20px; }

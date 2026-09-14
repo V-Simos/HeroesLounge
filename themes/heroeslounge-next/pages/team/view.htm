@@ -52,8 +52,16 @@ function onEnd()
     .score-masked (blur), revealed by body.reveal-spoilers. SpoilersToggle's
     frozen script calls hlToggleSpoilers() on ready with the cookie value
     (correct initial state) and on each toggle (persisted via its onSetShowSpoilers
-    AJAX cookie) — same wiring as pages/season/division.htm. -#}
-{% component 'SpoilersToggle' callback='hlToggleSpoilers' %}
+    AJAX cookie) — same wiring as pages/season/division.htm.
+
+    ViewTeam renders this page's ENTIRE body from one {% component %} call, so
+    the toggle can't be threaded into its markup the way the division page
+    threads it into .divtop — it renders above instead, right-aligned in its
+    own .wrap row (pages.css .spoiler-bar) so it doesn't just float bare at the
+    top of the page. -#}
+<div class="wrap spoiler-bar">
+    {% component 'SpoilersToggle' callback='hlToggleSpoilers' %}
+</div>
 {% component 'ViewTeam' %}
 {% put scripts %}
 <script type="text/javascript">

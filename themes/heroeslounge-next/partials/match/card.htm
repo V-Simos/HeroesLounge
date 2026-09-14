@@ -63,9 +63,14 @@
 {% set tz           = timezone ?: null %}
 {% set isFixture    = variant == 'fixture' %}
 {#- Winner-state locals: `decided` gates the .side win/loss classes (a fixture or
-    an undecided match shows neither); `homeWon` is the home comparison. The
-    scoreInner macro can't see this scope, so it re-checks match.winner_id. -#}
-{% set decided      = not isFixture and match.winner_id %}
+    an undecided match shows neither); `homeWon` is the home comparison. Also
+    gated on revealScore: .side.loss dims the losing team's name (components.css)
+    independently of the score digits, so without this a masked card (revealScore
+    =false) would still leak the winner via that dimming while the digits stayed
+    blurred — the exact spoiler the mask exists to prevent. The scoreInner macro
+    can't see this scope, so it re-checks match.winner_id (inside .score-masked,
+    where the blur itself hides the s-win/s-loss color cue). -#}
+{% set decided      = revealScore and not isFixture and match.winner_id %}
 {% set homeWon      = match.winner_id == home.id %}
 {#- result needs both teams (score card); fixture tolerates one missing side
     (TBD placeholder — bracket-fed upcoming matches may have one team). -#}
