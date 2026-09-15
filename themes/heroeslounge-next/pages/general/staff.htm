@@ -1,0 +1,29 @@
+title = "Staff"
+url = "/general/staff"
+layout = "static"
+is_hidden = 0
+==
+{#- Frozen: themes/HeroesLounge-Theme/pages/general/staff.htm — title/url/
+    is_hidden verbatim; layout plain-with-sidebar → static (sanctioned
+    mapping). The old page's [ssbuttonsnb] social-share component is not
+    ported (marketplace plugin, source unavailable — same call as
+    pages/blog/post.htm). The frozen jumbotron banner (dreamhack2018.jpg as a
+    CSS background + "Staff" block title) becomes the static layout's banner
+    placeholder: the photo is the same theme asset, ported downscaled from
+    4292x2414 / 2.5 MB to 1920x1080 / ~360 KB (presentational asset
+    optimisation), under a gradient scrim so the title keeps AA contrast.
+    This page owns the <h1> (listed in the layout's contentOwnsH1 switch).
+    The body is the frozen general-staff static content rendered
+    byte-verbatim; its nav-tabs + crew-card vocabulary is handled by the
+    static-content rules in pages.css + the legacy tab behavior in lounge.js.
+    The crew photos inside that body are absolute production URLs into the
+    OLD theme's assets dir (content debt, see PROGRESS.md Phase 4 notes). -#}
+{% put banner %}
+<header class="static-banner" style="background-image: url('{{ 'assets/img/staff/dreamhack2018.jpg' | theme }}')">
+    <div class="wrap static-banner-in">
+        <p class="eyebrow mono">HEROES LOUNGE</p>
+        <h1>Staff</h1>
+    </div>
+</header>
+{% endput %}
+{% content 'static-pages/general-staff' %}

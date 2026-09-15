@@ -1079,3 +1079,81 @@
    heading is dropped visually here (page-scoped via the layout's
    static-page-<id> hook) rather than rewritten in content. */
 .static-page-faq .static-content > h2:first-child { display: none; }
+
+/* Legacy vocabulary — nav-tabs, Bootstrap grid columns and the old theme's
+   crew cards (.blogPostWrapper/.blogImage/.hover-fadein, ported from
+   HeroesLounge-Theme/assets/css/custom.css) as used by the frozen
+   general-staff and division-s-crew bodies (Phase 4 Task 3). The bio overlay
+   was hover-only in the frozen CSS; it now also opens on :focus-within
+   (lounge.js gives each card tabindex=0). Font Awesome is not loaded in this
+   theme, so the cards' <i class="fa fa-twitch/fa-twitter"> glyphs are drawn
+   with CSS masks of the theme's own lucide twitch/twitter paths. */
+.static-content .navbar { padding: 0; }
+.static-content .navbar-collapse { display: block; }
+.static-content .nav-tabs { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0 0 20px; }
+.static-content .nav-tabs .nav-item { margin: 0; }
+.static-content .nav-link { display: inline-flex; align-items: center; min-height: 34px; padding: 7px 14px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--mute); background: rgba(136,156,215,0.1); text-decoration: none !important;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+.static-content .nav-link:hover { color: var(--ink); }
+.static-content .nav-link.active { background: linear-gradient(135deg, var(--storm), #2E86DD); color: #041020; }
+.static-content .nav-link:focus-visible { outline-offset: -4px; } /* clip-path clips outside outlines (see components.css) */
+.static-content .tab-content { width: 100%; }
+.static-content .tab-pane { display: none; }
+.static-content .tab-pane.active { display: block; }
+.static-content .tab-pane > .row + .row { margin-top: 20px; }
+/* grid columns: mobile-first, breakpoints as Bootstrap-4 (inline
+   min-width:250px on the crew columns wins over max-width and simply wraps) */
+.static-content .row > [class*="col-"] { flex: 0 0 100%; max-width: 100%; min-width: 0; }
+@media (min-width: 768px) { .static-content .row > .col-md-6 { flex-basis: calc(50% - 10px); max-width: calc(50% - 10px); } }
+@media (min-width: 992px) { .static-content .row > .col-lg-4 { flex-basis: calc(33.333% - 14px); max-width: calc(33.333% - 14px); } }
+@media (min-width: 1200px) { .static-content .row > .col-xl-3 { flex-basis: calc(25% - 15px); max-width: calc(25% - 15px); } }
+/* crew cards */
+.static-content .blogPostWrapper { position: relative; overflow: hidden; background: var(--panel); clip-path: var(--ch); outline-offset: -4px; }
+.static-content .blogPostWrapper:focus-visible { outline-offset: -4px; } /* chamfered + focusable (tabindex from lounge.js) */
+.static-content .blogImage { position: relative; background-position: center top; background-size: cover; background-repeat: no-repeat;
+  background-color: var(--deep); transition: transform .5s ease; }
+.static-content .blogImage::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(7,10,22,0.82), rgba(7,10,22,0) 48%); }
+.static-content .blogPostWrapper:hover .blogImage, .static-content .blogPostWrapper:focus-within .blogImage { transform: scale(1.06); z-index: 2; }
+/* z-index choreography: the hover transform above makes .blogImage a stacking
+   context, so the overlay's inline z-index:9999 only competes inside it.
+   Raising the image to 2 puts the overlay above the social links (1) while
+   the name/role headings (3) stay readable on top of the scrim. */
+.static-content .blogPostWrapper h3 { position: absolute; top: 0; left: 0; right: 0; margin: 0; padding: 18px 64px 0 20px; z-index: 3;
+  font-size: 18px; line-height: 1.2; color: var(--ink) !important; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
+.static-content .blogPostWrapper h3 + h3 { top: 44px !important; padding-top: 0; font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px !important; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--storm) !important; }
+.static-content .hover-fadein { opacity: 0; transition: opacity .3s ease; background-color: rgba(7,10,22,0.94) !important; }
+.static-content .blogPostWrapper:hover .hover-fadein, .static-content .blogPostWrapper:focus-within .hover-fadein,
+.static-content .blogPostWrapper:focus .hover-fadein { opacity: 1; }
+.static-content .hover-fadein > div { top: 26% !important; left: 8% !important; width: 84% !important; height: 68% !important;
+  font-size: 14px !important; line-height: 1.45; color: var(--ink) !important; }
+.static-content .blogPostWrapper .p-3 { padding: 14px 16px; z-index: 1; }
+.static-content .btn-group-vertical { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.static-content .btn-group-vertical > br { display: none; }
+.static-content i.fa { display: inline-block; width: 22px; height: 22px; background-color: var(--ink);
+  -webkit-mask: var(--fa-glyph) center / contain no-repeat; mask: var(--fa-glyph) center / contain no-repeat;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.7)); }
+.static-content i.fa-twitch { --fa-glyph: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7'/%3E%3C/svg%3E"); }
+.static-content i.fa-twitter { --fa-glyph: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z'/%3E%3C/svg%3E"); }
+.static-content .btn-group-vertical a:hover i.fa, .static-content .btn-group-vertical a:focus-visible i.fa { background-color: var(--storm); }
+/* full-bleed page banner (layouts/static.htm {% placeholder banner %};
+   first consumer pages/general/staff.htm) — photo under a scrim so the
+   title keeps AA contrast; the section below tightens its top padding. */
+.static-banner { position: relative; min-height: 340px; display: flex; align-items: flex-end;
+  background-size: cover; background-position: center; border-bottom: 1px solid var(--line); }
+.static-banner::before { content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(7,10,22,0.35), rgba(7,10,22,0.94)); }
+.static-banner-in { position: relative; width: 100%; padding-top: 120px; padding-bottom: 36px; }
+.static-banner h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; line-height: 1.05; }
+.static-banner + .static-page { padding-top: 44px; }
+@media (max-width: 720px) {
+  .static-banner { min-height: 240px; }
+  .static-banner-in { padding-top: 80px; padding-bottom: 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .static-content .blogImage, .static-content .hover-fadein { transition: none; }
+  .static-content .blogPostWrapper:hover .blogImage, .static-content .blogPostWrapper:focus-within .blogImage { transform: none; }
+}

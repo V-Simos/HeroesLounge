@@ -332,6 +332,53 @@
         }
     }
 
+    /* ---------- legacy static content: tabs + crew cards ----------
+       The frozen crew bodies (general-staff, division-s-crew) use
+       Bootstrap-4 nav-tabs: <a data-toggle="tab" href="#pane"> inside .nav,
+       panes as .tab-pane (.active = shown) inside .tab-content. Same
+       approach as the collapse block above: reimplement the data-API
+       contract without Bootstrap, scoped to .static-content, never touching
+       the markup beyond state classes/ARIA. Crew cards (.blogPostWrapper)
+       reveal their bio overlay on hover only in the frozen CSS; giving them
+       tabindex=0 lets :focus-within (pages.css) reveal it from the keyboard. */
+    if (staticRoot) {
+        var tabLinks = Array.prototype.slice.call(staticRoot.querySelectorAll('[data-toggle="tab"]'));
+
+        function tabPane(link) {
+            var selector = link.getAttribute('data-target') || link.getAttribute('href') || '';
+            if (selector.charAt(0) !== '#' || selector.length < 2) return null;
+            return document.getElementById(selector.slice(1));
+        }
+
+        tabLinks.forEach(function (link) {
+            link.setAttribute('aria-selected', link.classList.contains('active') ? 'true' : 'false');
+        });
+
+        staticRoot.addEventListener('click', function (event) {
+            var link = event.target.closest('[data-toggle="tab"]');
+            if (!link || !staticRoot.contains(link)) return;
+            var pane = tabPane(link);
+            if (!pane) return;
+            event.preventDefault();
+
+            var nav = link.closest('.nav') || staticRoot;
+            nav.querySelectorAll('[data-toggle="tab"]').forEach(function (other) {
+                var selected = other === link;
+                other.classList.toggle('active', selected);
+                other.setAttribute('aria-selected', selected ? 'true' : 'false');
+                var item = other.closest('.nav-item');
+                if (item) item.classList.toggle('active', selected);
+            });
+            Array.prototype.forEach.call(pane.parentElement.children, function (sibling) {
+                if (sibling.classList.contains('tab-pane')) sibling.classList.toggle('active', sibling === pane);
+            });
+        });
+
+        staticRoot.querySelectorAll('.blogPostWrapper').forEach(function (card) {
+            if (!card.hasAttribute('tabindex')) card.setAttribute('tabindex', '0');
+        });
+    }
+
     if (window.jQuery) {
         window.jQuery(window).on('ajaxErrorMessage', function (event, message) {
             event.preventDefault();
