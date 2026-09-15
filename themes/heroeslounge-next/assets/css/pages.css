@@ -1157,3 +1157,25 @@
   .static-content .blogImage, .static-content .hover-fadein { transition: none; }
   .static-content .blogPostWrapper:hover .blogImage, .static-content .blogPostWrapper:focus-within .blogImage { transform: none; }
 }
+
+/* ---------- Bans component override (partials/bans/default.htm on
+   pages/general/ruleset.htm, Phase 4 Task 4) ----------
+   Theme-authored markup (not legacy vocabulary): a .p-style panel with the
+   note as a storm-edged callout and a three-column list grid that collapses
+   to one column below 720px. Sits above the frozen rules body inside
+   .static-content, so it inherits the prose rhythm. */
+.bans { background: var(--panel); border: 1px solid var(--line); padding: 22px 24px 8px; }
+.bans-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 12px; }
+.bans-note { border-left: 3px solid var(--storm); background: var(--panel2); padding: 10px 14px; color: var(--mute); margin: 0 0 18px; }
+.bans-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.bans-col h3 { font-size: 1rem; font-weight: 700; margin: 0 0 8px; }
+.bans-list { list-style: none; padding: 0; margin: 0; }
+.static-content .bans-list li { padding: 8px 0; border-top: 1px solid var(--line); margin: 0; }
+.bans-empty { color: var(--mute); font-size: 15px; }
+.bans-window { color: var(--mute); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; margin-left: 4px; }
+.bans-rules { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--mute); font-size: 15.5px; }
+.bans-rules > p + p { margin-top: 8px; }
+@media (max-width: 720px) {
+  .bans { padding: 18px 16px 6px; }
+  .bans-grid { grid-template-columns: 1fr; }
+}

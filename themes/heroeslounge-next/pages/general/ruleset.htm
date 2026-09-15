@@ -1,0 +1,17 @@
+title = "Ruleset"
+url = "/general/ruleset"
+layout = "static"
+is_hidden = 0
+
+[Bans]
+==
+{#- Frozen: themes/HeroesLounge-Theme/pages/general/ruleset.htm — title/url/
+    is_hidden/[Bans] verbatim; layout plain → static (sanctioned mapping).
+    Body order as frozen: the Bans component (backend-maintained banned
+    heroes/bugs/talents, re-skinned through the lowercase override
+    partials/bans/default.htm — the plugin under plugins/rikki/loungeviews is
+    frozen) followed by the frozen general-rules static content rendered
+    byte-verbatim (its Bootstrap card-deck/list-group vocabulary is handled
+    by the static-content rules in pages.css). -#}
+{% component 'Bans' %}
+{% content 'static-pages/general-rules' %}

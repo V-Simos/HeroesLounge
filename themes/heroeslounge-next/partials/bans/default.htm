@@ -1,0 +1,62 @@
+{#- Theme override of plugins/rikki/loungeviews/components/bans/default.htm
+    (component alias `Bans`; ALL-LOWERCASE dir per the Task-7 override rule).
+    Bindings verbatim: __SELF__.heroes / __SELF__.literals / __SELF__.talents
+    (Ban models: ban.hero.title, ban.talent.title, ban.literal, the optional
+    "[Round start - end]" window from round_start/round_length). Copy is the
+    frozen partial's; only the markup is re-skinned (card + three lists →
+    .bans panel + grid). Empty lists render an explicit "None currently."
+    (sanctioned empty-state — the frozen partial rendered an empty <ul>). -#}
+{% macro window(ban) -%}
+    {%- if ban.round_start %} <span class="bans-window">[Round {{ ban.round_start }}{% if ban.round_length %} - {{ ban.round_start + ban.round_length }}{% endif %}]</span>{% endif -%}
+{%- endmacro %}
+{% import _self as bans %}
+<section class="bans" aria-labelledby="bans-title">
+    <h2 id="bans-title" class="bans-title">Banned Heroes/Bugs/Talents/Skins</h2>
+    <p class="bans-note"><strong>Note:</strong> This list may not be comprehensive and you may still be sanctioned if found abusing bugs that
+        are not listed here.</p>
+    <div class="bans-grid">
+        <div class="bans-col">
+            <h3>Banned Heroes</h3>
+            {% if __SELF__.heroes|length %}
+            <ul class="bans-list">
+                {% for ban in __SELF__.heroes %}
+                <li><strong>{{ ban.hero.title }}</strong>{{ bans.window(ban) }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="bans-empty">None currently.</p>
+            {% endif %}
+        </div>
+        <div class="bans-col">
+            <h3>Banned Bugs</h3>
+            {% if __SELF__.literals|length %}
+            <ul class="bans-list">
+                {% for ban in __SELF__.literals %}
+                <li>{{ ban.literal }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="bans-empty">None currently.</p>
+            {% endif %}
+        </div>
+        <div class="bans-col">
+            <h3>Banned Talents</h3>
+            {% if __SELF__.talents|length %}
+            <ul class="bans-list">
+                {% for ban in __SELF__.talents %}
+                <li>{% if ban.hero %}{{ ban.hero.title }} - {% endif %}<strong>{{ ban.talent.title }}</strong>{{ bans.window(ban) }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="bans-empty">None currently.</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="bans-rules">
+        <p>If a banned talent is picked and noticed before 5 minutes after the start of the game and before the first fort or keep has fallen, then a restart is required under the technical difficulties rule listed below.</p>
+        <p>If a banned talent is picked mid game, you may continue the game as long as the talent does not give a passive benefit, and the ability linked to the talent is not used for the rest of the game.</p>
+        <p>If the talent does give a passive benefit, the team that picked the banned talent will lose the map (not the series).</p>
+        <p>In situations where a banned hero is accidentally picked in draft, the draft must be stopped, and remade up to the point where the banned hero was picked.</p>
+        <p>All banned talent/hero/bug breaches must be reported within 7 days of the game being played.</p>
+    </div>
+</section>
