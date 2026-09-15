@@ -1,0 +1,15 @@
+name: guides
+items:
+    -
+        title: Guides
+        nesting: '1'
+        type: static-page
+        url: ''
+        code: ''
+        reference: guides
+        cmsPage: ''
+        replace: '0'
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'

@@ -1,0 +1,33 @@
+description = "Static-section subnav (layouts/static.htm)"
+==
+{#- Params: label (section name), items (RainLab.Pages MenuItemReference
+    list from a [staticMenu] component), currentUrl (this.page.url).
+    A root item that still carries children (guides.yaml keeps replace=0 so
+    the "Guides" landing link stays) renders as a link + nested list; flat
+    menus (general.yaml replace=1, division_s.yaml) render one list.
+    Active state: RainLab sets isActive for static-page references; url-type
+    items get a path comparison fallback (item.url may be absolute for
+    static-page references and root-relative for url items, so match on the
+    suffix). Links carry no clip-path — the global :focus-visible ring applies. -#}
+{% macro link(item, currentUrl) %}
+    {%- set active = item.isActive or (currentUrl and item.url ends with currentUrl) -%}
+    <a class="subnav-link{{ active ? ' on' : '' }}" href="{{ item.url }}"{{ active ? ' aria-current="page"' : '' }}>{{ item.title }}</a>
+{%- endmacro %}
+{% import _self as nav %}
+<nav class="subnav" aria-label="{{ label }} pages">
+    <p class="eyebrow mono">{{ label|upper }}</p>
+    <ul class="subnav-list">
+        {% for item in items %}
+        <li>
+            {{ nav.link(item, currentUrl) }}
+            {% if item.items|length %}
+            <ul>
+                {% for child in item.items %}
+                <li>{{ nav.link(child, currentUrl) }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</nav>

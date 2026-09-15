@@ -1,0 +1,47 @@
+# Frozen copy of themes/HeroesLounge-Theme/meta/menus/general.yaml (the
+# `general` static-page subtree, replace=1 flattens it to its children:
+# Playoff Rules, Seeding Rules, Schedule, Hall of Fame), PLUS two theme-owned
+# url items so the static layout's General subnav (partials/site/subnav.htm)
+# also reaches the two General CMS pages that are not RainLab static pages.
+# Consumers: layouts/static.htm ([staticMenu sectionGeneral]); the frozen
+# Navigation component also binds this code as `staticMenuGeneral` but the
+# new theme never renders that partial.
+name: general
+items:
+    -
+        title: General
+        nesting: '1'
+        type: static-page
+        code: ''
+        reference: general
+        replace: '1'
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
+    -
+        title: Ruleset
+        nesting: ''
+        type: url
+        url: /general/ruleset
+        code: ''
+        reference: ''
+        cmsPage: ''
+        replace: ''
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
+    -
+        title: Crew
+        nesting: ''
+        type: url
+        url: /general/staff
+        code: ''
+        reference: ''
+        cmsPage: ''
+        replace: ''
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'

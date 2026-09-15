@@ -247,6 +247,21 @@
         });
     });
 
+    /* ---------- legacy static content: editor tables ----------
+       Frozen static-page bodies (content/static-pages/*, rendered by
+       layouts/static.htm inside .static-content) are byte-verbatim
+       backend-authored HTML whose hand-sized Froala tables would otherwise
+       force page-level horizontal overflow at narrow widths. Each table is
+       wrapped in a .table-scroll container (pages.css: overflow-x: auto) so
+       it scrolls itself. Purely presentational; the content is untouched. */
+    document.querySelectorAll('.static-content table').forEach(function (table) {
+        if (table.parentElement && table.parentElement.classList.contains('table-scroll')) return;
+        var scroll = document.createElement('div');
+        scroll.className = 'table-scroll';
+        table.parentNode.insertBefore(scroll, table);
+        scroll.appendChild(table);
+    });
+
     if (window.jQuery) {
         window.jQuery(window).on('ajaxErrorMessage', function (event, message) {
             event.preventDefault();

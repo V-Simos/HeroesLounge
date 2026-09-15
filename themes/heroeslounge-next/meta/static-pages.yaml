@@ -1,3 +1,10 @@
+# RainLab.Pages routing manifest for heroeslounge-next. Mirrors the frozen
+# themes/HeroesLounge-Theme/meta/static-pages.yaml nesting for every body this
+# theme ports (Phase 3 Task 7: guides; Phase 4: the public static content).
+# Bodies that exist under content/static-pages/ but are NOT listed here
+# (faqpage, general-rules, general-staff) are frozen is_hidden=1 pages that
+# only render through {% content %} on a CMS page — leaving them unlisted keeps
+# their hidden URLs unrouted, as the frozen theme hid them from guests.
 static-pages:
     guides:
         guides-new-captains-guide-heroes-lounge: { }
@@ -6,3 +13,18 @@ static-pages:
         guides-aram-signup-guide: { }
         guides-guide-scheduling-and-playing-your-frist-game: { }
         guides-uploading-replays: { }
+    privacy-statement: { }
+    general:
+        playoff-rules: { }
+        general-test: { }
+        schedule: { }
+        general-hall-fame: { }
+    division-s-ruleset:
+        division-s-ruleset-division-s-playoffs: { }
+    division-s-crew: { }
+    division-s-standings: { }
+    division-s-schedule: { }
+    aram-league-ruleset: { }
+    division-s-qualifier-standings: { }
+    ruleset: { }
+    tournament-ruleset: { }

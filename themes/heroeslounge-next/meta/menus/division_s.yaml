@@ -1,0 +1,63 @@
+# Theme-owned section menu for the Division-S static pages (no frozen
+# equivalent — the old theme reached these only through ad-hoc links).
+# Static-page references derive their URLs from meta/static-pages.yaml;
+# the parent `division-s-ruleset` keeps its frozen is_hidden=1 and is
+# deliberately not listed (guests get the frozen 404), only its public
+# playoffs child is. Consumer: layouts/static.htm ([staticMenu sectionDivisionS]).
+name: division_s
+items:
+    -
+        title: Crew
+        nesting: ''
+        type: static-page
+        code: ''
+        reference: division-s-crew
+        replace: ''
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
+    -
+        title: Standings
+        nesting: ''
+        type: static-page
+        code: ''
+        reference: division-s-standings
+        replace: ''
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
+    -
+        title: 'Qualifier standings'
+        nesting: ''
+        type: static-page
+        code: ''
+        reference: division-s-qualifier-standings
+        replace: ''
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
+    -
+        title: Schedule
+        nesting: ''
+        type: static-page
+        code: ''
+        reference: division-s-schedule
+        replace: ''
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
+    -
+        title: 'Playoff format'
+        nesting: ''
+        type: static-page
+        code: ''
+        reference: division-s-ruleset-division-s-playoffs
+        replace: ''
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'

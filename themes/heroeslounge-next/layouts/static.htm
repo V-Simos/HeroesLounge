@@ -9,6 +9,15 @@ paramCode = ""
 [SetTimezone]
 
 [staticPage]
+
+[staticMenu sectionGuides]
+code = "guides"
+
+[staticMenu sectionGeneral]
+code = "general"
+
+[staticMenu sectionDivisionS]
+code = "division_s"
 ==
 <!DOCTYPE html>
 <html lang="en">
@@ -19,29 +28,62 @@ paramCode = ""
     <a class="skip-link" href="#main">Skip to content</a>
     {% partial 'site/nav' %}
     <main id="main">
+        {#- Optional full-bleed banner a CMS page supplies with {% put banner %}
+            (first consumer: pages/general/staff.htm). RainLab static pages
+            cannot put placeholders, so it renders empty for them. -#}
+        {% placeholder banner %}
+        {#- Section subnav (Phase 4). The three [staticMenu] components above
+            read theme-owned meta/menus/{guides,general,division_s}.yaml —
+            static-page references resolve titles/URLs from
+            meta/static-pages.yaml, so nothing here duplicates content. The
+            section is picked from the page URL prefix; standalone pages
+            (/faq, /privacy-statement, the orphaned rulesets) get no aside. -#}
+        {% set pageUrl = this.page.url %}
+        {% set section = null %}
+        {% if pageUrl starts with '/guides' %}
+            {% set section = { label: 'Guides', items: sectionGuides.menuItems } %}
+        {% elseif pageUrl starts with '/general' %}
+            {% set section = { label: 'General', items: sectionGeneral.menuItems } %}
+        {% elseif pageUrl starts with '/division-s' %}
+            {% set section = { label: 'Division S', items: sectionDivisionS.menuItems } %}
+        {% endif %}
+        {#- Frozen bodies are mixed: the ones listed here provide their own
+            title <h1>, so only h1-less bodies receive the viewBag title from
+            the layout. This prevents the layout from duplicating a body h1.
+            (Bodies with *section* h1s — schedule.htm ×5, the second h1 in
+            playoff-rules.htm — are recorded frozen-content quirks; see
+            PROGRESS.md Phase 4 notes. They are styled down via
+            .has-layout-title > h1, never rewritten.) -#}
+        {% set contentOwnsH1 = pageUrl in [
+            '/guides/signup-guide',
+            '/guides/scheduling-and-playing-your-first-game',
+            '/guides/aram-signup-guide',
+            '/general/playoff-rules',
+            '/general/staff',
+            '/division-s-ruleset/division-s-playoffs'
+        ] %}
         <section class="sec static-page">
-            <div class="wrap">
-                {#- Guide bodies are frozen and mixed: these three provide their
-                    own h1, so only the h1-less bodies receive their viewBag title
-                    here. This prevents the layout from duplicating a body h1. -#}
-                {% set contentOwnsH1 = this.page.url in [
-                    '/guides/signup-guide',
-                    '/guides/scheduling-and-playing-your-first-game',
-                    '/guides/aram-signup-guide'
-                ] %}
-                {% if not contentOwnsH1 %}
-                <header class="static-head">
-                    <h1>{{ this.page.title }}</h1>
-                </header>
+            <div class="wrap static-grid{{ section ? ' has-subnav' : '' }}">
+                {% if section %}
+                <aside class="static-aside">
+                    {% partial 'site/subnav' label=section.label items=section.items currentUrl=pageUrl %}
+                </aside>
                 {% endif %}
-                <article class="post-content static-content">
-                    {% page %}
-                </article>
+                <div class="static-main">
+                    {% if not contentOwnsH1 %}
+                    <header class="static-head">
+                        <h1>{{ this.page.title }}</h1>
+                    </header>
+                    {% endif %}
+                    <article class="post-content static-content{{ contentOwnsH1 ? '' : ' has-layout-title' }}">
+                        {% page %}
+                    </article>
+                </div>
             </div>
         </section>
     </main>
     {% partial 'site/footer' %}
-    {#- SetTimezone must be RENDERED (not just attached) â€” its partial
+    {#- SetTimezone must be RENDERED (not just attached) — its partial
         {% put %}s the timezone-detect script into {% scripts %}, which is
         rendered inside site/scripts below. -#}
     {% component 'SetTimezone' %}
