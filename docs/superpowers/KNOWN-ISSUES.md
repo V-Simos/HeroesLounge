@@ -4,6 +4,36 @@
 `hl_test_data_dump_07_2026.sql` was (supposedly) loaded. Answers "what has no
 data / what is broken right now, and is it the DB or the frontend?"
 
+## 2026-09-16 update — Phase 4 complete (static content wave)
+
+Phase 4 ports every remaining public static surface (plan:
+`docs/superpowers/plans/2026-09-16-phase-4-static-content.md`). Severity row
+**8** is now **RESOLVED-BY-PORT**: `/faq`, `/privacy-statement`,
+`/general/{ruleset,staff,playoff-rules,seeding-rules,schedule,hall-of-fame}`,
+`/general`, the five public Division-S pages, and the three orphaned
+rulesets (`/method-mayhem-hots-ruleset`, `/offmeta-maps-ruleset`,
+`/aram-league-ruleset`) render the new theme under their frozen URLs.
+Bodies are byte-verbatim (`dev/verify-static-content.ps1`); the theme
+renders their legacy Bootstrap/Froala vocabulary instead of rewriting it.
+Row **9** (team create/manage/match, applications) plus `/statistics*`,
+`/general/casterstatistics`, `/contact`, `/search`, `/timezone`,
+`/rssfeed.xml` remain **Frontend (not ported)** → Phase 5.
+
+Content / cutover debt recorded by Phase 4 (see PROGRESS.md → “Phase 4
+carry-forward”):
+
+- Crew photos are absolute production URLs into the OLD theme's asset
+  directory — keep it served after cutover or migrate the content.
+- Media-library images referenced by the bodies 404 in dev (no media in the
+  dump) — dev-data artifact, same class as team-logo 404s.
+- Frozen multi-`<h1>` bodies (`schedule`, `playoff-rules`), the FAQ body's
+  duplicate heading (hidden by page-scoped CSS, not edited), and the crew
+  cards' unnamed social links are editorial/a11y debt for a content
+  migration.
+- `/division-s-ruleset` stays a guest 404 (frozen `is_hidden = 1`); only its
+  public playoffs child routes.
+- ARAM retire/refresh is still an open decision.
+
 ## 2026-07-28 update — Phase 3 complete
 
 Phase 3 ports and verifies the account/auth/profile, caster schedule, Events
@@ -112,7 +142,7 @@ There are **two independent root causes**, and neither is a code bug:
 | 5 | Active season divisions show **teams but no matches/rounds** | DB (no fixtures generated) | 🟡 Data | §4.2 |
 | 6 | All **per-game / player statistics** blank | DB (`gameparticipation` = 0 rows) | 🟡 Data | §4.3 |
 | 7 | **Blog** nearly empty (1 post, only "Uncategorized") | DB (content) | 🟡 Data | §4.4 |
-| 8 | FAQ / Contact / Statistics / Search / Division-S / remaining static pages | Frontend (not ported) | 🟠 Med | §3.4 |
+| 8 | FAQ / rulesets / staff / Division-S / remaining static pages | Frontend | ✅ Resolved by port (Phase 4); Contact/Search/Statistics → Phase 5 | §3.4 |
 | 9 | Team **create / manage / match** pages absent | Frontend (not ported) | 🟠 Med | §3.4 |
 | 10 | First Game guide source contains six `<h1>` headings | Content migration / a11y | 🟡 Debt | §3.5 |
 

@@ -94,6 +94,14 @@ docker compose -f dev/docker-compose.yml exec -T web php artisan fixtures:live-d
   round matches, upcoming matches)
 - `http://localhost:8090/calendar` — match calendar
 - `http://localhost:8090/blog` — blog list
+- Static content (Phase 4): `http://localhost:8090/faq`,
+  `/general/ruleset`, `/general/staff`, `/general/hall-of-fame`,
+  `/general/schedule`, `/general/playoff-rules`, `/general/seeding-rules`,
+  `/privacy-statement`, `/division-s-crew`, `/division-s-standings`,
+  `/division-s-schedule`, `/division-s-qualifier-standings`. Static contracts:
+  `powershell -ExecutionPolicy Bypass -File dev\verify-static-content.ps1`.
+  Bodies reference media-library images and production-hosted crew photos,
+  so expect image 404s / external loads in dev.
 
 ## What's in the image / what's mounted
 

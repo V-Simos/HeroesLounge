@@ -1125,7 +1125,10 @@
   font-size: 18px; line-height: 1.2; color: var(--ink) !important; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
 .static-content .blogPostWrapper h3 + h3 { top: 44px !important; padding-top: 0; font-family: 'JetBrains Mono', monospace;
   font-size: 11.5px !important; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--storm) !important; }
-.static-content .hover-fadein { opacity: 0; transition: opacity .3s ease; background-color: rgba(7,10,22,0.94) !important; }
+.static-content .hover-fadein { opacity: 0; transition: opacity .3s ease !important; background-color: rgba(7,10,22,0.94) !important; }
+/* transition forced: the frozen overlay carries an inline `transition:.5s easy`
+   (a typo the browser parses as a 0.5s transition of a property named "easy"),
+   which would otherwise beat both the fade and its reduced-motion reset. */
 .static-content .blogPostWrapper:hover .hover-fadein, .static-content .blogPostWrapper:focus-within .hover-fadein,
 .static-content .blogPostWrapper:focus .hover-fadein { opacity: 1; }
 .static-content .hover-fadein > div { top: 26% !important; left: 8% !important; width: 84% !important; height: 68% !important;
@@ -1154,7 +1157,7 @@
   .static-banner-in { padding-top: 80px; padding-bottom: 28px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .static-content .blogImage, .static-content .hover-fadein { transition: none; }
+  .static-content .blogImage, .static-content .hover-fadein { transition: none !important; }
   .static-content .blogPostWrapper:hover .blogImage, .static-content .blogPostWrapper:focus-within .blogImage { transform: none; }
 }
 

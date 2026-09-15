@@ -11,8 +11,9 @@ maintained — this table is.)
 - Phase 2 spec: `docs/superpowers/specs/2026-07-04-phase-2-public-reskin-design.md`
 - **Phase 2 Wave 1 plan (✅ COMPLETE):** `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md`
 - **Phase 3 plan (✅ COMPLETE):** `docs/superpowers/plans/2026-07-24-phase-3-user-auth.md`
-- Branch: `ui-rework-phase-2` (fork V-Simos/HeroesLounge, upstream
-  Fabian-Sommer/HeroesLounge).
+- **Phase 4 plan (✅ COMPLETE):** `docs/superpowers/plans/2026-09-16-phase-4-static-content.md`
+- Branch: `ui-rework` (fork V-Simos/HeroesLounge, upstream
+  Fabian-Sommer/HeroesLounge; `ui-rework-phase-2` was fast-forwarded into it).
 - Process: superpowers subagent-driven development — per task: fresh implementer
   subagent → spec-compliance review → code-quality review → (fixes → re-review) → next task.
 
@@ -76,6 +77,117 @@ Task 8 must verify `forceSecure = 1` is what's committed). **Plan:**
 | 6 — Events archive port + Events link | ✅ | ✅ | ✅ (3 fix rounds; approved) | 6ffa2ad, 83b745b, 60004cd, 69191e6 |
 | 7 — Guides static-pages port | ✅ | ✅ | ✅ (approved) | 1c09098 |
 | 8 — Phase-3 finishing pass | ✅ | ✅ (phase-wide contract pass) | ✅ (whole-phase review approved after 2 fix rounds) | c2216f0, ffbe6f3, 172f5ff, 61a5035, 239b294, 58c48f1, a5b5724, fb3b2d1 |
+
+## Task status (Phase 4 — static content wave)
+
+**Plan:** `docs/superpowers/plans/2026-09-16-phase-4-static-content.md`
+(binding scope = Phase 2 spec §3.2 “Wave 2: static content”, reconciled in
+the plan header). Branch `ui-rework`. **✅ COMPLETE** — every remaining
+public static surface of the old theme now renders under its frozen URL.
+
+| Task | Implemented | Verified | Commits |
+|---|---|---|---|
+| 1 — Static layout subnav + rules/schedule/standings pages | ✅ | ✅ live 360/1200, overflow, h1, logs | 19208ba (plan), a01ba79 |
+| 2 — FAQ + accordion pages (legacy collapse vocabulary) | ✅ | ✅ live accordion state/exclusivity/aria | f57d251 |
+| 3 — Staff + Division-S crew pages (legacy tab/crew vocabulary) | ✅ | ✅ live tabs, overlay stacking, 360 | 374bd17 |
+| 4 — `/general/ruleset` (Bans override) | ✅ | ✅ override resolves, bans render | ef63d7f |
+| 5 — Finishing pass (verify script, 20-URL × 3-viewport sweep, docs) | ✅ | ✅ | _this docs commit_ |
+
+Between Phase 3 and Phase 4 four unplanned polish commits landed on
+`ui-rework` (2026-09-14, another session): blog post highlights/author
+identity/filters/sharing (`70a3280`), footer tagline (`7aa8633`), division
+timeline height sync (`897566d`), spoiler-toggle fixes (`fc15933`). They are
+theme-only and documented in their commit messages; nothing in Phase 4
+depends on them.
+
+### Phase 4 routes (all 200 as guest unless noted)
+
+`/faq`, `/privacy-statement`, `/general`, `/general/ruleset`,
+`/general/staff`, `/general/playoff-rules`, `/general/seeding-rules`,
+`/general/schedule`, `/general/hall-of-fame`, `/division-s-crew`,
+`/division-s-standings`, `/division-s-qualifier-standings`,
+`/division-s-schedule`, `/division-s-ruleset/division-s-playoffs`,
+`/method-mayhem-hots-ruleset`, `/offmeta-maps-ruleset`,
+`/aram-league-ruleset`; `/division-s-ruleset` is a guest **404** because its
+frozen body keeps `is_hidden = 1` (faithful). Guides (`/guides/*`) and
+`/events/archive` were Phase 3 and were re-verified under the upgraded
+static layout.
+
+### Notes from Phase 4 (hard-won contracts — carry forward)
+
+- **Content fidelity contract.** Every `content/static-pages/*.htm` body is
+  byte-identical to the frozen file after normalising ONLY the
+  `layout = "…"` line (`dev/verify-static-content.ps1` enforces it,
+  CR-insensitive: the working tree is CRLF via `text=auto`, blobs are LF).
+  Three frozen `is_hidden = 1` bodies (`faqpage`, `general-rules`,
+  `general-staff`) are copied for `{% content %}` on the CMS pages but are
+  deliberately NOT in `meta/static-pages.yaml`, so their hidden URLs stay
+  unrouted as the frozen theme hid them from guests.
+- **Legacy content vocabulary, not content rewrites.** Staff edit these
+  bodies in the backend editor using the old theme's Bootstrap-4 + Froala
+  class vocabulary with inline `style=""` colours. `pages.css` renders that
+  vocabulary scoped under `.static-content` (cards, card-deck/columns,
+  list-groups, alerts, row/col grid, nav-tabs/tab-pane, the crew cards
+  ported from the old `custom.css`, editor tables) and `lounge.js`
+  reimplements the Bootstrap data-API contracts the bodies rely on
+  (`data-toggle="collapse"` + `data-parent`, `data-toggle="tab"`) and
+  wraps editor tables in `.table-scroll`. Inline editor colours are
+  neutralised generically (`[style*="background"]` → transparent) and
+  re-emphasised by kind (`#2e93cd` rows/headers → panel2, `209,213,216`
+  header cells, `239,239,239` zebra, `CCE0FF`/`AFCEFF` highlights); this is
+  the ONLY place the re-skin acts on legacy content. The `.collapse` hiding
+  rule must keep excluding `.navbar-collapse` (the crew tab bar carries both
+  classes).
+- **Section subnav.** `layouts/static.htm` attaches three `[staticMenu]`
+  components (`sectionGuides`/`sectionGeneral`/`sectionDivisionS`; aliases
+  chosen NOT to collide with the frozen Navigation component's deferred
+  `staticMenuGuides`/`staticMenuGeneral` children, which bind the same
+  `guides`/`general` codes) against theme-owned `meta/menus/*.yaml`; the
+  section is picked from the page-URL prefix. `general.yaml` is the frozen
+  menu plus two `type: url` items for the Ruleset/Crew CMS pages;
+  `division_s.yaml` is new. Static-page references derive titles/URLs from
+  the manifest (`navigation_hidden = 1` bodies are excluded automatically).
+- **Heading quirks recorded, not fixed.** Bodies owning a title `<h1>` are
+  listed in the layout's `contentOwnsH1` switch (`/general/playoff-rules`,
+  `/general/staff`, `/division-s-ruleset/division-s-playoffs` + the three
+  Phase-3 guides). Frozen *section* `<h1>`s remain: `schedule.htm` (layout
+  h1 + 5 section h1s = 6), `playoff-rules.htm` (title h1 + 1 section h1 =
+  2); they render at h2 scale via `.has-layout-title > h1` / `> h1 ~ h1`.
+  Same exception class as the First Game guide. The FAQ body's duplicate
+  leading `<h2>FAQ</h2>` is hidden via the layout's `static-page-<id>`
+  class hook, not edited.
+- **Editor tables** are forced to `width: 100% !important; margin: 0 !important`
+  (their inline `width: 34%; margin-right: calc(66%)` only produced phantom
+  scrollbars inside the scroll wrapper); column widths inside stay authored.
+- **Crew-card stacking.** The hover zoom (`transform`) makes `.blogImage` a
+  stacking context, so the overlay's inline `z-index:9999` only competes
+  inside it; `.blogImage` is raised to 2 on hover/focus-within and the
+  name/role `h3`s sit at 3 so they stay readable above the bio scrim. Cards
+  get `tabindex="0"` from lounge.js so the bio is keyboard-reachable
+  (chamfered → `outline-offset: -4px` on the card itself).
+- **Dev-data artifacts (not defects):** media-library images referenced by
+  the bodies (`/storage/app/media/uploaded-files/*`) 404 in dev — the dump
+  ships no media; crew photos are absolute `https://heroeslounge.gg/…` URLs
+  and load from production.
+
+### Phase 4 carry-forward (content / cutover debt)
+
+- Crew photos in `general-staff.htm` / `division-s-crew.htm` point at the
+  OLD theme's asset dir on production
+  (`https://heroeslounge.gg/themes/HeroesLounge-Theme/assets/img/staff/…`).
+  Keep that directory served after cutover or migrate the content to
+  media-library URLs (content operation, not theme work).
+- The crew cards' social links (`<i class="fa fa-twitch">` inside an empty
+  `<a>`) have no accessible name — content debt; the theme only restores the
+  glyph.
+- Multi-`<h1>` bodies (`schedule`, `playoff-rules`, First Game guide) and the
+  FAQ duplicate heading await an editorial content migration.
+- ARAM (`/aram-league-ruleset`, `/guides/aram-signup-guide`, the ARAM archive
+  links) remains the open retire/refresh decision; both pages are ported
+  frozen meanwhile.
+- `/contact`, `/search`, `/statistics*`, `/general/casterstatistics`,
+  `/team/create|manage|match`, `/application*`, `/timezone`, `/rssfeed.xml`
+  are Phase 5 (interactive wave) — see NEXT-SESSION.md.
 
 Design facts that drove the spec (verified live 2026-07-24, this session): the
 blog is **Indikator.Content** (NOT RainLab.Blog — query the `indikator_content_*`

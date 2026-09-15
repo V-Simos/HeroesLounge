@@ -2,54 +2,59 @@
 
 **How to resume:** `@docs/superpowers/NEXT-SESSION.md Continue`
 
-_Last updated: 2026-07-28. Phase 2 Wave 1 and Phase 3 are complete on
-`ui-rework-phase-2`. No Phase-3 implementation work remains._
+_Last updated: 2026-09-16. Phase 4 (static content wave) is complete on
+`ui-rework`. No Phase-4 implementation work remains._
 
 ---
 
 ## Where things stand
 
 - **Phase 1: ✅ SHIPPED to the open fork PR #1.**
-- **Phase 2 Wave 1: ✅ COMPLETE and fully reviewed.** Public competitive
-  viewing surfaces, including the live-data seed, are merged into the working
-  branch history.
-- **Phase 3: ✅ COMPLETE.** Auth/account/profile, caster schedule, Events
-  archive/nav behavior, and seven Guides surfaces have passed the finishing
-  static/server/browser sweep. Source of truth:
-  `docs/superpowers/PROGRESS.md` → “Task status (Phase 3)”.
-- **Current branch:** `ui-rework-phase-2`.
-- **Next action:** use `finishing-a-development-branch` to decide whether to
-  merge/open a PR, then write a separate plan for the remaining static and
-  interactive surfaces. Do not improvise a new wave directly from this file.
+- **Phase 2 Wave 1: ✅ COMPLETE** (public competitive viewing + live-data seed).
+- **Phase 3: ✅ COMPLETE** (auth/account/profile, caster schedule, Events
+  archive, Guides).
+- **Phase 4: ✅ COMPLETE** (every remaining public static surface: FAQ,
+  rulesets, schedule, hall of fame, privacy, staff/crew, Division-S). Source
+  of truth: `docs/superpowers/PROGRESS.md` → “Task status (Phase 4)”.
+- **Current branch:** `ui-rework` (local, ahead of `origin/ui-rework`).
+- **Next action:** write the **Phase 5 plan — interactive wave** (team
+  create/manage/match, applications, statistics, caster statistics, plus a
+  decision on contact/search/timezone/RSS), then implement it task by task.
+  Do not improvise it from this file; the Phase 4 plan is the format
+  template (`docs/superpowers/plans/2026-09-16-phase-4-static-content.md`).
 
-Phase 3 sources:
+## What Phase 5 has to cover (frozen old-theme pages still unported)
 
-- Spec: `docs/superpowers/specs/2026-07-24-phase-3-user-auth-design.md`
-- Plan: `docs/superpowers/plans/2026-07-24-phase-3-user-auth.md`
+| Frozen page | URL | Component(s) | Notes |
+|---|---|---|---|
+| `team/create.htm` | `/team/create` | `CreateTeam` | today caught by the `/:slug/:divslug` division route (graceful themed 200) |
+| `team/manage.htm` | `/team/manage/:slug` | `ManageTeam` | captain-only; `ViewApps::onSendAccept()` authorization finding applies |
+| `team/manageMatch.htm` | `/team/match/:slug` | `ManageMatches` | reschedule / report flows; linked from dashboard + team page literals |
+| `application/create.htm` | `/application` | `CreateApp` | linked from the account Applications tab |
+| `application/view.htm` | `/application/view/:id` | `ViewApplication` | plugin `Redirect::refresh()` quirk noted in the Phase 2 spec |
+| `statistics/.htm` | `/statistics` | `Rikki\LoungeStatistics\Components\Statistics` | orphaned (no inbound links) — decide port vs drop |
+| `statistics/hero.htm` | `/statistics/hero/:slug/:season?` | `HeroDetails` | data-blind (`gameparticipation` = 0 rows) |
+| `general/casterstatistics.htm` | `/general/casterstatistics` | `CasterStatistics season=23` | caster-gated in the old nav |
+| `search.htm` | `/search` | `searchResults` (OFFLINE.SiteSearch, present in the dev image) | spec said drop; no entry point in the new nav — decide |
+| `contact.htm` | `/contact` | — | 500s on a missing partial in the old theme; spec says drop |
+| `timezone.htm`, `rssfeedxml.htm` | `/timezone`, `/rssfeed.xml` | raw PHP / `RssFeed` | utility endpoints, port verbatim if kept |
 
-## Verified Phase-3 routes
+## Verified Phase-4 routes
 
-- `/user/forgotpassword`
-- `/user`
-- `/user/view/25`
-- `/user/casterschedule`
-- `/events/archive`
-- `/guides`
-- `/guides/signup-guide`
-- `/guides/captains-guide`
-- `/guides/scheduling-and-reporting-matches`
-- `/guides/scheduling-and-playing-your-first-game`
-- `/guides/uploading-replays`
-- `/guides/aram-signup-guide`
-
-The First Game guide's frozen source contains six `<h1>` elements. This is
-the explicitly approved sole Phase-3 one-`<h1>` exception under Task 7's
-byte-verbatim fidelity requirement, plus recorded content-migration/a11y debt;
-do not silently rewrite it or add the plan typo's `/guide/.../frist` alias.
+`/faq`, `/privacy-statement`, `/general`, `/general/ruleset`,
+`/general/staff`, `/general/playoff-rules`, `/general/seeding-rules`,
+`/general/schedule`, `/general/hall-of-fame`, `/division-s-crew`,
+`/division-s-standings`, `/division-s-qualifier-standings`,
+`/division-s-schedule`, `/division-s-ruleset/division-s-playoffs`,
+`/method-mayhem-hots-ruleset`, `/offmeta-maps-ruleset`,
+`/aram-league-ruleset` (all 200); `/division-s-ruleset` is a guest 404 by
+frozen `is_hidden = 1`. Phase-3 routes (`/user*`, `/events/archive`,
+`/guides*`) unchanged.
 
 ## Environment resume
 
-Docker containers do not auto-start after reboot. From the repository root:
+Docker containers do not auto-start after reboot (Docker Desktop itself may
+need launching first). From the repository root:
 
 ```powershell
 docker compose -f dev/docker-compose.yml up -d
@@ -59,6 +64,13 @@ Site: http://localhost:8090. If it shows the old theme:
 
 ```powershell
 docker compose -f dev/docker-compose.yml exec -T web php artisan theme:use heroeslounge-next
+```
+
+After editing `meta/static-pages.yaml` or `meta/menus/*.yaml`, clear the
+October cache or RainLab.Pages keeps serving the cached menu/manifest:
+
+```powershell
+docker compose -f dev/docker-compose.yml exec -T web php artisan cache:clear
 ```
 
 The July-2026 production dump is imported and the additive live-data seed is
@@ -82,7 +94,8 @@ renders because the frozen SlothAccount component drops the parent redirect
 response; preserve that behavior rather than changing plugin code or leaving a
 temporary property flip.
 
-Full environment details: `dev/README.md`.
+Full environment details: `dev/README.md`. Static contracts for all phases:
+`dev/verify-*.ps1` (all pass as of this update).
 
 ## Binding constraints
 
@@ -90,30 +103,36 @@ Full environment details: `dev/README.md`.
   bindings, handlers, and behavior.
 - Plugins under `plugins/rikki/*` and the old theme
   `themes/HeroesLounge-Theme/` remain frozen.
+- Static content bodies (`content/static-pages/*.htm`) are byte-verbatim
+  copies of the frozen files except the `layout` line; the theme renders
+  their legacy Bootstrap/Froala vocabulary via the scoped `.static-content`
+  rules in `pages.css` + the legacy collapse/tab/table behaviors in
+  `lounge.js`. Never “fix” the bodies; extend the vocabulary instead.
 - Two final-review security findings remain behind frozen handlers:
   `UpcomingMatches` caster apply/retract lacks caller/permission/identity
   authorization, and `ViewApps::onSendAccept()` permits any team member rather
   than enforcing captain authority. Do not treat theme markup as a security
-  boundary. Editing either plugin requires separate explicit authorization.
+  boundary. Editing either plugin requires separate explicit authorization —
+  Phase 5's team-manage/applications work runs straight into this.
 - Override directories must be all lowercase. October probes the lowercase
   alias first, while Docker Desktop can hide casing mistakes.
 - Keep `components.css`'s reduced-motion block last and preserve inset
   `:focus-visible` treatment on clipped/chamfered controls.
-- Commit with `git -c core.fsmonitor=false`; the IDE/fsmonitor can otherwise
-  race on `.git/index.lock`.
+- Commit with `git -c core.fsmonitor=false`; the IDE's git integration can
+  otherwise race on `.git/index.lock` (retry once if it does).
 - Every implementation commit uses:
-  `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`.
+  `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
 
 ## Carry-forward production work
 
 - Resolve the two frozen-plugin authorization findings before exposing the
-  caster apply/retract or application-accept controls in production. The
-  authorized backend change must derive/validate the acting user, enforce the
-  relevant permission or captain role, validate object ownership, and include
-  request-level negative tests. If plugin work is not authorized, withhold the
-  affected controls instead.
+  caster apply/retract or application-accept controls in production. If
+  plugin work is not authorized, withhold the affected controls.
 - Create or confirm the Indikator.Content category with slug `events` before
   production cutover so `/blog/category/events` resolves with content.
+- Keep the old theme's `assets/img/staff/` directory served after cutover
+  (or migrate the crew content): the staff/crew bodies embed absolute
+  production URLs into it.
 - Apply the documented `gameparticipation` schema fix after any dump re-import.
   Per-game/player statistics remain data-blind because the imported table has
   zero rows.
@@ -123,21 +142,24 @@ Full environment details: `dev/README.md`.
 
 ## Open decisions
 
-- **ARAM league:** if concluded, remove/retire the ARAM guide and nav target in
-  a separately approved content migration; if active, refresh it in the next
-  static-content plan. Phase 3 preserves the frozen page meanwhile.
-- **First Game heading hierarchy:** editorial/content owner must approve
-  semantic demotion of the six source `<h1>` elements.
-- **PR #1 / branch integration:** merge now or keep open for review.
-- **Next wave scope:** remaining FAQ/contact/rulesets/privacy/staff/static
-  content versus team create/manage/match/statistics/search interactive work.
+- **ARAM league:** retire (remove `/aram-league-ruleset`,
+  `/guides/aram-signup-guide`, the ARAM archive links) or refresh — content
+  decision; both pages are ported frozen meanwhile.
+- **Editorial content migration:** demote the frozen section `<h1>`s
+  (`schedule`, `playoff-rules`, First Game guide), drop the FAQ body's
+  duplicate heading, give the crew cards' social links accessible names.
+- **Search:** OFFLINE.SiteSearch is installed in the dev image and the old
+  sidebar had a search box; the new nav has none. Port `/search` in Phase 5
+  or drop it for good.
+- **PR #1 / branch integration:** merge now or keep open for review;
+  `ui-rework` has not been pushed since Phase 4.
 
 ## Don't waste time on
 
-- Re-running Phase 2 Wave 1 or Phase 3 implementation; both are complete.
+- Re-running Phase 2 Wave 1, Phase 3, or Phase 4 implementation; all complete.
 - Fixture-era login accounts on the imported dump; use `Hapcher`.
-- Treating missing team-upload files or empty `gameparticipation` as theme
-  regressions.
+- Treating missing team-upload files, media-library 404s, or empty
+  `gameparticipation` as theme regressions.
 - Fixing frozen-plugin performance or redirect behavior in a theme-only task.
 - Re-litigating line endings; rework blobs are LF and the CRLF warning is a
   working-tree conversion warning, not corruption.
@@ -148,7 +170,9 @@ Full environment details: `dev/README.md`.
 - `docs/superpowers/KNOWN-ISSUES.md` — current issues plus historical audit.
 - `docs/superpowers/DB-DUMP-IMPORT.md` — imported-dump and schema-fix record.
 - `dev/README.md` — environment, credentials, seeds, and useful URLs.
-- `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md` — completed
-  Phase 2 Wave 1 plan.
+- `docs/superpowers/plans/2026-09-16-phase-4-static-content.md` — completed
+  Phase 4 plan (format template for Phase 5).
 - `docs/superpowers/plans/2026-07-24-phase-3-user-auth.md` — completed Phase 3
   plan.
+- `docs/superpowers/plans/2026-07-04-phase-2-wave-1-viewing.md` — completed
+  Phase 2 Wave 1 plan.
