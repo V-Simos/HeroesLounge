@@ -62,7 +62,9 @@ code = "division_s"
             '/general/staff',
             '/division-s-ruleset/division-s-playoffs'
         ] %}
-        <section class="sec static-page">
+        {#- static-page-<id> is a per-page styling hook (CMS page file name, or
+            the RainLab static page id) for the rare page-specific rule. -#}
+        <section class="sec static-page static-page-{{ this.page.id }}">
             <div class="wrap static-grid{{ section ? ' has-subnav' : '' }}">
                 {% if section %}
                 <aside class="static-aside">

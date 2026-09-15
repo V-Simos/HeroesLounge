@@ -1009,3 +1009,73 @@
   .subnav-link.on { background: linear-gradient(135deg, var(--storm), #2E86DD); color: #041020; }
   .subnav-link:focus-visible { outline-offset: -4px; } /* clip-path clips outside outlines (see components.css) */
 }
+
+/* Legacy vocabulary — Bootstrap-4 cards / accordions / list-groups / alerts /
+   grid utilities as used by the frozen rule, FAQ, hall-of-fame and Division-S
+   bodies (Phase 4 Task 2). Scoped to .static-content; class names are the
+   editor's, never reused by the design system. */
+.static-content .row { display: flex; flex-wrap: wrap; gap: 20px; }
+.static-content .row > .col { flex: 1 1 220px; min-width: 0; }
+.static-content .row > .col > * + *, .static-content .card-body > * + * { margin-top: 12px; }
+.static-content .card { background: var(--panel); border: 1px solid var(--line); min-width: 0; }
+.static-content .card + .card, .static-content .card.mb-2 { margin-bottom: 8px; }
+.static-content .card-header { padding: 12px 16px; font-family: 'Chakra Petch', sans-serif; font-weight: 600;
+  font-size: 15.5px; line-height: 1.3; background: var(--panel2); border-bottom: 1px solid var(--line); }
+.static-content .card-header:last-child { border-bottom: 0; }
+.static-content .card-body { padding: 16px; }
+.static-content .card-text { color: var(--mute); }
+.static-content .card.bg-dark { background: var(--deep); }
+.static-content .card-deck { display: flex; flex-wrap: wrap; gap: 16px; }
+.static-content .card-deck > .card { flex: 1 1 260px; margin-bottom: 0; }
+.static-content .card-columns { columns: 2 260px; column-gap: 16px; }
+.static-content .card-columns > .card { break-inside: avoid; display: inline-block; width: 100%; margin-bottom: 16px; }
+.static-content .list-group { list-style: none; padding: 0; }
+.static-content .list-group-item { padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.static-content .list-group-item + .list-group-item { margin-top: 0; }
+.static-content .list-group-item:last-child { border-bottom: 0; }
+.static-content .list-group-item > .alert { margin-top: 10px; }
+.static-content .list-group-item a { color: var(--storm); text-decoration: underline; text-underline-offset: 2px; }
+.static-content .alert + .alert { margin-top: 8px; }
+/* accordion trigger: the frozen <a data-toggle="collapse" href="#id"> (inside
+   a .card-header h5, or as an inline-styled pill in the hall of fame) becomes
+   a full-width row with a rotating chevron driven by aria-expanded, which
+   lounge.js mirrors from the target's .show state. Plain link, no clip-path:
+   the global :focus-visible ring applies. */
+.static-content .collapse:not(.show):not(.navbar-collapse) { display: none; }
+.static-content [data-toggle^="collapse"] { display: block; position: relative; padding: 12px 44px 12px 16px;
+  font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 15.5px; line-height: 1.3;
+  color: var(--ink) !important; text-decoration: none !important; background: var(--panel2) !important;
+  border: 1px solid var(--line); border-radius: 0 !important; cursor: pointer; }
+.static-content [data-toggle^="collapse"]:hover { color: var(--storm) !important; }
+.static-content [data-toggle^="collapse"]::after { content: ""; position: absolute; right: 18px; top: 50%;
+  width: 9px; height: 9px; border-right: 2px solid var(--mute); border-bottom: 2px solid var(--mute);
+  transform: translateY(-70%) rotate(45deg); transition: transform .15s ease; }
+.static-content [data-toggle^="collapse"][aria-expanded="true"]::after { transform: translateY(-20%) rotate(-135deg); }
+.static-content .card-header > h5 > [data-toggle^="collapse"], .static-content .card-header > h4 > [data-toggle^="collapse"] { margin: -12px -16px; border: 0; }
+.static-content .card-header h5, .static-content .card-header h4 { font-size: inherit; margin: 0; }
+.static-content [data-toggle^="collapse"] h4 { display: inline; font-size: inherit; margin: 0; }
+.static-content h2 > [data-toggle^="collapse"], .static-content p > [data-toggle^="collapse"] { margin: 6px 0; }
+/* utilities the editor sprinkled in */
+.static-content .text-center { text-align: center; }
+.static-content .text-white { color: var(--ink); }
+.static-content .text-muted { color: var(--mute); }
+.static-content .font-weight-bold { font-weight: 700; }
+.static-content .font-italic { font-style: italic; }
+.static-content .mb-0 { margin-bottom: 0; }
+.static-content .mb-2 { margin-bottom: 8px; }
+.static-content .m-1 { margin: 4px; }
+.static-content .m-3 { margin: 16px; }
+.static-content .mt-1 { margin-top: 4px; }
+.static-content .mr-1 { margin-right: 4px; }
+.static-content .p-3 { padding: 16px; }
+.static-content .lead { font-size: 1.15em; color: var(--mute); }
+.static-content .text-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.static-content hr.separator { margin: 24px 0; }
+@media (prefers-reduced-motion: reduce) {
+  .static-content [data-toggle^="collapse"]::after { transition: none; }
+}
+/* /faq: the frozen faqpage body opens with its own <h2>FAQ</h2> directly under
+   the layout's <h1>FAQ</h1>. The body stays byte-verbatim; the redundant
+   heading is dropped visually here (page-scoped via the layout's
+   static-page-<id> hook) rather than rewritten in content. */
+.static-page-faq .static-content > h2:first-child { display: none; }

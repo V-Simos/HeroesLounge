@@ -1,0 +1,15 @@
+title = "FAQ"
+url = "/faq"
+layout = "static"
+is_hidden = 0
+==
+{#- Frozen: themes/HeroesLounge-Theme/pages/faq.htm — title/url/is_hidden
+    verbatim; layout plain-with-sidebar → static (sanctioned mapping). The old
+    page's [ssbuttonsnb] social-share component is not ported (marketplace
+    plugin, source unavailable — same call as pages/blog/post.htm). The body
+    is the frozen faqpage static content rendered byte-verbatim; its
+    Bootstrap accordion vocabulary is handled by the static-content rules in
+    pages.css + the legacy collapse behavior in lounge.js. The body's own
+    leading <h2>FAQ</h2> under the layout's <h1>FAQ</h1> is a recorded
+    frozen-content quirk, not rewritten here. -#}
+{% content 'static-pages/faqpage' %}

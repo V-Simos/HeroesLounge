@@ -262,6 +262,76 @@
         scroll.appendChild(table);
     });
 
+    /* ---------- legacy static content: collapse (accordions) ----------
+       The same frozen bodies use Bootstrap-4's data API for accordions:
+       <a data-toggle="collapse" href="#id" data-parent="#accordion"> toggles
+       a .collapse sibling (.show = open). Bootstrap is not loaded in this
+       theme, so this reimplements exactly that contract, scoped to
+       .static-content: toggle .show on the href/data-target element, mirror
+       aria-expanded/aria-controls on every trigger of that target, honour
+       data-parent exclusivity (a missing parent is a no-op, as in
+       Bootstrap), and open a .collapse addressed by location.hash on load.
+       The content markup is never modified. */
+    var staticRoot = document.querySelector('.static-content');
+    if (staticRoot) {
+        var collapseTriggers = Array.prototype.slice.call(
+            staticRoot.querySelectorAll('[data-toggle^="collapse"]')
+        );
+
+        function collapseTarget(trigger) {
+            var selector = trigger.getAttribute('data-target') || trigger.getAttribute('href') || '';
+            if (selector.charAt(0) !== '#' || selector.length < 2) return null;
+            return document.getElementById(selector.slice(1));
+        }
+
+        function syncCollapseTriggers(target, open) {
+            collapseTriggers.forEach(function (trigger) {
+                if (collapseTarget(trigger) === target) {
+                    trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+                }
+            });
+        }
+
+        collapseTriggers.forEach(function (trigger) {
+            var target = collapseTarget(trigger);
+            if (!target) return;
+            trigger.setAttribute('aria-controls', target.id);
+            trigger.setAttribute('aria-expanded', target.classList.contains('show') ? 'true' : 'false');
+        });
+
+        staticRoot.addEventListener('click', function (event) {
+            var trigger = event.target.closest('[data-toggle^="collapse"]');
+            if (!trigger || !staticRoot.contains(trigger)) return;
+            var target = collapseTarget(trigger);
+            if (!target) return;
+            event.preventDefault();
+
+            var open = !target.classList.contains('show');
+            var parentSelector = trigger.getAttribute('data-parent');
+            var parent = null;
+            if (open && parentSelector) {
+                try { parent = document.querySelector(parentSelector); } catch (e) { parent = null; }
+            }
+            if (parent) {
+                parent.querySelectorAll('.collapse.show').forEach(function (other) {
+                    if (other === target || other.contains(target) || target.contains(other)) return;
+                    other.classList.remove('show');
+                    syncCollapseTriggers(other, false);
+                });
+            }
+            target.classList.toggle('show', open);
+            syncCollapseTriggers(target, open);
+        });
+
+        if (location.hash.length > 1) {
+            var hashed = document.getElementById(location.hash.slice(1));
+            if (hashed && hashed.classList.contains('collapse') && staticRoot.contains(hashed)) {
+                hashed.classList.add('show');
+                syncCollapseTriggers(hashed, true);
+            }
+        }
+    }
+
     if (window.jQuery) {
         window.jQuery(window).on('ajaxErrorMessage', function (event, message) {
             event.preventDefault();
